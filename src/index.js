@@ -1,5 +1,11 @@
-// ESM nutzen; kein dotenv. ENV kommen direkt aus process.env (TOKEN, CLIENT_ID, GUILD_ID).
-// TODO: { Client, GatewayIntentBits } aus 'discord.js' importieren.
-// TODO: Client mit minimalen Intents (z. B. GatewayIntentBits.Guilds) erzeugen.
-// TODO: commandLoader & eventLoader importieren und ausführen, um Commands/Events zu registrieren.
-// TODO: client.login(process.env.TOKEN) aufrufen.
+import { Client, GatewayIntentBits } from 'discord.js';
+import commandLoader from './loaders/commandLoader.js';
+import eventLoader from './loaders/eventLoader.js';
+
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
+await commandLoader(client);
+await eventLoader(client);
+
+await client.login(process.env.TOKEN);
+

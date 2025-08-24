@@ -1,7 +1,45 @@
-// Zweck: Slash-Commands ausschließlich auf EINER Guild registrieren (privater Bot).
-// ENV: process.env.CLIENT_ID (Application ID), process.env.GUILD_ID (Guild), process.env.TOKEN (Bot-Token).
-// TODO: REST-Client aus 'discord.js' (REST, Routes) vorbereiten (nur Kommentar, keine Imports/Implementierung).
-// TODO: Funktions-Signatur ohne Body:
-// function registerGuildCommands({ applicationId, guildId, token }) { /* TODO: später REST-PUT an Routes.applicationGuildCommands */ }
-// Hinweis: Keine globalen Commands registrieren. Nur Guild.
-// Hinweis: Script manuell ausführen, wenn Commands hinzugefügt/geändert wurden (später).
+import { REST, Routes } from 'discord.js';
+import { readdir } from 'node:fs/promises';
+import path from 'node:path';
+
+const applicationId = process.env.CLIENT_ID;
+const guildId = process.env.GUILD_ID;
+const token = process.env.TOKEN;
+
+async function readCommands() {
+  const commandsDir = path.join(process.cwd(), 'src', 'commands');
+  const files = await readdir(commandsDir);
+  const commands = [];
+
+  for (const file of files) {
+    if (!file.endsWith('.js')) continue;
+    try {
+      const command = (await import(path.join(commandsDir, file))).default;
+      if (command?.name && command?.description) {
+        commands.push({ name: command.name, description: command.description });
+      }
+    } catch (err) {
+      console.error(`Failed to load command ${file}:`, err);
+    }
+  }
+
+  return commands;
+}
+
+async function registerGuildCommands() {
+  const commands = await readCommands();
+  const rest = new REST({ version: '10' }).setToken(token);
+  try {
+    console.log(`Registering ${commands.length} command(s) to guild ${guildId}...`);
+    await rest.put(
+      Routes.applicationGuildCommands(applicationId, guildId),
+      { body: commands },
+    );
+    console.log('Guild commands registered successfully.');
+  } catch (error) {
+    console.error('Error registering guild commands:', error);
+  }
+}
+
+registerGuildCommands();
+
