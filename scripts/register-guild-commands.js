@@ -6,6 +6,11 @@ const applicationId = process.env.CLIENT_ID;
 const guildId = process.env.GUILD_ID;
 const token = process.env.TOKEN;
 
+if (!token || !applicationId || !guildId) {
+  console.error('[ENV] TOKEN/CLIENT_ID/GUILD_ID missing');
+  process.exit(1);
+}
+
 async function readCommands() {
   const commandsDir = path.join(process.cwd(), 'src', 'commands');
   const files = await readdir(commandsDir);
@@ -38,6 +43,7 @@ async function registerGuildCommands() {
     console.log('Guild commands registered successfully.');
   } catch (error) {
     console.error('Error registering guild commands:', error);
+    process.exit(1);
   }
 }
 
