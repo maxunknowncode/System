@@ -13,16 +13,15 @@ export default {
     const uptime = formatDuration(uptimeMs);
 
     const embed = new EmbedBuilder()
-      .setTitle('The Core System — Status')
-      .setDescription('Operational.')
+      .setTitle('🟢 The Core System — Status')
+      .setDescription('✅ Operational.')
       .addFields(
-        { name: 'WebSocket Ping', value: `${client.ws.ping} ms`, inline: true },
-        { name: 'Roundtrip', value: `${roundtrip} ms`, inline: true },
-        { name: 'Uptime', value: uptime, inline: true },
-        { name: 'Server Time', value: new Date().toISOString(), inline: false }
+        { name: '📡 WebSocket Ping', value: `${Math.round(client.ws.ping)} ms`, inline: true },
+        { name: '⏱️ Roundtrip', value: `${roundtrip} ms`, inline: true },
+        { name: '⏳ Uptime', value: uptime, inline: true },
+        { name: '🕒 Server Time', value: new Date().toISOString(), inline: false }
       )
       .setColor(0xFFD700)
-      .setTimestamp(new Date())
       .setFooter(FOOTER);
 
     await interaction.editReply({ embeds: [embed] });
