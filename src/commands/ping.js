@@ -1,4 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
+import { FOOTER } from '../util/footer.js';
 
 export default {
   name: 'ping',
@@ -22,7 +23,7 @@ export default {
       )
       .setColor(0xFFD700)
       .setTimestamp(new Date())
-      .setFooter({ text: 'The Core System' });
+      .setFooter(FOOTER);
 
     await interaction.editReply({ embeds: [embed] });
   },
