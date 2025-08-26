@@ -2,50 +2,65 @@ import { REST, Routes } from 'discord.js';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 
-const applicationId = process.env.CLIENT_ID;
-const guildId = process.env.GUILD_ID;
 const token = process.env.TOKEN;
+const clientId = process.env.CLIENT_ID;
+const guildId = process.env.GUILD_ID;
 
-if (!token || !applicationId || !guildId) {
-  console.error('[ENV] TOKEN/CLIENT_ID/GUILD_ID missing');
+if (!token || !clientId || !guildId) {
+  console.error('[register] Missing TOKEN/CLIENT_ID/GUILD_ID');
   process.exit(1);
 }
 
-async function readCommands() {
-  const commandsDir = path.join(process.cwd(), 'src', 'commands');
-  const files = await readdir(commandsDir);
-  const commands = [];
+const baseDir = path.join(process.cwd(), 'src', 'commands');
 
-  for (const file of files) {
-    if (!file.endsWith('.js')) continue;
+async function collect(dir, acc = []) {
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch (err) {
+    console.error('[register] Failed to read directory:', dir, err);
+    return acc;
+  }
+  const names = entries.map((e) => e.name);
+  const file = names.includes('command.js')
+    ? 'command.js'
+    : names.includes('index.js')
+      ? 'index.js'
+      : null;
+
+  if (file) {
+    const filePath = path.join(dir, file);
     try {
-      const command = (await import(path.join(commandsDir, file))).default;
-      if (command?.name && command?.description) {
-        commands.push({ name: command.name, description: command.description });
+      const mod = (await import(filePath)).default;
+      if (mod?.name && mod?.description) {
+        const data = { name: mod.name, description: mod.description };
+        if (mod.options) data.options = mod.options;
+        if (mod.defaultMemberPermissions !== undefined) data.default_member_permissions = mod.defaultMemberPermissions;
+        if (mod.dmPermission !== undefined) data.dm_permission = mod.dmPermission;
+        acc.push(data);
+      } else {
+        console.warn(`[register] Skipping ${path.relative(baseDir, filePath)}: name/description missing`);
       }
     } catch (err) {
-      console.error(`Failed to load command ${file}:`, err);
+      console.warn(`[register] Failed to load ${filePath}:`, err);
+    }
+  } else {
+    for (const entry of entries.filter((e) => e.isDirectory())) {
+      await collect(path.join(dir, entry.name), acc);
     }
   }
-
-  return commands;
+  return acc;
 }
 
-async function registerGuildCommands() {
-  const commands = await readCommands();
+(async () => {
+  const commands = await collect(baseDir);
   const rest = new REST({ version: '10' }).setToken(token);
   try {
-    console.log(`Registering ${commands.length} command(s) to guild ${guildId}...`);
-    await rest.put(
-      Routes.applicationGuildCommands(applicationId, guildId),
-      { body: commands },
-    );
-    console.log('Guild commands registered successfully.');
-  } catch (error) {
-    console.error('Error registering guild commands:', error);
+    console.log(`[register] Replacing ${commands.length} guild command(s)`);
+    await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
+    console.log('[register] Guild commands registered');
+  } catch (err) {
+    console.error('[register] Failed to register guild commands:', err);
     process.exit(1);
   }
-}
-
-registerGuildCommands();
-
+})();
