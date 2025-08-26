@@ -1,5 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
-import { FOOTER } from '../util/footer.js';
+import { FOOTER } from '../../util/footer.js';
 
 export default {
   name: 'ping',

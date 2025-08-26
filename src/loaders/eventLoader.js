@@ -2,32 +2,48 @@ import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 
 export default async function eventLoader(client) {
-  const eventsDir = path.join(process.cwd(), 'src', 'events');
-  let files = [];
-  try {
-    files = await readdir(eventsDir);
-  } catch (err) {
-    console.error('Failed to read events directory:', err);
-    return;
-  }
+  const baseDir = path.join(process.cwd(), 'src', 'events');
+  let loaded = 0;
 
-  for (const file of files) {
-    if (!file.endsWith('.js')) continue;
-    const filePath = path.join(eventsDir, file);
+  async function traverse(dir) {
+    let entries;
     try {
-      const event = (await import(filePath)).default;
-      if (!event?.name || typeof event.execute !== 'function') {
-        console.warn(`Invalid event structure in ${file}`);
-        continue;
-      }
-      if (event.once) {
-        client.once(event.name, (...args) => event.execute(...args, client));
-      } else {
-        client.on(event.name, (...args) => event.execute(...args, client));
-      }
+      entries = await readdir(dir, { withFileTypes: true });
     } catch (err) {
-      console.error(`Failed to load event ${file}:`, err);
+      console.error('[events] Failed to read directory:', dir, err);
+      return;
+    }
+    const names = entries.map((e) => e.name);
+    const file = names.includes('handler.js')
+      ? 'handler.js'
+      : names.includes('index.js')
+        ? 'index.js'
+        : null;
+
+    if (file) {
+      const filePath = path.join(dir, file);
+      try {
+        const mod = (await import(filePath)).default;
+        if (!mod?.name || typeof mod.execute !== 'function') {
+          console.warn(`[events] Skipping ${path.relative(baseDir, filePath)}: name/execute missing`);
+          return;
+        }
+        if (mod.once) {
+          client.once(mod.name, (...args) => mod.execute(...args, client));
+        } else {
+          client.on(mod.name, (...args) => mod.execute(...args, client));
+        }
+        loaded++;
+      } catch (err) {
+        console.warn(`[events] Failed to load ${filePath}:`, err);
+      }
+    } else {
+      for (const entry of entries.filter((e) => e.isDirectory())) {
+        await traverse(path.join(dir, entry.name));
+      }
     }
   }
-}
 
+  await traverse(baseDir);
+  console.log(`[events] Bound ${loaded} event(s)`);
+}
