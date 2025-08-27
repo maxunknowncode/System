@@ -9,25 +9,41 @@ export default {
     if (interaction.isButton() && interaction.customId === VERIFY_BUTTON_ID) {
       console.log(`[verify] ${interaction.user.tag} clicked verify`);
       const member = interaction.member ?? await interaction.guild.members.fetch(interaction.user.id);
-      try {
-        if (!member.roles.cache.has(VERIFY_ROLE_ID)) {
-          await member.roles.add(VERIFY_ROLE_ID);
+
+      if (member.roles.cache.has(VERIFY_ROLE_ID)) {
+        const embed = new EmbedBuilder()
+          .setColor(0x00ff00)
+          .setTitle('Verification')
+          .setDescription('ℹ️ You are already verified.')
+          .setFooter(FOOTER);
+        try {
+          await interaction.reply({ embeds: [embed], ephemeral: true });
+        } catch (err) {
+          console.error('[interaction] Failed to send already verified reply:', err);
         }
+        return;
+      }
+
+      try {
+        await member.roles.add(VERIFY_ROLE_ID);
+        const embed = new EmbedBuilder()
+          .setColor(0x00ff00)
+          .setTitle('Verification')
+          .setDescription('✅ You are now verified!')
+          .setFooter(FOOTER);
+        await interaction.reply({ embeds: [embed], ephemeral: true });
       } catch (err) {
         console.error('[verify] Failed to add role:', err);
-      }
-      const embed = new EmbedBuilder()
-        .setColor(0x00ff00)
-        .setDescription('You are now verified!\nDu bist jetzt verifiziert!')
-        .setFooter(FOOTER);
-      try {
-        if (interaction.deferred || interaction.replied) {
-          await interaction.editReply({ embeds: [embed] });
-        } else {
+        const embed = new EmbedBuilder()
+          .setColor(0xFFA500)
+          .setTitle('Verification')
+          .setDescription('⚠️ Verification failed. Please try again or contact staff.')
+          .setFooter(FOOTER);
+        try {
           await interaction.reply({ embeds: [embed], ephemeral: true });
+        } catch (sendErr) {
+          console.error('[interaction] Failed to send verify reply:', sendErr);
         }
-      } catch (err) {
-        console.error('[interaction] Failed to send verify reply:', err);
       }
       return;
     }
