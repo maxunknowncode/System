@@ -1,13 +1,14 @@
 import { VERIFY_CHANNEL_ID, VERIFY_MESSAGE_ID, VERIFY_BUTTON_ID } from './config.js';
 import { renderVerifyMessage } from './render.js';
+import { logger } from '../../util/logger.js';
 
 export default async function ensureVerifyMessage(client) {
   const channel = await client.channels.fetch(VERIFY_CHANNEL_ID).catch((err) => {
-    console.error('[verify] Failed to fetch verify channel:', err);
+    logger.error('[verify] Failed to fetch verify channel:', err);
     return null;
   });
   if (!channel || !channel.isTextBased()) {
-    console.warn('[verify] Verify channel not found or not text-based');
+    logger.warn('[verify] Verify channel not found or not text-based');
     return;
   }
 
@@ -31,7 +32,7 @@ export default async function ensureVerifyMessage(client) {
         )
       );
     } catch (err) {
-      console.error('[verify] Failed to search verify message:', err);
+      logger.error('[verify] Failed to search verify message:', err);
     }
   }
 
@@ -39,13 +40,13 @@ export default async function ensureVerifyMessage(client) {
     try {
       await message.edit(payload);
     } catch (err) {
-      console.error('[verify] Failed to edit verify message:', err);
+      logger.error('[verify] Failed to edit verify message:', err);
     }
   } else {
     try {
       await channel.send(payload);
     } catch (err) {
-      console.error('[verify] Failed to send verify message:', err);
+      logger.error('[verify] Failed to send verify message:', err);
     }
   }
 }

@@ -1,14 +1,15 @@
 import ensureVerifyMessage from '../../features/verify/ensure.js';
+import { logger } from '../../util/logger.js';
 
 export default {
   name: 'ready',
   once: true,
   async execute(client) {
-    console.log(`[events] Logged in as ${client.user.tag}`);
+    logger.info(`[READY] Logged in as ${client.user.tag}`);
     try {
       await ensureVerifyMessage(client);
     } catch (err) {
-      console.error('[verify] Failed to ensure verify message:', err);
+      logger.error('[verify] Failed to ensure verify message:', err);
     }
   },
 };

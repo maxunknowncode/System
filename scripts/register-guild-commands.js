@@ -17,8 +17,7 @@ async function collect(dir, acc = []) {
   let entries;
   try {
     entries = await readdir(dir, { withFileTypes: true });
-  } catch (err) {
-    console.error('[register] Failed to read directory:', dir, err);
+  } catch {
     return acc;
   }
   const names = entries.map((e) => e.name);
@@ -38,12 +37,10 @@ async function collect(dir, acc = []) {
         if (mod.defaultMemberPermissions !== undefined) data.default_member_permissions = mod.defaultMemberPermissions;
         if (mod.dmPermission !== undefined) data.dm_permission = mod.dmPermission;
         acc.push(data);
-      } else {
-        console.warn(`[register] Skipping ${path.relative(baseDir, filePath)}: name/description missing`);
+        }
+      } catch {
+        // ignore
       }
-    } catch (err) {
-      console.warn(`[register] Failed to load ${filePath}:`, err);
-    }
   } else {
     for (const entry of entries.filter((e) => e.isDirectory())) {
       await collect(path.join(dir, entry.name), acc);
@@ -56,11 +53,11 @@ async function collect(dir, acc = []) {
   const commands = await collect(baseDir);
   const rest = new REST({ version: '10' }).setToken(token);
   try {
-    console.log(`[register] Replacing ${commands.length} guild command(s)`);
+    console.log(`Registering ${commands.length} command(s) to guild ${guildId}…`);
     await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
-    console.log('[register] Guild commands registered');
+    console.log('Guild commands registered.');
   } catch (err) {
-    console.error('[register] Failed to register guild commands:', err);
+    console.error(err);
     process.exit(1);
   }
 })();

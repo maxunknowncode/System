@@ -1,5 +1,6 @@
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { logger } from '../util/logger.js';
 
 export default async function eventLoader(client) {
   const baseDir = path.join(process.cwd(), 'src', 'events');
@@ -10,7 +11,7 @@ export default async function eventLoader(client) {
     try {
       entries = await readdir(dir, { withFileTypes: true });
     } catch (err) {
-      console.error('[events] Failed to read directory:', dir, err);
+      logger.error('[events] Failed to read directory:', dir, err);
       return;
     }
     const names = entries.map((e) => e.name);
@@ -25,7 +26,7 @@ export default async function eventLoader(client) {
       try {
         const mod = (await import(filePath)).default;
         if (!mod?.name || typeof mod.execute !== 'function') {
-          console.warn(`[events] Skipping ${path.relative(baseDir, filePath)}: name/execute missing`);
+          logger.warn(`[events] Skipping ${path.relative(baseDir, filePath)}: name/execute missing`);
           return;
         }
         if (mod.once) {
@@ -35,7 +36,7 @@ export default async function eventLoader(client) {
         }
         loaded++;
       } catch (err) {
-        console.warn(`[events] Failed to load ${filePath}:`, err);
+        logger.warn(`[events] Failed to load ${filePath}:`, err);
       }
     } else {
       for (const entry of entries.filter((e) => e.isDirectory())) {
@@ -45,5 +46,5 @@ export default async function eventLoader(client) {
   }
 
   await traverse(baseDir);
-  console.log(`[events] Bound ${loaded} event(s)`);
+  logger.debug(`[events] Bound ${loaded} event(s)`);
 }

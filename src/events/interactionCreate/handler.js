@@ -1,13 +1,13 @@
 import { EmbedBuilder } from 'discord.js';
 import { FOOTER } from '../../util/footer.js';
 import { VERIFY_BUTTON_ID, VERIFY_ROLE_ID } from '../../features/verify/config.js';
+import { logger } from '../../util/logger.js';
 
 export default {
   name: 'interactionCreate',
   once: false,
   async execute(interaction, client) {
     if (interaction.isButton() && interaction.customId === VERIFY_BUTTON_ID) {
-      console.log(`[verify] ${interaction.user.tag} clicked verify`);
       const member = interaction.member ?? await interaction.guild.members.fetch(interaction.user.id);
 
       if (member.roles.cache.has(VERIFY_ROLE_ID)) {
@@ -19,7 +19,7 @@ export default {
         try {
           await interaction.reply({ embeds: [embed], ephemeral: true });
         } catch (err) {
-          console.error('[interaction] Failed to send already verified reply:', err);
+          logger.warn('[interaction] Failed to send already verified reply:', err);
         }
         return;
       }
@@ -33,7 +33,7 @@ export default {
           .setFooter(FOOTER);
         await interaction.reply({ embeds: [embed], ephemeral: true });
       } catch (err) {
-        console.error('[verify] Failed to add role:', err);
+        logger.error('[verify] Failed to add role:', err);
         const embed = new EmbedBuilder()
           .setColor(0xFFA500)
           .setTitle('Verification')
@@ -42,7 +42,7 @@ export default {
         try {
           await interaction.reply({ embeds: [embed], ephemeral: true });
         } catch (sendErr) {
-          console.error('[interaction] Failed to send verify reply:', sendErr);
+          logger.warn('[interaction] Failed to send verify reply:', sendErr);
         }
       }
       return;
@@ -52,7 +52,7 @@ export default {
 
     const command = client.commands?.get(interaction.commandName);
     if (!command) {
-      console.warn(`[interaction] Unknown command: ${interaction.commandName}`);
+      logger.warn(`[interaction] Unknown command: ${interaction.commandName}`);
       const payload = { content: 'Unknown command.' };
       try {
         if (interaction.deferred || interaction.replied) {
@@ -61,7 +61,7 @@ export default {
           await interaction.reply({ ...payload, ephemeral: true });
         }
       } catch (err) {
-        console.error('[interaction] Failed to send unknown command reply:', err);
+        logger.warn('[interaction] Failed to send unknown command reply:', err);
       }
       return;
     }
@@ -71,7 +71,7 @@ export default {
         await command.execute(interaction, client);
       }
     } catch (error) {
-      console.error('[interaction] Command execution error:', error);
+      logger.error('[interaction] Command execution error:', error);
       const payload = { content: 'An error occurred while executing this command.' };
       try {
         if (interaction.deferred || interaction.replied) {
@@ -80,7 +80,7 @@ export default {
           await interaction.reply({ ...payload, ephemeral: true });
         }
       } catch (err) {
-        console.error('[interaction] Failed to send error reply:', err);
+        logger.warn('[interaction] Failed to send error reply:', err);
       }
     }
   },

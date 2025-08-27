@@ -1,5 +1,6 @@
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { logger } from '../util/logger.js';
 
 export default async function commandLoader(client) {
   const baseDir = path.join(process.cwd(), 'src', 'commands');
@@ -11,7 +12,7 @@ export default async function commandLoader(client) {
     try {
       entries = await readdir(dir, { withFileTypes: true });
     } catch (err) {
-      console.error('[commands] Failed to read directory:', dir, err);
+      logger.error('[commands] Failed to read directory:', dir, err);
       return;
     }
     const names = entries.map((e) => e.name);
@@ -29,10 +30,10 @@ export default async function commandLoader(client) {
           commands.set(mod.name, mod);
           loaded++;
         } else {
-          console.warn(`[commands] Skipping ${path.relative(baseDir, filePath)}: name/description missing`);
+          logger.warn(`[commands] Skipping ${path.relative(baseDir, filePath)}: name/description missing`);
         }
       } catch (err) {
-        console.warn(`[commands] Failed to load ${filePath}:`, err);
+        logger.warn(`[commands] Failed to load ${filePath}:`, err);
       }
     } else {
       for (const entry of entries.filter((e) => e.isDirectory())) {
@@ -43,5 +44,5 @@ export default async function commandLoader(client) {
 
   await traverse(baseDir);
   client.commands = commands;
-  console.log(`[commands] Loaded ${loaded} command(s)`);
+  logger.debug(`[commands] Loaded ${loaded} command(s)`);
 }
