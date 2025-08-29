@@ -5,11 +5,11 @@ export default {
   name: 'ready',
   once: true,
   async execute(client) {
-    logger.info(`[READY] Logged in as ${client.user.tag}`);
+    logger.info(`[bereit] Angemeldet als ${client.user?.tag}`);
     try {
       await ensureVerifyMessage(client);
     } catch (err) {
-      logger.error('[verify] Failed to ensure verify message:', err);
+      logger.error('[verifizierung] Fehler beim Sicherstellen der Nachricht:', err);
     }
   },
 };
