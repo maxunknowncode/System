@@ -69,7 +69,7 @@ async function collect(dir, acc = []) {
         Routes.applicationGuildCommands(clientId, guildId)
       );
     } catch (err) {
-      logger.error('[registrierung] Fehler beim Abrufen der aktuellen Guild-Commands:', err);
+        logger.error('[registrierung] Fehler:', err);
       process.exit(1);
     }
 
@@ -93,9 +93,9 @@ async function collect(dir, acc = []) {
       await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
         body: commands,
       });
-        logger.info(`[registrierung] Guild-Commands aktualisiert: gesamt ${commands.length} (hinzugefügt ${added}, entfernt ${removed}, geändert ${changed})`);
+        logger.info(`[registrierung] Aktualisiert: gesamt ${commands.length} (hinzugefügt ${added}, entfernt ${removed}, geändert ${changed})`);
     } catch (err) {
-      logger.error('[registrierung] Fehler bei der Registrierung:', err);
+      logger.error('[registrierung] Fehler:', err);
       process.exit(1);
     }
   })();

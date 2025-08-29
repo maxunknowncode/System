@@ -2,7 +2,7 @@ import { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'disc
 import { FOOTER } from '../../util/footer.js';
 import { VERIFY_BUTTON_ID, VERIFY_EMOJI } from './config.js';
 
-export function renderVerifyMessage() {
+export function buildVerifyEmbedAndComponents() {
   const embed = new EmbedBuilder()
     .setColor(0xFFD700)
     .setTitle('<a:verify:1355265228862001202> Verify — Verifizierung')
