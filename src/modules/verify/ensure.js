@@ -1,5 +1,5 @@
 import { VERIFY_CHANNEL_ID, VERIFY_MESSAGE_ID, VERIFY_BUTTON_ID } from './config.js';
-import { renderVerifyMessage } from './render.js';
+import { buildVerifyEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logger.js';
 
 export default async function ensureVerifyMessage(client) {
@@ -15,7 +15,7 @@ export default async function ensureVerifyMessage(client) {
     return;
   }
 
-  const payload = renderVerifyMessage();
+  const payload = buildVerifyEmbedAndComponents();
   let message = null;
 
     if (VERIFY_MESSAGE_ID) {

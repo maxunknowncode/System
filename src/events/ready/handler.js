@@ -1,4 +1,4 @@
-import ensureVerifyMessage from '../../features/verify/ensure.js';
+import ensureVerifyMessage from '../../modules/verify/ensure.js';
 import { logger } from '../../util/logger.js';
 
 export default {
