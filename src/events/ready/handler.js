@@ -1,3 +1,6 @@
+/*
+### Zweck: READY-Event – loggt Anmeldung und stößt die Verify-Nachricht-Prüfung an.
+*/
 import ensureVerifyMessage from '../../modules/verify/ensure.js';
 import { logger } from '../../util/logger.js';
 

@@ -1,3 +1,6 @@
+/*
+### Zweck: Handhabt Verify-Button-Klicks und führt Chat-Input-Commands aus.
+*/
 import { VERIFY_BUTTON_ID } from '../../modules/verify/config.js';
 import { handleVerifyButton } from '../../modules/verify/interactions.js';
 import { logger } from '../../util/logger.js';

@@ -1,3 +1,6 @@
+/*
+### Zweck: Lädt rekursiv Event-Handler (handler.js|index.js) und bindet sie am Client (on/once).
+*/
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { logger } from '../util/logger.js';

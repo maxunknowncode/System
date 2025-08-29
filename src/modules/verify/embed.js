@@ -1,3 +1,6 @@
+/*
+### Zweck: Baut die zweisprachige Verify-Embed und den grünen Verify-Button.
+*/
 import { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
 import { FOOTER } from '../../util/footer.js';
 import { VERIFY_BUTTON_ID, VERIFY_EMOJI } from './config.js';
