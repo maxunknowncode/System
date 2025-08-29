@@ -12,7 +12,7 @@ export default async function commandLoader(client) {
     try {
       entries = await readdir(dir, { withFileTypes: true });
     } catch (err) {
-      logger.error('[commands] Failed to read directory:', dir, err);
+      logger.error('[befehle] Verzeichnis konnte nicht gelesen werden:', dir, err);
       return;
     }
     const names = entries.map((e) => e.name);
@@ -29,12 +29,12 @@ export default async function commandLoader(client) {
         if (typeof mod?.name === 'string' && typeof mod?.description === 'string') {
           commands.set(mod.name, mod);
           loaded++;
-        } else {
-          logger.warn(`[commands] Skipping ${path.relative(baseDir, filePath)}: name/description missing`);
+          } else {
+            logger.warn(`[befehle] Überspringe ${path.relative(baseDir, filePath)}: name/description fehlt`);
+          }
+        } catch (err) {
+          logger.warn(`[befehle] Laden von ${filePath} fehlgeschlagen:`, err);
         }
-      } catch (err) {
-        logger.warn(`[commands] Failed to load ${filePath}:`, err);
-      }
     } else {
       for (const entry of entries.filter((e) => e.isDirectory())) {
         await traverse(path.join(dir, entry.name));
@@ -44,5 +44,5 @@ export default async function commandLoader(client) {
 
   await traverse(baseDir);
   client.commands = commands;
-  logger.info(`[commands] Loaded ${loaded} command(s)`);
+  logger.info(`[befehle] Geladen: ${commands.size} Befehl(e)`);
 }

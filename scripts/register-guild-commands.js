@@ -8,7 +8,7 @@ const clientId = process.env.CLIENT_ID;
 const guildId = process.env.GUILD_ID;
 
 if (!token || !clientId || !guildId) {
-  logger.error('[register] Missing TOKEN/CLIENT_ID/GUILD_ID');
+  logger.error('[registrierung] TOKEN/CLIENT_ID/GUILD_ID fehlen');
   process.exit(1);
 }
 
@@ -69,7 +69,7 @@ async function collect(dir, acc = []) {
         Routes.applicationGuildCommands(clientId, guildId)
       );
     } catch (err) {
-      logger.error('[register] Failed to fetch current guild commands:', err);
+      logger.error('[registrierung] Fehler beim Abrufen der aktuellen Guild-Commands:', err);
       process.exit(1);
     }
 
@@ -87,15 +87,15 @@ async function collect(dir, acc = []) {
     }
 
     logger.info(
-      `[register] Registering ${commands.length} command(s) to guild ${guildId}…`
+      `[registrierung] Registriere ${commands.length} Befehl(e) für Guild ${guildId}…`
     );
     try {
       await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
         body: commands,
       });
-        logger.info(`[register] Guild commands registered: total ${commands.length} (added ${added}, removed ${removed}, changed ${changed})`);
+        logger.info(`[registrierung] Guild-Commands aktualisiert: gesamt ${commands.length} (hinzugefügt ${added}, entfernt ${removed}, geändert ${changed})`);
     } catch (err) {
-      logger.error('[register] Failed to register guild commands:', err);
+      logger.error('[registrierung] Fehler bei der Registrierung:', err);
       process.exit(1);
     }
   })();

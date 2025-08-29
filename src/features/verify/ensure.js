@@ -3,52 +3,55 @@ import { renderVerifyMessage } from './render.js';
 import { logger } from '../../util/logger.js';
 
 export default async function ensureVerifyMessage(client) {
-  const channel = await client.channels.fetch(VERIFY_CHANNEL_ID).catch((err) => {
-    logger.error('[verify] Failed to fetch verify channel:', err);
-    return null;
-  });
+  let channel;
+  try {
+    channel = await client.channels.fetch(VERIFY_CHANNEL_ID);
+  } catch (err) {
+    logger.error('[verifizierung] Fehler beim Sicherstellen der Nachricht:', err);
+    return;
+  }
   if (!channel || !channel.isTextBased()) {
-    logger.warn('[verify] Verify channel not found or not text-based');
+    logger.warn('[verifizierung] Kanal nicht gefunden oder nicht textbasiert: ' + VERIFY_CHANNEL_ID);
     return;
   }
 
   const payload = renderVerifyMessage();
   let message = null;
 
-  if (VERIFY_MESSAGE_ID) {
-    try {
-      message = await channel.messages.fetch(VERIFY_MESSAGE_ID);
-    } catch {
-      // ignore
+    if (VERIFY_MESSAGE_ID) {
+      try {
+        message = await channel.messages.fetch(VERIFY_MESSAGE_ID);
+      } catch {
+        // ignore
+      }
     }
-  }
 
-  if (!message) {
-    try {
-      const messages = await channel.messages.fetch({ limit: 10 });
-      message = messages.find((m) =>
-        m.components.some((row) =>
-          row.components.some((c) => c.customId === VERIFY_BUTTON_ID)
-        )
-      );
-    } catch (err) {
-      logger.error('[verify] Failed to search verify message:', err);
+    if (!message) {
+      try {
+        const messages = await channel.messages.fetch({ limit: 10 });
+        message = messages.find((m) =>
+          m.components.some((row) =>
+            row.components.some((c) => c.customId === VERIFY_BUTTON_ID)
+          )
+        );
+      } catch (err) {
+        logger.error('[verifizierung] Fehler beim Sicherstellen der Nachricht:', err);
+      }
     }
-  }
 
     if (message) {
       try {
         await message.edit(payload);
-        logger.info('[verify] message updated');
+        logger.info('[verifizierung] Nachricht aktualisiert');
       } catch (err) {
-        logger.error('[verify] Failed to edit verify message:', err);
+        logger.error('[verifizierung] Fehler beim Sicherstellen der Nachricht:', err);
       }
     } else {
       try {
         await channel.send(payload);
-        logger.info('[verify] message created');
+        logger.info('[verifizierung] Nachricht erstellt');
       } catch (err) {
-        logger.error('[verify] Failed to send verify message:', err);
+        logger.error('[verifizierung] Fehler beim Sicherstellen der Nachricht:', err);
       }
     }
-  }
+}

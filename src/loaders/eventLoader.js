@@ -11,7 +11,7 @@ export default async function eventLoader(client) {
     try {
       entries = await readdir(dir, { withFileTypes: true });
     } catch (err) {
-      logger.error('[events] Failed to read directory:', dir, err);
+      logger.error('[ereignisse] Verzeichnis konnte nicht gelesen werden:', dir, err);
       return;
     }
     const names = entries.map((e) => e.name);
@@ -23,21 +23,21 @@ export default async function eventLoader(client) {
 
     if (file) {
       const filePath = path.join(dir, file);
-      try {
-        const mod = (await import(filePath)).default;
-        if (!mod?.name || typeof mod.execute !== 'function') {
-          logger.warn(`[events] Skipping ${path.relative(baseDir, filePath)}: name/execute missing`);
-          return;
+        try {
+          const mod = (await import(filePath)).default;
+          if (!mod?.name || typeof mod.execute !== 'function') {
+            logger.warn(`[ereignisse] Überspringe ${path.relative(baseDir, filePath)}: name/execute fehlt`);
+            return;
+          }
+          if (mod.once) {
+            client.once(mod.name, (...args) => mod.execute(...args, client));
+          } else {
+            client.on(mod.name, (...args) => mod.execute(...args, client));
+          }
+          loaded++;
+        } catch (err) {
+          logger.warn(`[ereignisse] Laden von ${filePath} fehlgeschlagen:`, err);
         }
-        if (mod.once) {
-          client.once(mod.name, (...args) => mod.execute(...args, client));
-        } else {
-          client.on(mod.name, (...args) => mod.execute(...args, client));
-        }
-        loaded++;
-      } catch (err) {
-        logger.warn(`[events] Failed to load ${filePath}:`, err);
-      }
     } else {
       for (const entry of entries.filter((e) => e.isDirectory())) {
         await traverse(path.join(dir, entry.name));
@@ -46,5 +46,5 @@ export default async function eventLoader(client) {
   }
 
   await traverse(baseDir);
-  logger.info(`[events] Bound ${loaded} event(s)`);
+  logger.info(`[ereignisse] Gebunden: ${loaded} Ereignis(se)`);
 }

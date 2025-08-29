@@ -4,7 +4,7 @@ import eventLoader from './loaders/eventLoader.js';
 import { logger } from './util/logger.js';
 
 if (!process.env.TOKEN) {
-  logger.error('[ENV] TOKEN missing');
+  logger.error('[start] TOKEN fehlt – Start abgebrochen.');
   process.exit(1);
 }
 
@@ -13,21 +13,22 @@ const client = new Client({
 }); // SERVER MEMBERS INTENT im Dev-Portal aktivieren
 
 const shutdown = (code = 0) => {
-  logger.info('[shutdown] Shutting down');
+  logger.info('[beenden] Fahre herunter…');
   client.destroy().finally(() => process.exit(code));
 };
 
 process.on('SIGINT', () => shutdown());
 process.on('SIGTERM', () => shutdown());
 process.on('unhandledRejection', (err) => {
-  logger.error('[crash] Unhandled rejection:', err);
+  logger.error('[fehler] Unbehandelte Ausnahme:', err);
   shutdown(1);
 });
 process.on('uncaughtException', (err) => {
-  logger.error('[crash] Uncaught exception:', err);
+  logger.error('[fehler] Unbehandelte Ausnahme:', err);
   shutdown(1);
 });
-logger.debug('[startup] Loading modules');
+
+logger.info('[start] Starte…');
 await commandLoader(client);
 await eventLoader(client);
 
