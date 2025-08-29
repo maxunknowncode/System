@@ -1,3 +1,6 @@
+/*
+### Zweck: Stellt sicher, dass genau eine Verify-Nachricht existiert (aktualisieren oder neu senden).
+*/
 import { VERIFY_CHANNEL_ID, VERIFY_MESSAGE_ID, VERIFY_BUTTON_ID } from './config.js';
 import { buildVerifyEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logger.js';

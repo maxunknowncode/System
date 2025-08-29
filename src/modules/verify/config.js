@@ -1,3 +1,6 @@
+/*
+### Zweck: Hält nur IDs/Konstanten für das Verify-Feature (Channel, Rolle, Button, Emoji, MessageID).
+*/
 export const VERIFY_CHANNEL_ID = '1354914940611330239';
 export const VERIFY_ROLE_ID = '1354909911691038862';
 export const VERIFY_MESSAGE_ID = '1409745967883747491';

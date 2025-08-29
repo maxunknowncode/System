@@ -1,3 +1,6 @@
+/*
+### Zweck: Einfacher Logger mit LOG_LEVEL zur einheitlichen Konsolen-Ausgabe.
+*/
 const levels = ['debug', 'info', 'warn', 'error'];
 const current = process.env.LOG_LEVEL?.toLowerCase() || 'info';
 const currentIndex = levels.indexOf(current);

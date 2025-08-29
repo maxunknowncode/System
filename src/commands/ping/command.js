@@ -1,3 +1,6 @@
+/*
+### Zweck: Slash-Command /ping – zeigt Ping, Roundtrip, Uptime und Serverzeit als Embed.
+*/
 import { EmbedBuilder } from 'discord.js';
 import { FOOTER } from '../../util/footer.js';
 

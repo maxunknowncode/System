@@ -1,3 +1,6 @@
+/*
+### Zweck: Einstiegspunkt – erstellt den Client, lädt Commands/Events und loggt den Bot ein.
+*/
 import { Client, GatewayIntentBits } from 'discord.js';
 import commandLoader from './loaders/commandLoader.js';
 import eventLoader from './loaders/eventLoader.js';

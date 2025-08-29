@@ -1,3 +1,6 @@
+/*
+### Zweck: Registriert alle Slash-Commands der Guild und loggt nur Summen (gesamt/hinzugefügt/entfernt/geändert).
+*/
 import { REST, Routes } from 'discord.js';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';

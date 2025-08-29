@@ -1,3 +1,6 @@
+/*
+### Zweck: Vergibt bei Verify-Klick die Rolle und sendet ephemere EN-Bestätigungen (success/already/error).
+*/
 import { EmbedBuilder } from 'discord.js';
 import { VERIFY_ROLE_ID } from './config.js';
 import { FOOTER } from '../../util/footer.js';
