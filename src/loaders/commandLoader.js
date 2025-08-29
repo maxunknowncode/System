@@ -44,5 +44,5 @@ export default async function commandLoader(client) {
 
   await traverse(baseDir);
   client.commands = commands;
-  logger.debug(`[commands] Loaded ${loaded} command(s)`);
+  logger.info(`[commands] Loaded ${loaded} command(s)`);
 }

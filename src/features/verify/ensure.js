@@ -36,17 +36,19 @@ export default async function ensureVerifyMessage(client) {
     }
   }
 
-  if (message) {
-    try {
-      await message.edit(payload);
-    } catch (err) {
-      logger.error('[verify] Failed to edit verify message:', err);
-    }
-  } else {
-    try {
-      await channel.send(payload);
-    } catch (err) {
-      logger.error('[verify] Failed to send verify message:', err);
+    if (message) {
+      try {
+        await message.edit(payload);
+        logger.info('[verify] message updated');
+      } catch (err) {
+        logger.error('[verify] Failed to edit verify message:', err);
+      }
+    } else {
+      try {
+        await channel.send(payload);
+        logger.info('[verify] message created');
+      } catch (err) {
+        logger.error('[verify] Failed to send verify message:', err);
+      }
     }
   }
-}
