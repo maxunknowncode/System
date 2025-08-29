@@ -8,7 +8,9 @@ if (!process.env.TOKEN) {
   process.exit(1);
 }
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+}); // SERVER MEMBERS INTENT im Dev-Portal aktivieren
 
 const shutdown = (code = 0) => {
   logger.info('[shutdown] Shutting down');

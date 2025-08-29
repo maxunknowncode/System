@@ -46,5 +46,5 @@ export default async function eventLoader(client) {
   }
 
   await traverse(baseDir);
-  logger.debug(`[events] Bound ${loaded} event(s)`);
+  logger.info(`[events] Bound ${loaded} event(s)`);
 }

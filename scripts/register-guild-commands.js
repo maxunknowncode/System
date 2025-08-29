@@ -1,13 +1,14 @@
 import { REST, Routes } from 'discord.js';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { logger } from '../src/util/logger.js';
 
 const token = process.env.TOKEN;
 const clientId = process.env.CLIENT_ID;
 const guildId = process.env.GUILD_ID;
 
 if (!token || !clientId || !guildId) {
-  console.error('[register] Missing TOKEN/CLIENT_ID/GUILD_ID');
+  logger.error('[register] Missing TOKEN/CLIENT_ID/GUILD_ID');
   process.exit(1);
 }
 
@@ -49,15 +50,52 @@ async function collect(dir, acc = []) {
   return acc;
 }
 
-(async () => {
-  const commands = await collect(baseDir);
-  const rest = new REST({ version: '10' }).setToken(token);
-  try {
-    console.log(`Registering ${commands.length} command(s) to guild ${guildId}…`);
-    await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
-    console.log('Guild commands registered.');
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  }
-})();
+  (async () => {
+    const commands = await collect(baseDir);
+    const rest = new REST({ version: '10' }).setToken(token);
+
+    const normalize = (cmd) => {
+      const obj = { name: cmd.name, description: cmd.description };
+      if (cmd.options) obj.options = cmd.options;
+      if (cmd.default_member_permissions !== undefined)
+        obj.default_member_permissions = cmd.default_member_permissions;
+      if (cmd.dm_permission !== undefined) obj.dm_permission = cmd.dm_permission;
+      return JSON.stringify(obj);
+    };
+
+    let existing = [];
+    try {
+      existing = await rest.get(
+        Routes.applicationGuildCommands(clientId, guildId)
+      );
+    } catch (err) {
+      logger.error('[register] Failed to fetch current guild commands:', err);
+      process.exit(1);
+    }
+
+    const oldMap = new Map(existing.map((c) => [c.name, normalize(c)]));
+    const newMap = new Map(commands.map((c) => [c.name, normalize(c)]));
+    let added = 0;
+    let removed = 0;
+    let changed = 0;
+    for (const [name, hash] of newMap) {
+      if (!oldMap.has(name)) added++;
+      else if (oldMap.get(name) !== hash) changed++;
+    }
+    for (const name of oldMap.keys()) {
+      if (!newMap.has(name)) removed++;
+    }
+
+    logger.info(
+      `[register] Registering ${commands.length} command(s) to guild ${guildId}…`
+    );
+    try {
+      await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+        body: commands,
+      });
+        logger.info(`[register] Guild commands registered: total ${commands.length} (added ${added}, removed ${removed}, changed ${changed})`);
+    } catch (err) {
+      logger.error('[register] Failed to register guild commands:', err);
+      process.exit(1);
+    }
+  })();
