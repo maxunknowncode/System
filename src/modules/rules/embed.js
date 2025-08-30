@@ -119,10 +119,14 @@ export function buildRulesEmbedAndComponents(lang = "en") {
   const isDe = lang === "de";
   const fields = isDe ? FIELDS_DE : FIELDS_EN;
   const title = isDe ? "📜 Regeln — Bitte lesen" : "📜 Rules — Please Read";
+  const description = isDe
+    ? "🛡️ *Offizielle Server-Regeln von **The Core Team** — alle müssen sich daran halten.*"
+    : "🛡️ *Official server rules by **The Core Team** — everyone must follow them.*";
 
   const embed = new EmbedBuilder()
     .setColor(0xffd700)
     .setTitle(title)
+    .setDescription(description)
     .setFields(fields)
     .setFooter(FOOTER);
 
