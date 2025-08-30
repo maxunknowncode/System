@@ -1,17 +1,25 @@
 /*
-### Zweck: Handhabt Verify-Button-Klicks und führt Chat-Input-Commands aus.
+### Zweck: Handhabt Regeln- und Verify-Buttons sowie Chat-Input-Commands.
 */
 import { VERIFY_BUTTON_ID } from '../../modules/verify/config.js';
 import { handleVerifyButton } from '../../modules/verify/interactions.js';
+import { RULES_BUTTON_ID_EN, RULES_BUTTON_ID_DE } from '../../modules/rules/config.js';
+import { handleRulesButtons } from '../../modules/rules/interactions.js';
 import { logger } from '../../util/logger.js';
 
 export default {
   name: 'interactionCreate',
   once: false,
   async execute(interaction, client) {
-    if (interaction.isButton() && interaction.customId === VERIFY_BUTTON_ID) {
-      await handleVerifyButton(interaction, client);
-      return;
+    if (interaction.isButton()) {
+      if (interaction.customId === RULES_BUTTON_ID_EN || interaction.customId === RULES_BUTTON_ID_DE) {
+        await handleRulesButtons(interaction, client);
+        return;
+      }
+      if (interaction.customId === VERIFY_BUTTON_ID) {
+        await handleVerifyButton(interaction, client);
+        return;
+      }
     }
 
     if (!interaction.isChatInputCommand()) return;
