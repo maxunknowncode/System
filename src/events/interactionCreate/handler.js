@@ -1,10 +1,12 @@
 /*
-### Zweck: Handhabt Regeln- und Verify-Buttons sowie Chat-Input-Commands.
+### Zweck: Handhabt Regeln-, Verify- und Teamlisten-Buttons sowie Chat-Input-Commands.
 */
 import { VERIFY_BUTTON_ID } from '../../modules/verify/config.js';
 import { handleVerifyButton } from '../../modules/verify/interactions.js';
 import { RULES_BUTTON_ID_EN, RULES_BUTTON_ID_DE } from '../../modules/rules/config.js';
 import { handleRulesButtons } from '../../modules/rules/interactions.js';
+import { TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE } from '../../modules/teamlist/config.js';
+import { handleTeamButtons } from '../../modules/teamlist/interactions.js';
 import { logger } from '../../util/logger.js';
 
 export default {
@@ -12,6 +14,10 @@ export default {
   once: false,
   async execute(interaction, client) {
     if (interaction.isButton()) {
+      if (interaction.customId === TEAM_BUTTON_ID_EN || interaction.customId === TEAM_BUTTON_ID_DE) {
+        await handleTeamButtons(interaction, client);
+        return;
+      }
       if (interaction.customId === RULES_BUTTON_ID_EN || interaction.customId === RULES_BUTTON_ID_DE) {
         await handleRulesButtons(interaction, client);
         return;

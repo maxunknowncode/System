@@ -1,8 +1,9 @@
 /*
-### Zweck: READY-Event – loggt Anmeldung und stößt die Verify- und Regelnachrichten-Prüfung an.
+### Zweck: READY-Event – loggt Anmeldung und stößt die Verify-, Regeln- und Teamlisten-Nachrichten-Prüfung an.
 */
 import ensureVerifyMessage from '../../modules/verify/ensure.js';
 import { ensureRulesMessage } from '../../modules/rules/ensure.js';
+import { ensureTeamMessage } from '../../modules/teamlist/ensure.js';
 import { logger } from '../../util/logger.js';
 
 export default {
@@ -19,6 +20,11 @@ export default {
       await ensureRulesMessage(client);
     } catch (err) {
       logger.error('[regeln] Fehler beim Sicherstellen der Nachricht:', err);
+    }
+    try {
+      await ensureTeamMessage(client);
+    } catch (err) {
+      logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);
     }
   },
 };
