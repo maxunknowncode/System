@@ -1,7 +1,7 @@
 /*
 ### Zweck: Stellt sicher, dass genau eine Teamlisten-Nachricht existiert.
 */
-import { TEAM_CHANNEL_ID, TEAM_MESSAGE_ID, TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE } from './config.js';
+import { TEAM_CHANNEL_ID, TEAM_MESSAGE_ID, TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE, TEAM_ROLES } from './config.js';
 import { buildTeamEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logger.js';
 
@@ -50,16 +50,18 @@ export async function ensureTeamMessage(client) {
     }
   }
 
+  const allowedMentions = { parse: [], roles: TEAM_ROLES.map(r => r.id), users: [] };
+
   if (message) {
     try {
-      await message.edit(payload);
+      await message.edit({ ...payload, allowedMentions });
       logger.info('[team] Nachricht aktualisiert');
     } catch (err) {
       logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);
     }
   } else {
     try {
-      await channel.send(payload);
+      await channel.send({ ...payload, allowedMentions });
       logger.info('[team] Nachricht erstellt');
     } catch (err) {
       logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);

@@ -40,10 +40,11 @@ export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
 
   for (const role of TEAM_ROLES) {
     const desc = isDe ? role.descDe : role.descEn;
+    const label = isDe ? role.labelDe : role.labelEn;
     const mentions = await getRoleMemberMentions(guild, role.id);
     if (mentions.length === 0) continue;
-    const value = `\`${desc}\`\n${mentions.join('\n')}`;
-    embed.addFields({ name: `<@&${role.id}>`, value, inline: false });
+    const value = `<@&${role.id}>\n\`${desc}\`\n${mentions.join('\n')}`;
+    embed.addFields({ name: label, value, inline: false });
   }
 
   const enButton = new ButtonBuilder()
