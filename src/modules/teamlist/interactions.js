@@ -1,16 +1,17 @@
 /*
 ### Zweck: Handhabt Sprachwechsel-Buttons der Teamliste und Timeout-Rücksetzung.
 */
-import { TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE, TEAM_RESET_MS } from './config.js';
+import { TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE, TEAM_RESET_MS, TEAM_ROLES } from './config.js';
 import { buildTeamEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logger.js';
 
 const timeouts = new Map();
 
 export async function handleTeamButtons(interaction, client) {
+  const allowedMentions = { parse: [], roles: TEAM_ROLES.map(r => r.id), users: [] };
   const lang = interaction.customId === TEAM_BUTTON_ID_DE ? 'de' : 'en';
   try {
-    await interaction.update(await buildTeamEmbedAndComponents(lang, interaction.guild));
+    await interaction.update({ ...(await buildTeamEmbedAndComponents(lang, interaction.guild)), allowedMentions });
     logger.info(`[team] Sprache → ${lang.toUpperCase()}`);
   } catch (err) {
     logger.error('[team] Fehler beim Umschalten der Sprache:', err);
@@ -24,7 +25,7 @@ export async function handleTeamButtons(interaction, client) {
   const timeout = setTimeout(async () => {
     try {
       const payload = await buildTeamEmbedAndComponents('en', interaction.guild);
-      await interaction.message.edit(payload);
+      await interaction.message.edit({ ...payload, allowedMentions });
       logger.info('[team] Sprache → EN (Timeout)');
     } catch (err) {
       logger.error('[team] Fehler beim Zurücksetzen der Sprache:', err);
