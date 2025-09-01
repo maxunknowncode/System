@@ -1,7 +1,7 @@
 /*
 ### Zweck: Hält IDs/Konstanten für die Teamliste.
 */
-export const TEAM_CHANNEL_ID = "";
+export const TEAM_CHANNEL_ID = "1364580010316529755";
 export const TEAM_MESSAGE_ID = "";
 export const TEAM_BUTTON_ID_EN = "team_lang_en";
 export const TEAM_BUTTON_ID_DE = "team_lang_de";
