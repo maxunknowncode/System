@@ -12,7 +12,11 @@ if (!process.env.TOKEN) {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages, // Kein Message-Content-Intent nötig
+  ],
 }); // SERVER MEMBERS INTENT im Dev-Portal aktivieren
 
 const shutdown = (code = 0) => {
