@@ -1,8 +1,8 @@
 /*
 ### Zweck: Handhabt Regeln-, Verify- und Teamlisten-Buttons sowie Chat-Input-Commands.
 */
-import { VERIFY_BUTTON_ID } from '../../modules/verify/config.js';
-import { handleVerifyButton } from '../../modules/verify/interactions.js';
+import { VERIFY_BUTTON_ID, VERIFY_LANG_EN_ID, VERIFY_LANG_DE_ID } from '../../modules/verify/config.js';
+import { handleVerifyInteractions } from '../../modules/verify/interactions.js';
 import { RULES_BUTTON_ID_EN, RULES_BUTTON_ID_DE } from '../../modules/rules/config.js';
 import { handleRulesButtons } from '../../modules/rules/interactions.js';
 import { TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE } from '../../modules/teamlist/config.js';
@@ -14,16 +14,20 @@ export default {
   once: false,
   async execute(interaction, client) {
     if (interaction.isButton()) {
+      if (
+        interaction.customId === VERIFY_BUTTON_ID ||
+        interaction.customId === VERIFY_LANG_EN_ID ||
+        interaction.customId === VERIFY_LANG_DE_ID
+      ) {
+        await handleVerifyInteractions(interaction, client);
+        return;
+      }
       if (interaction.customId === TEAM_BUTTON_ID_EN || interaction.customId === TEAM_BUTTON_ID_DE) {
         await handleTeamButtons(interaction, client);
         return;
       }
       if (interaction.customId === RULES_BUTTON_ID_EN || interaction.customId === RULES_BUTTON_ID_DE) {
         await handleRulesButtons(interaction, client);
-        return;
-      }
-      if (interaction.customId === VERIFY_BUTTON_ID) {
-        await handleVerifyButton(interaction, client);
         return;
       }
     }
