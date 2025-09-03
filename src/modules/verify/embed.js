@@ -13,12 +13,15 @@ import {
 
 export function buildVerifyEmbedAndComponents(lang = VERIFY_DEFAULT_LANG) {
   const isDe = lang === 'de';
+
   const title = isDe
     ? '✅ Verifizierung — Zugriff auf den Server'
     : '✅ Verify — Access the Server';
+
   const description = isDe
     ? '🛡️ *Offizielle Verifizierung von **The Core Team** — bitte bestätige, dass du kein Bot bist.*'
     : '🛡️ *Official verification by **The Core Team** — please confirm you’re not a bot.*';
+
   const fields = isDe
     ? [
         {
@@ -48,6 +51,7 @@ export function buildVerifyEmbedAndComponents(lang = VERIFY_DEFAULT_LANG) {
     .addFields(fields)
     .setFooter(FOOTER);
 
+  // ✅ Verify-Button (grün) bleibt mit Label
   const verifyButton = new ButtonBuilder()
     .setCustomId(VERIFY_BUTTON_ID)
     .setLabel('Verify')
@@ -56,15 +60,16 @@ export function buildVerifyEmbedAndComponents(lang = VERIFY_DEFAULT_LANG) {
 
   const row1 = new ActionRowBuilder().addComponents(verifyButton);
 
+  // 🌐 Sprach-Buttons: NUR Flaggen (keine Text-Labels)
   const langEnButton = new ButtonBuilder()
     .setCustomId(VERIFY_LANG_EN_ID)
-    .setLabel('🇺🇸 English')
-    .setStyle(ButtonStyle.Primary);
+    .setStyle(ButtonStyle.Primary)
+    .setEmoji('🇺🇸');
 
   const langDeButton = new ButtonBuilder()
     .setCustomId(VERIFY_LANG_DE_ID)
-    .setLabel('🇩🇪 Deutsch')
-    .setStyle(ButtonStyle.Secondary);
+    .setStyle(ButtonStyle.Secondary)
+    .setEmoji('🇩🇪');
 
   const row2 = new ActionRowBuilder().addComponents(langEnButton, langDeButton);
 
