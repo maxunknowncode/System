@@ -2,6 +2,7 @@
 ### Zweck: Hält IDs/Konstanten für das Verify-Feature (Channel, Rolle, Buttons, Sprache).
 */
 export const VERIFY_CHANNEL_ID = '1354914940611330239';
+export const VERIFY_MESSAGE_ID = 'PASTE_EXISTING_MESSAGE_ID_HERE'; // Wenn leer (""), wird beim Start eine neue Nachricht erstellt.
 export const VERIFY_ROLE_ID = '1354909911691038862';
 export const VERIFY_BUTTON_ID = 'verify_action';
 export const VERIFY_LANG_EN_ID = 'verify_lang_en';
