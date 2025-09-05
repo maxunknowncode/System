@@ -35,7 +35,7 @@ export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
 
   const title = isDe ? '💠 Das Serverteam 💠' : '💠 The Server Team 💠';
 
-  // Gewünschte neue Beschreibungen: kursiv + mit ">" als Quote
+  // Beschreibungen: beide Varianten als Quote ("> ") und kursiv (*...*)
   const description = isDe
     ? '> *Sehr geehrte Community, hier findet ihr unsere Teamliste. Hier könnt ihr entnehmen, wer zum Serverteam gehört und wer nicht. Dies hilft, um immer zu wissen, ob man den Personen trauen kann.*'
     : '> *Official Staff List by **The Core Team** — These are the people you can rely on.*';
