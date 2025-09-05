@@ -18,53 +18,47 @@ export async function ensureTeamMessage(client) {
     return;
   }
 
-  let payload;
-  try {
-    payload = await buildTeamEmbedAndComponents('en', channel.guild);
-  } catch (err) {
-    logger.error('[team] Fehler beim Erstellen der Embed:', err);
-    return;
-  }
+  const allowedMentions = { parse: [], roles: TEAM_ROLES.map(r => r.id) };
+
   let message = null;
-
-  if (TEAM_MESSAGE_ID) {
-    try {
-      message = await channel.messages.fetch(TEAM_MESSAGE_ID);
-    } catch {
-      // ignore
-    }
-  }
-
-  if (!message) {
-    try {
-      const messages = await channel.messages.fetch({ limit: 10 });
-      message = messages.find((m) =>
-        m.author?.id === client.user?.id &&
-        (m.embeds.some((e) => e.title === '💠 The Server Team 💠' || e.title === '💠 Das Serverteam 💠') ||
-          m.components.some((row) =>
-            row.components.some((c) => c.customId === TEAM_BUTTON_ID_EN || c.customId === TEAM_BUTTON_ID_DE)
-          ))
-      );
-    } catch (err) {
-      logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);
-    }
-  }
-
-  const allowedMentions = { parse: [], roles: TEAM_ROLES.map(r => r.id), users: [] };
+  try {
+    message = await channel.messages.fetch(TEAM_MESSAGE_ID);
+  } catch {}
 
   if (message) {
     try {
-      await message.edit({ ...payload, allowedMentions });
+      const { embeds, components } = await buildTeamEmbedAndComponents('en', channel.guild);
+      await message.edit({ embeds, components, allowedMentions });
       logger.info('[team] Nachricht aktualisiert');
     } catch (err) {
       logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);
     }
-  } else {
-    try {
-      await channel.send({ ...payload, allowedMentions });
+    return;
+  }
+
+  try {
+    const messages = await channel.messages.fetch({ limit: 10 });
+    message = messages.find((m) =>
+      m.author?.id === client.user?.id &&
+      (m.embeds.some((e) => e.title === '💠 The Server Team 💠' || e.title === '💠 Das Serverteam 💠') ||
+        m.components.some((row) =>
+          row.components.some((c) => c.customId === TEAM_BUTTON_ID_EN || c.customId === TEAM_BUTTON_ID_DE)
+        ))
+    );
+  } catch (err) {
+    logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);
+  }
+
+  try {
+    const { embeds, components } = await buildTeamEmbedAndComponents('en', channel.guild);
+    if (message) {
+      await message.edit({ embeds, components, allowedMentions });
+      logger.info('[team] Nachricht aktualisiert');
+    } else {
+      await channel.send({ embeds, components, allowedMentions });
       logger.info('[team] Nachricht erstellt');
-    } catch (err) {
-      logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);
     }
+  } catch (err) {
+    logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);
   }
 }
