@@ -1,3 +1,6 @@
+alles klar—hier ist die Datei **komplett neu**, mit der **englischen Beschreibung angepasst** (gleicher Inhalt wie Deutsch), jeweils **als Quote `>` und kursiv**.
+
+```js
 /*
 ### Zweck: Baut die Teamlisten-Embed und Sprach-Buttons.
 */
@@ -37,8 +40,8 @@ export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
 
   // Beschreibungen: beide Varianten als Quote ("> ") und kursiv (*...*)
   const description = isDe
-    ? '> *Sehr geehrte Community, hier findet ihr unsere Teamliste. Hier könnt ihr entnehmen, wer zum Serverteam gehört und wer nicht. Dies hilft, um immer zu wissen, ob man den Personen trauen kann.*'
-    : '> *Official Staff List by **The Core Team** — These are the people you can rely on.*';
+    ? '> *Sehr geehrte Community, hier findet ihr unsere Teamliste. Hier könnt ihr sehen, wer zum Serverteam gehört. Dies hilft, um immer zu wissen, ob man den Personen trauen kann.*'
+    : '> *Dear community, here you can find our team list. Here you can see who is part of the server team. This helps you always know whom you can trust.*';
 
   const embed = new EmbedBuilder()
     .setColor(0xFFD700)
@@ -77,3 +80,6 @@ export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
 
   return { embeds: [embed], components: [row] };
 }
+```
+
+so passt’s: deutsch & englisch sagen jetzt inhaltlich dasselbe, genau im Stil den du wolltest.
