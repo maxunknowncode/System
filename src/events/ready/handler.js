@@ -5,6 +5,7 @@ import ensureVerifyMessage from '../../modules/verify/ensure.js';
 import { ensureRulesMessage } from '../../modules/rules/ensure.js';
 import { ensureTeamMessage } from '../../modules/teamlist/ensure.js';
 import { startVoiceStats } from '../../modules/voiceStats/updater.js';
+import { ensureTicketPanel } from '../../modules/tickets/ensure.js';
 import { logger } from '../../util/logger.js';
 
 export default {
@@ -32,5 +33,8 @@ export default {
     } catch (err) {
       logger.error('[voicestats] Fehler beim Starten:', err);
     }
+    try {
+      await ensureTicketPanel(client);
+    } catch {}
   },
 };
