@@ -8,11 +8,30 @@ import { handleRulesButtons } from '../../modules/rules/interactions.js';
 import { TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE } from '../../modules/teamlist/config.js';
 import { handleTeamButtons } from '../../modules/teamlist/interactions.js';
 import { logger } from '../../util/logger.js';
+import {
+  MENU_CUSTOM_ID,
+  BTN_CLAIM_ID,
+  BTN_CLOSE_ID,
+  BTN_DELETE_ID,
+  BTN_ACK_PRIVATE_ID,
+} from '../../modules/tickets/config.js';
+import { handleTicketInteractions } from '../../modules/tickets/interactions.js';
 
 export default {
   name: 'interactionCreate',
   once: false,
   async execute(interaction, client) {
+    if (interaction.isStringSelectMenu() && interaction.customId === MENU_CUSTOM_ID) {
+      await handleTicketInteractions(interaction, client);
+      return;
+    }
+    if (
+      interaction.isButton() &&
+      [BTN_CLAIM_ID, BTN_CLOSE_ID, BTN_DELETE_ID, BTN_ACK_PRIVATE_ID].includes(interaction.customId)
+    ) {
+      await handleTicketInteractions(interaction, client);
+      return;
+    }
     if (interaction.isButton()) {
       if (
         interaction.customId === VERIFY_BUTTON_ID ||
