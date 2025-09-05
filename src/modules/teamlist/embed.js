@@ -1,6 +1,3 @@
-alles klar—hier ist die Datei **komplett neu**, mit der **englischen Beschreibung angepasst** (gleicher Inhalt wie Deutsch), jeweils **als Quote `>` und kursiv**.
-
-```js
 /*
 ### Zweck: Baut die Teamlisten-Embed und Sprach-Buttons.
 */
@@ -20,7 +17,9 @@ import {
 async function getRoleMemberMentions(guild, roleId) {
   // Cache auffüllen, falls nötig
   if (guild.members.cache.size < guild.memberCount) {
-    try { await guild.members.fetch(); } catch {}
+    try {
+      await guild.members.fetch();
+    } catch {}
   }
   // Mitglieder mit der Rolle sammeln
   const members = guild.members.cache.filter(m => m.roles.cache.has(roleId));
@@ -80,6 +79,3 @@ export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
 
   return { embeds: [embed], components: [row] };
 }
-```
-
-so passt’s: deutsch & englisch sagen jetzt inhaltlich dasselbe, genau im Stil den du wolltest.
