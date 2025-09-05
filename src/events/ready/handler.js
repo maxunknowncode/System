@@ -4,6 +4,7 @@
 import ensureVerifyMessage from '../../modules/verify/ensure.js';
 import { ensureRulesMessage } from '../../modules/rules/ensure.js';
 import { ensureTeamMessage } from '../../modules/teamlist/ensure.js';
+import { startVoiceStats } from '../../modules/voiceStats/updater.js';
 import { logger } from '../../util/logger.js';
 
 export default {
@@ -25,6 +26,11 @@ export default {
       await ensureTeamMessage(client);
     } catch (err) {
       logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);
+    }
+    try {
+      await startVoiceStats(client);
+    } catch (err) {
+      logger.error('[voicestats] Fehler beim Starten:', err);
     }
   },
 };
