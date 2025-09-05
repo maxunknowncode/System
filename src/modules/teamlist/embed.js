@@ -15,22 +15,30 @@ import {
 } from './config.js';
 
 async function getRoleMemberMentions(guild, roleId) {
+  // Cache auffüllen, falls nötig
   if (guild.members.cache.size < guild.memberCount) {
     try { await guild.members.fetch(); } catch {}
   }
+  // Mitglieder mit der Rolle sammeln
   const members = guild.members.cache.filter(m => m.roles.cache.has(roleId));
   if (!members.size) return [];
-  const lines = Array.from(members.values()).slice(0, 30).map(m => `> <@${m.id}>`);
+  // Max 30 Zeilen, dann "…"
+  const lines = Array.from(members.values())
+    .slice(0, 30)
+    .map(m => `> <@${m.id}>`);
   if (members.size > 30) lines.push('> …');
   return lines;
 }
 
 export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
   const isDe = lang === 'de';
+
   const title = isDe ? '💠 Das Serverteam 💠' : '💠 The Server Team 💠';
+
+  // Gewünschte neue Beschreibungen: kursiv + mit ">" als Quote
   const description = isDe
-    ? '*Offizielle Teamliste von **The Core Team** — das sind die Personen, auf die ihr euch verlassen könnt.*'
-    : '*Official staff list by **The Core Team** — these are the people you can rely on.*';
+    ? '> *Sehr geehrte Community, hier findet ihr unsere Teamliste. Hier könnt ihr entnehmen, wer zum Serverteam gehört und wer nicht. Dies hilft, um immer zu wissen, ob man den Personen trauen kann.*'
+    : '> *Official Staff List by **The Core Team** — These are the people you can rely on.*';
 
   const embed = new EmbedBuilder()
     .setColor(0xFFD700)
@@ -38,15 +46,21 @@ export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
     .setDescription(description)
     .setFooter(FOOTER);
 
+  // Nur Rollen rendern, die mindestens 1 Mitglied haben
   for (const role of TEAM_ROLES) {
     const desc = isDe ? role.descDe : role.descEn;
     const label = isDe ? role.labelDe : role.labelEn;
+
     const mentions = await getRoleMemberMentions(guild, role.id);
     if (mentions.length === 0) continue;
+
+    // Titel = Label (ohne Emoji/Mention)
+    // Wert: 1) Role-Mention, 2) kurze Beschreibung im Code-Style, 3) Mitglieder als Zitate
     const value = `<@&${role.id}>\n\`${desc}\`\n${mentions.join('\n')}`;
     embed.addFields({ name: label, value, inline: false });
   }
 
+  // Sprach-Buttons (Flag + Text)
   const enButton = new ButtonBuilder()
     .setCustomId(TEAM_BUTTON_ID_EN)
     .setLabel('English')
