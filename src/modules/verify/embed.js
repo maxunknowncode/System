@@ -51,7 +51,7 @@ export function buildVerifyEmbedAndComponents(lang = VERIFY_DEFAULT_LANG) {
     .addFields(fields)
     .setFooter(FOOTER);
 
-  // ✅ Verify-Button (grün) bleibt mit Label
+  // ✅ Verify-Button (grün)
   const verifyButton = new ButtonBuilder()
     .setCustomId(VERIFY_BUTTON_ID)
     .setLabel('Verify')
@@ -60,14 +60,16 @@ export function buildVerifyEmbedAndComponents(lang = VERIFY_DEFAULT_LANG) {
 
   const row1 = new ActionRowBuilder().addComponents(verifyButton);
 
-  // 🌐 Sprach-Buttons: NUR Flaggen (keine Text-Labels)
+  // 🌐 Sprach-Buttons: Flag + Text
   const langEnButton = new ButtonBuilder()
     .setCustomId(VERIFY_LANG_EN_ID)
+    .setLabel('English')
     .setStyle(ButtonStyle.Primary)
     .setEmoji('🇺🇸');
 
   const langDeButton = new ButtonBuilder()
     .setCustomId(VERIFY_LANG_DE_ID)
+    .setLabel('Deutsch')
     .setStyle(ButtonStyle.Secondary)
     .setEmoji('🇩🇪');
 
