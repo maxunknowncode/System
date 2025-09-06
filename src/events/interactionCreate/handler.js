@@ -12,8 +12,11 @@ import {
   MENU_CUSTOM_ID,
   BTN_CLAIM_ID,
   BTN_CLOSE_ID,
+  BTN_CLOSE_CONFIRM_ID,
+  BTN_REOPEN_ID,
   BTN_DELETE_ID,
-  BTN_ACK_PRIVATE_ID,
+  BTN_DELETE_CONFIRM_ID,
+  MODAL_REOPEN_ID,
 } from '../../modules/tickets/config.js';
 import { handleTicketInteractions } from '../../modules/tickets/interactions.js';
 
@@ -27,8 +30,19 @@ export default {
     }
     if (
       interaction.isButton() &&
-      [BTN_CLAIM_ID, BTN_CLOSE_ID, BTN_DELETE_ID, BTN_ACK_PRIVATE_ID].includes(interaction.customId)
+      [
+        BTN_CLAIM_ID,
+        BTN_CLOSE_ID,
+        BTN_CLOSE_CONFIRM_ID,
+        BTN_REOPEN_ID,
+        BTN_DELETE_ID,
+        BTN_DELETE_CONFIRM_ID,
+      ].includes(interaction.customId)
     ) {
+      await handleTicketInteractions(interaction, client);
+      return;
+    }
+    if (interaction.isModalSubmit() && interaction.customId === MODAL_REOPEN_ID) {
       await handleTicketInteractions(interaction, client);
       return;
     }

@@ -15,3 +15,21 @@ export function buildTicketName(user) {
 export function isTeam(member) {
   return member.roles.cache.has(TEAM_ROLE_ID);
 }
+
+export async function setStatusPrefix(channel, symbol) {
+  if (!channel?.manageable) return;
+  const prefixes = ['🟢 ', '🔴 '];
+  let name = channel.name;
+  for (const p of prefixes) {
+    if (name.startsWith(p)) {
+      name = name.slice(p.length);
+      break;
+    }
+  }
+  const newName = symbol + name;
+  if (channel.name !== newName) {
+    try {
+      await channel.setName(newName);
+    } catch {}
+  }
+}
