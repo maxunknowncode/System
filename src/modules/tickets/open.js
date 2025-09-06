@@ -16,10 +16,10 @@ import {
 } from 'discord.js';
 
 export async function openTicket(interaction) {
-  const { guild, user, member } = interaction;
+  const { guild, user } = interaction;
   const categoryId = TICKET_ACTIVE_CATEGORY_ID;
   if (!categoryId) {
-    await interaction.reply({ content: '```Fehler```', ephemeral: true, allowedMentions: { parse: [] } });
+    await interaction.reply({ content: 'Fehler', ephemeral: true, allowedMentions: { parse: [] } });
     return;
   }
 
@@ -67,14 +67,16 @@ export async function openTicket(interaction) {
       permissionOverwrites: overwrites,
     });
   } catch {
-    await interaction.reply({ content: '```Fehler```', ephemeral: true, allowedMentions: { parse: [] } });
+    await interaction.reply({ content: 'Fehler', ephemeral: true, allowedMentions: { parse: [] } });
     return;
   }
 
   const embed = new EmbedBuilder()
     .setTitle('🧾 Support Ticket | Support-Ticket')
     .setDescription(
-      `**English**\n• A team member will assist you shortly.\n\n` +
+      `**Bitte beschreibe dein Anliegen, während du wartest.**\n` +
+        `**Please describe your issue while you’re waiting.**\n\n` +
+        `**English**\n• A team member will assist you shortly.\n\n` +
         `**Deutsch**\n• Ein Teammitglied kümmert sich in Kürze.`
     )
     .addFields(
@@ -86,11 +88,13 @@ export async function openTicket(interaction) {
   const claimBtn = new ButtonBuilder()
     .setCustomId(BTN_CLAIM_ID)
     .setLabel('Claim')
+    .setEmoji('✅')
     .setStyle(ButtonStyle.Success);
 
   const closeBtn = new ButtonBuilder()
     .setCustomId(BTN_CLOSE_ID)
     .setLabel('Close')
+    .setEmoji('🔒')
     .setStyle(ButtonStyle.Danger);
 
   const row = new ActionRowBuilder().addComponents(claimBtn, closeBtn);
@@ -103,21 +107,9 @@ export async function openTicket(interaction) {
   });
 
   const ticketChannel = channel.toString();
-  const replyEmbed = new EmbedBuilder()
-    .setTitle('✅ Ticket created | Ticket erstellt')
-    .setDescription(
-      `➡️ ${ticketChannel}\n\n` +
-        `**English**\n` +
-        '• Your ticket has been created. A team member will assist you shortly.\n\n' +
-        `**Deutsch**\n` +
-        '• Dein Ticket wurde erstellt. Ein Teammitglied kümmert sich in Kürze.'
-    )
-    .setColor(0xffd700)
-    .setFooter(FOOTER);
-
   await interaction.reply({
+    content: `➡️ ${ticketChannel} — Ticket erstellt | Ticket created`,
     ephemeral: true,
-    embeds: [replyEmbed],
     allowedMentions: { parse: [] },
   });
 }
