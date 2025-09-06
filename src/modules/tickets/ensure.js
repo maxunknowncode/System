@@ -14,11 +14,9 @@ export async function ensureTicketPanel(client) {
   const payload = { ...buildTicketPanel(), allowedMentions: { parse: [] } };
   let message = null;
 
-  if (TICKET_PANEL_MESSAGE_ID) {
-    try {
-      message = await channel.messages.fetch(TICKET_PANEL_MESSAGE_ID);
-    } catch {}
-  }
+  try {
+    message = await channel.messages.fetch(TICKET_PANEL_MESSAGE_ID);
+  } catch {}
 
   if (!message) {
     try {

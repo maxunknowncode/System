@@ -74,8 +74,7 @@ export async function openTicket(interaction) {
   const embed = new EmbedBuilder()
     .setTitle('🧾 Support Ticket | Support-Ticket')
     .setDescription(
-      `**Bitte beschreibe dein Anliegen, während du wartest.**\n` +
-        `**Please describe your issue while you’re waiting.**\n\n` +
+      `Please describe your issue while you wait. | Bitte beschreibe dein Anliegen, während du wartest.\n\n` +
         `**English**\n• A team member will assist you shortly.\n\n` +
         `**Deutsch**\n• Ein Teammitglied kümmert sich in Kürze.`
     )
@@ -108,7 +107,7 @@ export async function openTicket(interaction) {
 
   const ticketChannel = channel.toString();
   await interaction.reply({
-    content: `➡️ ${ticketChannel} — Ticket erstellt | Ticket created`,
+    content: `➡️ ${ticketChannel} — Ticket created | Ticket erstellt`,
     ephemeral: true,
     allowedMentions: { parse: [] },
   });
