@@ -18,15 +18,8 @@ export function isTeam(member) {
 
 export async function setStatusPrefix(channel, symbol) {
   if (!channel?.manageable) return;
-  const prefixes = ['🟢 ', '🔴 '];
-  let name = channel.name;
-  for (const p of prefixes) {
-    if (name.startsWith(p)) {
-      name = name.slice(p.length);
-      break;
-    }
-  }
-  const newName = symbol + name;
+  let base = channel.name.replace(/^(?:✅ |🔴 )+/, '');
+  const newName = symbol + base;
   if (channel.name !== newName) {
     try {
       await channel.setName(newName);

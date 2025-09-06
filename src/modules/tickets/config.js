@@ -13,13 +13,12 @@ export const MENU_OPTION_SUPPORT        = {
   emoji: "🆘",
 };
 
-export const BTN_CLAIM_ID               = "ticket_claim";
-export const BTN_CLOSE_ID               = "ticket_close";
-export const BTN_CLOSE_CONFIRM_ID       = "ticket_close_confirm";
-export const BTN_REOPEN_ID              = "ticket_reopen";
-export const MODAL_REOPEN_ID            = "ticket_reopen_modal";
-export const MODAL_REOPEN_REASON_ID     = "ticket_reopen_reason";
-export const BTN_DELETE_ID              = "ticket_delete";
-export const BTN_DELETE_CONFIRM_ID      = "ticket_delete_confirm";
+export const BTN_CLAIM_ID               = "ticket_claim";            // ✅ Claim
+export const BTN_CLOSE_ID               = "ticket_close";            // 🔒 Close (Start)
+export const BTN_CLOSE_CONFIRM_ID       = "ticket_close_confirm";    // ✅ Confirm Close
+export const BTN_REOPEN_ID              = "ticket_reopen";           // 🔓 Reopen (nach Close)
+export const BTN_REOPEN_CONFIRM_ID      = "ticket_reopen_confirm";   // ✅ Confirm Reopen
+export const BTN_DELETE_ID              = "ticket_delete";           // 🗑️ Delete (nach Close)
+export const BTN_DELETE_CONFIRM_ID      = "ticket_delete_confirm";   // ✅ Confirm Delete
 
 export const TICKET_CHANNEL_PREFIX      = "ticket";
