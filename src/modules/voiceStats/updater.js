@@ -2,18 +2,30 @@
 ### Zweck: Aktualisiert Voice-Statistik-Kanäle für Mitglieder- und Onlinezahlen.
 Der Bot benötigt in den Ziel-Kanälen die Berechtigung „Manage Channels“ zum Umbenennen.
 */
-import { VOICESTATS_GUILD_ID, MEMBERS_CHANNEL_ID, ONLINE_CHANNEL_ID, UPDATE_EVERY_MS, ONLINE_STATUSES } from './config.js';
+import {
+  VOICESTATS_GUILD_ID,
+  MEMBERS_CHANNEL_ID,
+  ONLINE_CHANNEL_ID,
+  UPDATE_EVERY_MS,
+  ONLINE_STATUSES,
+} from './config.js';
 import { logger } from '../../util/logger.js';
 
 let client;
 let intervalStarted = false;
+let presencesFetched = false;
 
 async function computeCounts(guild) {
-  await guild.members.fetch();
+  if (!presencesFetched) {
+    await guild.members.fetch({ withPresences: true });
+    presencesFetched = true;
+  }
   const humans = guild.members.cache.filter((m) => !m.user.bot).size;
-  await guild.members.fetch({ withPresences: true });
   const online = guild.members.cache.filter(
-    (m) => !m.user.bot && m.presence && ONLINE_STATUSES.includes(m.presence.status)
+    (m) =>
+      !m.user.bot &&
+      m.presence &&
+      ONLINE_STATUSES.includes(m.presence.status)
   ).size;
   return { humans, online };
 }
