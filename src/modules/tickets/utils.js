@@ -16,10 +16,13 @@ export function isTeam(member) {
   return member.roles.cache.has(TEAM_ROLE_ID);
 }
 
-export async function setStatusPrefix(channel, symbol) {
+export async function setStatusPrefix(channel, mode) {
   if (!channel?.manageable) return;
-  const base = channel.name.replace(/^(?:✅ |🔴 )/, '');
-  const newName = symbol ? `${symbol}${base}` : base;
+  const base = channel.name.replace(/^(?:✅\s|🔴-)+/, '');
+  let prefix = '';
+  if (mode === 'claimed') prefix = '✅ ';
+  if (mode === 'closed') prefix = '🔴-';
+  const newName = `${prefix}${base}`;
   if (channel.name !== newName) {
     try {
       await channel.setName(newName);
