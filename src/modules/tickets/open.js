@@ -16,11 +16,11 @@ import {
 } from 'discord.js';
 
 export async function openTicket(interaction) {
-  const { guild, user } = interaction;
+  const { guild, user, member } = interaction;
   const categoryId = TICKET_ACTIVE_CATEGORY_ID;
   if (!categoryId) {
-    await interaction.editReply('```Fehler```');
-    return false;
+    await interaction.reply({ content: '```Fehler```', ephemeral: true, allowedMentions: { parse: [] } });
+    return;
   }
 
   let name = buildTicketName(user);
@@ -29,10 +29,7 @@ export async function openTicket(interaction) {
   }
 
   const overwrites = [
-    {
-      id: guild.roles.everyone.id,
-      deny: [PermissionsBitField.Flags.ViewChannel],
-    },
+    { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
     {
       id: user.id,
       allow: [
@@ -70,17 +67,18 @@ export async function openTicket(interaction) {
       permissionOverwrites: overwrites,
     });
   } catch {
-    await interaction.editReply('```Fehler```');
-    return false;
+    await interaction.reply({ content: '```Fehler```', ephemeral: true, allowedMentions: { parse: [] } });
+    return;
   }
 
   const embed = new EmbedBuilder()
     .setTitle('🧾 Support Ticket | Support-Ticket')
     .setDescription(
-      `**English**\n• A team member will assist you shortly.\n\n**Deutsch**\n• Ein Teammitglied kümmert sich in Kürze.`
+      `**English**\n• A team member will assist you shortly.\n\n` +
+        `**Deutsch**\n• Ein Teammitglied kümmert sich in Kürze.`
     )
     .addFields(
-      { name: 'Status', value: 'Unclaimed / Nicht übernommen' },
+      { name: 'Status', value: 'Unclaimed | Nicht übernommen' },
       { name: 'Created by', value: `<@${user.id}>` }
     )
     .setFooter(FOOTER);
@@ -88,14 +86,12 @@ export async function openTicket(interaction) {
   const claimBtn = new ButtonBuilder()
     .setCustomId(BTN_CLAIM_ID)
     .setLabel('Claim')
-    .setStyle(ButtonStyle.Success)
-    .setEmoji('✅');
+    .setStyle(ButtonStyle.Success);
 
   const closeBtn = new ButtonBuilder()
     .setCustomId(BTN_CLOSE_ID)
     .setLabel('Close')
-    .setStyle(ButtonStyle.Danger)
-    .setEmoji('🔴');
+    .setStyle(ButtonStyle.Danger);
 
   const row = new ActionRowBuilder().addComponents(claimBtn, closeBtn);
 
@@ -106,5 +102,14 @@ export async function openTicket(interaction) {
     allowedMentions: { users: [user.id], roles: [TEAM_ROLE_ID], parse: [] },
   });
 
-  return true;
+  const replyEmbed = new EmbedBuilder()
+    .setTitle('Ticket created | Ticket erstellt')
+    .setFooter(FOOTER);
+
+  await interaction.reply({
+    content: `➡️ <#${channel.id}>\n\`\`\`Das Channel wurde erstellt und auch erwähnt\`\`\``,
+    embeds: [replyEmbed],
+    ephemeral: true,
+    allowedMentions: { parse: [] },
+  });
 }
