@@ -102,14 +102,22 @@ export async function openTicket(interaction) {
     allowedMentions: { users: [user.id], roles: [TEAM_ROLE_ID], parse: [] },
   });
 
+  const ticketChannel = channel.toString();
   const replyEmbed = new EmbedBuilder()
-    .setTitle('Ticket created | Ticket erstellt')
+    .setTitle('✅ Ticket created | Ticket erstellt')
+    .setDescription(
+      `➡️ ${ticketChannel}\n\n` +
+        `**English**\n` +
+        '• Your ticket has been created. A team member will assist you shortly.\n\n' +
+        `**Deutsch**\n` +
+        '• Dein Ticket wurde erstellt. Ein Teammitglied kümmert sich in Kürze.'
+    )
+    .setColor(0xffd700)
     .setFooter(FOOTER);
 
   await interaction.reply({
-    content: `➡️ <#${channel.id}>\n\`\`\`Das Channel wurde erstellt und auch erwähnt\`\`\``,
-    embeds: [replyEmbed],
     ephemeral: true,
+    embeds: [replyEmbed],
     allowedMentions: { parse: [] },
   });
 }
