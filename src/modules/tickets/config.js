@@ -5,7 +5,7 @@ export const TICKET_ARCHIVE_CATEGORY_ID = "1357069661505589268"; // Archiv-Ticke
 export const TEAM_ROLE_ID               = "1354916696527208693"; // Team
 
 export const MENU_CUSTOM_ID             = "ticket_menu";
-export const MENU_PLACEHOLDER           = "Create Ticket";
+export const MENU_PLACEHOLDER           = "Choose a ticket type";
 export const MENU_OPTION_SUPPORT        = {
   value: "support",
   label: "Support",

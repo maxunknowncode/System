@@ -16,16 +16,14 @@ export function isTeam(member) {
   return member.roles.cache.has(TEAM_ROLE_ID);
 }
 
+// mode: "neutral" | "claimed" | "closed"
 export async function setStatusPrefix(channel, mode) {
-  if (!channel?.manageable) return;
-  const base = channel.name.replace(/^(?:✅\s|🔴-)+/, '');
-  let prefix = '';
-  if (mode === 'claimed') prefix = '✅ ';
-  if (mode === 'closed') prefix = '🔴-';
-  const newName = `${prefix}${base}`;
-  if (channel.name !== newName) {
-    try {
-      await channel.setName(newName);
-    } catch {}
-  }
+  const raw = channel.name;
+  // alle führenden bekannten Präfixe entfernen (auch doppelte)
+  const clean = raw.replace(/^(?:✅\s|🔴-)+/u, "");
+  const next =
+    mode === "claimed" ? `✅ ${clean}` :
+    mode === "closed"  ? `🔴-${clean}` :
+    clean;
+  if (next !== raw) await channel.setName(next);
 }
