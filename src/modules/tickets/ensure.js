@@ -21,24 +21,24 @@ export async function ensureTicketPanel(client) {
   if (!message) {
     try {
       const messages = await channel.messages.fetch({ limit: 20 });
-      message = messages.find(
-        (m) =>
-          m.author.id === client.user.id &&
-          (m.components.some((row) => row.components.some((c) => c.customId === MENU_CUSTOM_ID)) ||
-            m.embeds.some((e) => e.title === '🎫 Create Ticket — Support | Ticket erstellen — Support'))
-      );
-    } catch {}
-  }
+        message = messages.find(
+          (m) =>
+            m.author.id === client.user.id &&
+            (m.components.some((row) => row.components.some((c) => c.customId === MENU_CUSTOM_ID)) ||
+              m.embeds.some((e) => e.title === '🎫 Ticket System'))
+        );
+      } catch {}
+    }
 
   if (message) {
     try {
       await message.edit(payload);
-      logger.info('[tickets] Panel aktualisiert');
+      logger.info('[tickets] Panel erstellt/aktualisiert]');
     } catch {}
   } else {
     try {
       await channel.send(payload);
-      logger.info('[tickets] Panel erstellt');
+      logger.info('[tickets] Panel erstellt/aktualisiert]');
     } catch {}
   }
 }

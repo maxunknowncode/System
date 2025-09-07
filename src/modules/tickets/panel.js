@@ -9,10 +9,11 @@ import { MENU_CUSTOM_ID, MENU_PLACEHOLDER, MENU_OPTION_SUPPORT } from './config.
 
 export function buildTicketPanel() {
   const embed = new EmbedBuilder()
-    .setTitle('🎫 Create Ticket — Support | Ticket erstellen — Support')
+    .setTitle('🎫 Ticket System')
     .setDescription(
-      `**English**\n• Choose a category below to open a support ticket.\n\n` +
-        `**Deutsch**\n• Wähle unten eine Kategorie, um ein Support-Ticket zu eröffnen.`
+      `🇩🇪 Deutsch\nWähle im Dropdown-Menü aus, welche Art von Ticket du öffnen möchtest!\n\n` +
+        `🇺🇸 English\nSelect which type of ticket you would like to open in the dropdown menu!\n\n` +
+        `_Create a ticket by selecting an option from the dropdown menu._`
     )
     .setFooter(FOOTER);
 
