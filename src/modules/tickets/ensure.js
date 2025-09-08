@@ -33,12 +33,12 @@ export async function ensureTicketPanel(client) {
   if (message) {
     try {
       await message.edit(payload);
-      logger.info('[tickets] Panel erstellt/aktualisiert]');
+      logger.info('[tickets] Panel aktualisiert');
     } catch {}
   } else {
     try {
       await channel.send(payload);
-      logger.info('[tickets] Panel erstellt/aktualisiert]');
+      logger.info('[tickets] Panel erstellt');
     } catch {}
   }
 }

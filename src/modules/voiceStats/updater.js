@@ -14,6 +14,8 @@ import { logger } from '../../util/logger.js';
 let client;
 let intervalStarted = false;
 let presencesFetched = false;
+let lastHumans = null;
+let lastOnline = null;
 
 async function computeCounts(guild) {
   if (!presencesFetched) {
@@ -33,11 +35,7 @@ async function computeCounts(guild) {
 async function setChannelName(channelId, name) {
   try {
     const ch = await client.channels.fetch(channelId);
-    if (!ch) {
-      logger.warn(`[voicestats] Kanal nicht gefunden: ${channelId}`);
-      return;
-    }
-    if (ch.name !== name) {
+    if (ch && ch.name !== name) {
       await ch.setName(name);
     }
   } catch (err) {
@@ -49,13 +47,16 @@ async function tick() {
   const guild = VOICESTATS_GUILD_ID
     ? client.guilds.cache.get(VOICESTATS_GUILD_ID)
     : client.guilds.cache.first();
-  if (!guild) {
-    logger.warn('[voicestats] Guild nicht gefunden');
-    return;
-  }
+  if (!guild) return;
   const { humans, online } = await computeCounts(guild);
-  await setChannelName(MEMBERS_CHANNEL_ID, `👥 Mitglieder: ${humans}`);
-  await setChannelName(ONLINE_CHANNEL_ID, `🟢 Online: ${online}`);
+  if (humans !== lastHumans) {
+    await setChannelName(MEMBERS_CHANNEL_ID, `👥 Mitglieder: ${humans}`);
+    lastHumans = humans;
+  }
+  if (online !== lastOnline) {
+    await setChannelName(ONLINE_CHANNEL_ID, `🟢 Online: ${online}`);
+    lastOnline = online;
+  }
 }
 
 export async function startVoiceStats(c) {
