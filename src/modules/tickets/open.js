@@ -15,7 +15,7 @@ import {
   PermissionsBitField,
 } from 'discord.js';
 
-export async function openTicket(interaction) {
+export async function openTicket(interaction, lang = 'en') {
   const { guild, user } = interaction;
   const categoryId = TICKET_ACTIVE_CATEGORY_ID;
   if (!categoryId) {
