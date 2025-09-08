@@ -1,4 +1,9 @@
-import { TICKET_PANEL_CHANNEL_ID, TICKET_PANEL_MESSAGE_ID, MENU_CUSTOM_ID } from './config.js';
+import {
+  TICKET_PANEL_CHANNEL_ID,
+  TICKET_PANEL_MESSAGE_ID,
+  MENU_EN_CUSTOM_ID,
+  MENU_DE_CUSTOM_ID,
+} from './config.js';
 import { buildTicketPanel } from './panel.js';
 import { logger } from '../../util/logger.js';
 
@@ -24,8 +29,9 @@ export async function ensureTicketPanel(client) {
         message = messages.find(
           (m) =>
             m.author.id === client.user.id &&
-            (m.components.some((row) => row.components.some((c) => c.customId === MENU_CUSTOM_ID)) ||
-              m.embeds.some((e) => e.title === '🎫 Ticket System'))
+            (m.components.some((row) =>
+              row.components.some((c) => [MENU_EN_CUSTOM_ID, MENU_DE_CUSTOM_ID].includes(c.customId))
+            ) || m.embeds.some((e) => e.title === '🎫 Ticket System'))
         );
       } catch {}
     }

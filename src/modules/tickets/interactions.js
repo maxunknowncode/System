@@ -1,5 +1,6 @@
 import {
-  MENU_CUSTOM_ID,
+  MENU_EN_CUSTOM_ID,
+  MENU_DE_CUSTOM_ID,
   BTN_CLAIM_ID,
   BTN_CLOSE_ID,
   BTN_CLOSE_CONFIRM_ID,
@@ -21,10 +22,13 @@ import {
 } from 'discord.js';
 
 export async function handleTicketInteractions(interaction, client) {
-  if (interaction.isStringSelectMenu() && interaction.customId === MENU_CUSTOM_ID) {
+  if (interaction.isStringSelectMenu() &&
+      (interaction.customId === MENU_EN_CUSTOM_ID || interaction.customId === MENU_DE_CUSTOM_ID)) {
     const value = interaction.values?.[0];
-    if (value === 'support') {
-      await openTicket(interaction);
+    if (value === 'support_en') {
+      await openTicket(interaction, 'en');
+    } else if (value === 'support_de') {
+      await openTicket(interaction, 'de');
     }
     return;
   }
