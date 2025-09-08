@@ -15,10 +15,10 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildPresences,
+    GatewayIntentBits.GuildPresences, // Presence-Intent im Dev-Portal aktivieren
     GatewayIntentBits.GuildMessages, // Kein Message-Content-Intent nötig
   ],
-}); // SERVER MEMBERS + PRESENCE INTENTS im Dev-Portal aktivieren
+});
 
 const shutdown = (code = 0) => {
   logger.info('[beenden] Fahre herunter…');
