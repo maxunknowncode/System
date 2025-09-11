@@ -1,6 +1,5 @@
 import {
-  MENU_EN_CUSTOM_ID,
-  MENU_DE_CUSTOM_ID,
+  MENU_CUSTOM_ID,
   BTN_CLAIM_ID,
   BTN_CLOSE_ID,
   BTN_CLOSE_CONFIRM_ID,
@@ -22,8 +21,7 @@ import {
 } from 'discord.js';
 
 export async function handleTicketInteractions(interaction, client) {
-  if (interaction.isStringSelectMenu() &&
-      (interaction.customId === MENU_EN_CUSTOM_ID || interaction.customId === MENU_DE_CUSTOM_ID)) {
+  if (interaction.isStringSelectMenu() && interaction.customId === MENU_CUSTOM_ID) {
     const value = interaction.values?.[0];
     if (value === 'support_en') {
       await openTicket(interaction, 'en');
@@ -38,51 +36,38 @@ export async function handleTicketInteractions(interaction, client) {
   switch (interaction.customId) {
     case BTN_CLAIM_ID: {
       if (!isTeam(interaction.member)) {
-        await interaction.reply({
-          content: 'Kein Teammitglied | Not a team member',
-          ephemeral: true,
-          allowedMentions: { parse: [] },
-        });
+        const embed = new EmbedBuilder()
+          .setTitle('No Permission')
+          .setDescription('You do not have permission to claim this ticket.')
+          .setColor(0xff0000);
+        await interaction.reply({ embeds: [embed], ephemeral: true, allowedMentions: { parse: [] } });
         return;
       }
       await interaction.deferUpdate();
-      const embed = EmbedBuilder.from(interaction.message.embeds[0]);
-      embed.data.fields = embed.data.fields.map((f) =>
-        f.name === 'Status'
-          ? {
-              ...f,
-              value: `🇺🇸 Claimed by <@${interaction.user.id}>\n🇩🇪 Übernommen von <@${interaction.user.id}>`,
-            }
-          : f
-      );
-      await interaction.message.edit({
-        embeds: [embed],
-        components: interaction.message.components,
-        allowedMentions: { parse: [] },
-      });
       await setStatusPrefix(interaction.channel, 'claimed');
       const info = new EmbedBuilder()
         .setDescription(
-          `🇺🇸 Claimed by <@${interaction.user.id}>\n🇩🇪 Übernommen von <@${interaction.user.id}>`
+          `🇺🇸 > Claimed by <@${interaction.user.id}>\n🇩🇪 > Übernommen von <@${interaction.user.id}>`
         )
         .setFooter(FOOTER);
-      await interaction.channel.send({ embeds: [info], allowedMentions: { parse: [] } });
+      await interaction.channel.send({
+        embeds: [info],
+        allowedMentions: { users: [interaction.user.id], parse: [] },
+      });
       return;
     }
     case BTN_CLOSE_ID: {
       const btn = new ButtonBuilder()
         .setCustomId(BTN_CLOSE_CONFIRM_ID)
-        .setLabel('Confirm')
         .setEmoji('✅')
-        .setStyle(ButtonStyle.Primary);
+        .setStyle(ButtonStyle.Success);
       const row = new ActionRowBuilder().addComponents(btn);
-      await interaction.reply({
-        content:
-          '🇺🇸 Are you sure you want to close this ticket?\n🇩🇪 Bist du sicher, dass du dieses Ticket schließen möchtest?',
-        components: [row],
-        ephemeral: true,
-        allowedMentions: { parse: [] },
-      });
+      const embed = new EmbedBuilder()
+        .setTitle('Close Ticket')
+        .setDescription(
+          '🇺🇸 > Are you sure you want to close this ticket?\n🇩🇪 > Bist du sicher, dass du dieses Ticket schließen möchtest?'
+        );
+      await interaction.reply({ embeds: [embed], components: [row], ephemeral: true, allowedMentions: { parse: [] } });
       return;
     }
     case BTN_CLOSE_CONFIRM_ID: {
@@ -103,12 +88,6 @@ export async function handleTicketInteractions(interaction, client) {
         } catch {}
       }
       if (startMsg) {
-        const embed = EmbedBuilder.from(startMsg.embeds[0]);
-        embed.data.fields = embed.data.fields.map((f) =>
-          f.name === 'Status'
-            ? { ...f, value: '🇺🇸 Ticket archived\n🇩🇪 Ticket archiviert' }
-            : f
-        );
         const reopenBtn = new ButtonBuilder()
           .setCustomId(BTN_REOPEN_ID)
           .setLabel('Reopen')
@@ -120,14 +99,14 @@ export async function handleTicketInteractions(interaction, client) {
           .setEmoji('🗑️')
           .setStyle(ButtonStyle.Danger);
         const row = new ActionRowBuilder().addComponents(reopenBtn, deleteBtn);
-        await startMsg.edit({ embeds: [embed], components: [row], allowedMentions: { parse: [] } });
+        await startMsg.edit({ components: [row], embeds: startMsg.embeds, allowedMentions: { parse: [] } });
       }
       await setStatusPrefix(interaction.channel, 'closed');
-      await interaction.update({
-        content: '🇺🇸 Ticket archived\n🇩🇪 Ticket archiviert',
-        components: [],
-        allowedMentions: { parse: [] },
-      });
+      const embed = new EmbedBuilder()
+        .setTitle('Archived')
+        .setDescription('🇺🇸 > Ticket archived\n🇩🇪 > Ticket archiviert')
+        .setFooter(FOOTER);
+      await interaction.update({ embeds: [embed], components: [], allowedMentions: { parse: [] } });
       return;
     }
     case BTN_REOPEN_ID: {
@@ -164,10 +143,6 @@ export async function handleTicketInteractions(interaction, client) {
       }
       await setStatusPrefix(interaction.channel, 'neutral');
       if (startMsg) {
-        const embed = EmbedBuilder.from(startMsg.embeds[0]);
-        embed.data.fields = embed.data.fields.map((f) =>
-          f.name === 'Status' ? { ...f, value: 'Unclaimed | Nicht übernommen' } : f
-        );
         const claimBtn = new ButtonBuilder()
           .setCustomId(BTN_CLAIM_ID)
           .setLabel('Claim')
@@ -179,7 +154,7 @@ export async function handleTicketInteractions(interaction, client) {
           .setEmoji('🔒')
           .setStyle(ButtonStyle.Danger);
         const row = new ActionRowBuilder().addComponents(claimBtn, closeBtn);
-        await startMsg.edit({ embeds: [embed], components: [row], allowedMentions: { parse: [] } });
+        await startMsg.edit({ components: [row], embeds: startMsg.embeds, allowedMentions: { parse: [] } });
       }
       const info = new EmbedBuilder()
         .setDescription(

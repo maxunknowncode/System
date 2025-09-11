@@ -4,10 +4,18 @@ export const TICKET_ACTIVE_CATEGORY_ID  = "1357069606455345483"; // Aktive Ticke
 export const TICKET_ARCHIVE_CATEGORY_ID = "1357069661505589268"; // Archiv-Tickets
 export const TEAM_ROLE_ID               = "1354916696527208693"; // Team
 
-export const MENU_EN_CUSTOM_ID          = "ticket_menu_en";
-export const MENU_DE_CUSTOM_ID          = "ticket_menu_de";
-export const MENU_EN_PLACEHOLDER        = "🇺🇸 Support";
-export const MENU_DE_PLACEHOLDER        = "🇩🇪 Support";
+export const MENU_CUSTOM_ID = "ticket_menu_single";
+export const MENU_PLACEHOLDER = "Select your ticket type.";
+export const MENU_OPTION_EN = {
+  value: "support_en",
+  label: "🇺🇸 General Support",
+  description: "General questions & problems",
+};
+export const MENU_OPTION_DE = {
+  value: "support_de",
+  label: "🇩🇪 Allgemeiner Support",
+  description: "Allgemeine Fragen und Probleme",
+};
 
 export const BTN_CLAIM_ID               = "ticket_claim";            // ✅ Claim
 export const BTN_CLOSE_ID               = "ticket_close";            // 🔒 Close (Start)
