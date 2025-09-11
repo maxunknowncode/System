@@ -9,8 +9,7 @@ import { TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE } from '../../modules/teamlist/con
 import { handleTeamButtons } from '../../modules/teamlist/interactions.js';
 import { logger } from '../../util/logger.js';
 import {
-  MENU_EN_CUSTOM_ID,
-  MENU_DE_CUSTOM_ID,
+  MENU_CUSTOM_ID,
   BTN_CLAIM_ID,
   BTN_CLOSE_ID,
   BTN_CLOSE_CONFIRM_ID,
@@ -25,10 +24,7 @@ export default {
   name: 'interactionCreate',
   once: false,
   async execute(interaction, client) {
-    if (
-      interaction.isStringSelectMenu() &&
-      (interaction.customId === MENU_EN_CUSTOM_ID || interaction.customId === MENU_DE_CUSTOM_ID)
-    ) {
+    if (interaction.isStringSelectMenu() && interaction.customId === MENU_CUSTOM_ID) {
       await handleTicketInteractions(interaction, client);
       return;
     }

@@ -1,9 +1,4 @@
-import {
-  BTN_CLAIM_ID,
-  BTN_CLOSE_ID,
-  TEAM_ROLE_ID,
-  TICKET_ACTIVE_CATEGORY_ID,
-} from './config.js';
+import { BTN_CLAIM_ID, BTN_CLOSE_ID, TEAM_ROLE_ID, TICKET_ACTIVE_CATEGORY_ID } from './config.js';
 import { buildTicketName } from './utils.js';
 import { FOOTER } from '../../util/footer.js';
 import {
@@ -71,31 +66,33 @@ export async function openTicket(interaction, lang = 'en') {
     return;
   }
 
-  const embed = new EmbedBuilder()
-    .setTitle('🧾 Support Ticket | Support-Ticket')
+  const ticketChannel = channel.toString();
+  const replyEmbed = new EmbedBuilder()
+    .setTitle(lang === 'de' ? 'Erfolgreich – Ticket erstellt' : 'Successfully - Ticket Created')
     .setDescription(
-      `🇺🇸 Please describe your issue while you’re waiting.\n` +
-        `🇩🇪 Bitte beschreibe dein Anliegen, während du wartest.\n\n` +
-        `**English**\n• A team member will assist you shortly.\n\n` +
-        `**Deutsch**\n• Ein Teammitglied kümmert sich in Kürze.`
+      lang === 'de'
+        ? `Ticket erstellt. Hier ist dein Ticket: ${ticketChannel}`
+        : `Ticket created. Here is your ticket: ${ticketChannel}`
     )
-    .addFields(
-      { name: 'Status', value: 'Unclaimed | Nicht übernommen' },
-      { name: 'Created by', value: `<@${user.id}>` }
-    )
+    .setFooter(FOOTER);
+  await interaction.reply({ embeds: [replyEmbed], ephemeral: true, allowedMentions: { parse: [] } });
+
+  const embed = new EmbedBuilder()
+    .setTitle('📚 Support Ticket')
+    .setDescription('> Bitte beschreibe dein Anliegen, während du wartest!')
     .setFooter(FOOTER);
 
   const claimBtn = new ButtonBuilder()
     .setCustomId(BTN_CLAIM_ID)
-    .setLabel('Claim')
     .setEmoji('✅')
-    .setStyle(ButtonStyle.Success);
+    .setStyle(ButtonStyle.Success)
+    .setLabel('Claim');
 
   const closeBtn = new ButtonBuilder()
     .setCustomId(BTN_CLOSE_ID)
-    .setLabel('Close')
     .setEmoji('🔒')
-    .setStyle(ButtonStyle.Danger);
+    .setStyle(ButtonStyle.Danger)
+    .setLabel('Close');
 
   const row = new ActionRowBuilder().addComponents(claimBtn, closeBtn);
 
@@ -104,12 +101,5 @@ export async function openTicket(interaction, lang = 'en') {
     embeds: [embed],
     components: [row],
     allowedMentions: { users: [user.id], roles: [TEAM_ROLE_ID], parse: [] },
-  });
-
-  const ticketChannel = channel.toString();
-  await interaction.reply({
-    content: `➡️ ${ticketChannel}\n🇺🇸 Ticket created\n🇩🇪 Ticket erstellt`,
-    ephemeral: true,
-    allowedMentions: { parse: [] },
   });
 }
