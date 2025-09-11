@@ -8,13 +8,15 @@ export const MENU_CUSTOM_ID = "ticket_menu_single";
 export const MENU_PLACEHOLDER = "Select your ticket type.";
 export const MENU_OPTION_EN = {
   value: "support_en",
-  label: "🇺🇸 General Support",
+  label: "General Support",
   description: "General questions & problems",
+  emoji: "🇺🇸",
 };
 export const MENU_OPTION_DE = {
   value: "support_de",
-  label: "🇩🇪 Allgemeiner Support",
+  label: "Allgemeiner Support",
   description: "Allgemeine Fragen und Probleme",
+  emoji: "🇩🇪",
 };
 
 export const BTN_CLAIM_ID               = "ticket_claim";            // ✅ Claim
