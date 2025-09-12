@@ -13,6 +13,7 @@ import {
 import { openTicket } from './open.js';
 import { isTeam, setStatusPrefix } from './utils.js';
 import { FOOTER } from '../../util/footer.js';
+import { applyAuthor } from '../../util/author.js';
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -45,7 +46,7 @@ export async function handleTicketInteractions(interaction, client) {
       }
       await interaction.deferUpdate();
       await setStatusPrefix(interaction.channel, 'claimed');
-      const info = new EmbedBuilder()
+      const info = applyAuthor(new EmbedBuilder(), 'TICKET')
         .setColor(0x57f287)
         .setDescription(
           `🇺🇸 **Claimed** by <@${interaction.user.id}>\n\n🇩🇪 **Beansprucht** von <@${interaction.user.id}>`
@@ -154,7 +155,7 @@ export async function handleTicketInteractions(interaction, client) {
         const row = new ActionRowBuilder().addComponents(claimBtn, closeBtn);
         await startMsg.edit({ components: [row], embeds: startMsg.embeds, allowedMentions: { parse: [] } });
       }
-      const info = new EmbedBuilder()
+      const info = applyAuthor(new EmbedBuilder(), 'TICKET')
         .setDescription(
           '🔓 Ticket reopened | 🔓 Ticket wieder eröffnet\n• Please describe your issue. | Bitte beschreibe dein Anliegen.'
         )

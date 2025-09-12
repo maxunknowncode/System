@@ -1,6 +1,7 @@
 import { BTN_CLAIM_ID, BTN_CLOSE_ID, TEAM_ROLE_ID, TICKET_ACTIVE_CATEGORY_ID } from './config.js';
 import { buildTicketName } from './utils.js';
 import { FOOTER } from '../../util/footer.js';
+import { applyAuthor } from '../../util/author.js';
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -77,7 +78,7 @@ export async function openTicket(interaction, lang = 'en') {
     .setFooter(FOOTER);
   await interaction.reply({ embeds: [replyEmbed], ephemeral: true, allowedMentions: { parse: [] } });
 
-  const embed = new EmbedBuilder().setDescription(
+  const embed = applyAuthor(new EmbedBuilder(), 'TICKET').setDescription(
     lang === 'de'
       ? '> 🇩🇪 Bitte beschreibe dein Anliegen, während du wartest.'
       : "> 🇺🇸 Please describe your issue while you’re waiting."
