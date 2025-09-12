@@ -77,10 +77,11 @@ export async function openTicket(interaction, lang = 'en') {
     .setFooter(FOOTER);
   await interaction.reply({ embeds: [replyEmbed], ephemeral: true, allowedMentions: { parse: [] } });
 
-  const embed = new EmbedBuilder()
-    .setTitle('📚 Support Ticket')
-    .setDescription('> Bitte beschreibe dein Anliegen, während du wartest!')
-    .setFooter(FOOTER);
+  const embed = new EmbedBuilder().setDescription(
+    lang === 'de'
+      ? '> 🇩🇪 Bitte beschreibe dein Anliegen, während du wartest.'
+      : "> 🇺🇸 Please describe your issue while you’re waiting."
+  );
 
   const claimBtn = new ButtonBuilder()
     .setCustomId(BTN_CLAIM_ID)
