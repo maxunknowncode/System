@@ -8,7 +8,7 @@ import {
   ButtonStyle,
 } from 'discord.js';
 import { FOOTER } from '../../util/footer.js';
-import { applyAuthor } from '../../util/author.js';
+import { applyAuthorByLang } from '../../util/author.js';
 import {
   TEAM_BUTTON_ID_EN,
   TEAM_BUTTON_ID_DE,
@@ -43,11 +43,12 @@ export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
     ? '> *Sehr geehrte Community, hier findet ihr unsere Teamliste. Hier könnt ihr sehen, wer zum Serverteam gehört. Dies hilft, um immer zu wissen, ob man den Personen trauen kann.*'
     : '> *Dear community, here you can find our team list. Here you can see who is part of the server team. This helps you always know whom you can trust.*';
 
-  const embed = applyAuthor(new EmbedBuilder(), 'TEAM')
+  const embed = new EmbedBuilder()
     .setColor(0xFFD700)
     .setTitle(title)
     .setDescription(description)
     .setFooter(FOOTER);
+  applyAuthorByLang(embed, 'TEAM', lang);
 
   // Nur Rollen rendern, die mindestens 1 Mitglied haben
   for (const role of TEAM_ROLES) {

@@ -3,7 +3,7 @@
 */
 import { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
 import { FOOTER } from '../../util/footer.js';
-import { applyAuthor } from '../../util/author.js';
+import { applyAuthorByLang } from '../../util/author.js';
 import {
   VERIFY_BUTTON_ID,
   VERIFY_LANG_EN_ID,
@@ -45,12 +45,13 @@ export function buildVerifyEmbedAndComponents(lang = VERIFY_DEFAULT_LANG) {
         },
       ];
 
-  const embed = applyAuthor(new EmbedBuilder(), 'VERIFY')
+  const embed = new EmbedBuilder()
     .setColor(0xFFD700)
     .setTitle(title)
     .setDescription(description)
     .addFields(fields)
     .setFooter(FOOTER);
+  applyAuthorByLang(embed, 'VERIFY', lang);
 
   // ✅ Verify-Button (grün)
   const verifyButton = new ButtonBuilder()
