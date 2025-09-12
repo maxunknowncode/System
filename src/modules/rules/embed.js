@@ -8,6 +8,7 @@ import {
   ButtonStyle,
 } from "discord.js";
 import { FOOTER } from "../../util/footer.js";
+import { applyAuthor } from "../../util/author.js";
 import { RULES_BUTTON_ID_EN, RULES_BUTTON_ID_DE } from "./config.js";
 
 const FIELDS_EN = [
@@ -123,7 +124,7 @@ export function buildRulesEmbedAndComponents(lang = "en") {
     ? "🛡️ *Offizielle Server-Regeln von **The Core Team** — alle müssen sich daran halten.*"
     : "🛡️ *Official server rules by **The Core Team** — everyone must follow them.*";
 
-  const embed = new EmbedBuilder()
+  const embed = applyAuthor(new EmbedBuilder(), "RULES")
     .setColor(0xffd700)
     .setTitle(title)
     .setDescription(description)
