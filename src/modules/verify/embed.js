@@ -2,8 +2,9 @@
 ### Zweck: Baut die Verify-Embed samt Sprach- und Verify-Buttons.
 */
 import { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
-import { FOOTER } from '../../util/footer.js';
-import { applyAuthorByLang } from '../../util/author.js';
+import { FOOTER } from '../../util/embeds/footer.js';
+import { applyAuthorByLang } from '../../util/embeds/author.js';
+import { COLOR } from '../../util/embeds/color.js';
 import {
   VERIFY_BUTTON_ID,
   VERIFY_LANG_EN_ID,
@@ -46,7 +47,7 @@ export function buildVerifyEmbedAndComponents(lang = VERIFY_DEFAULT_LANG) {
       ];
 
   const embed = new EmbedBuilder()
-    .setColor(0xFFD700)
+    .setColor(COLOR)
     .setTitle(title)
     .setDescription(description)
     .addFields(fields)

@@ -4,16 +4,18 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
 } from 'discord.js';
-import { FOOTER } from '../../util/footer.js';
+import { FOOTER } from '../../util/embeds/footer.js';
+import { applyAuthor } from '../../util/embeds/author.js';
+import { COLOR } from '../../util/embeds/color.js';
 import { MENU_CUSTOM_ID, MENU_PLACEHOLDER, MENU_OPTION_EN, MENU_OPTION_DE } from './config.js';
 
 export function buildTicketPanel() {
-  const embed = new EmbedBuilder()
-    .setAuthor({ name: 'The Core - Ticket System' })
+  const embed = applyAuthor(new EmbedBuilder(), 'TICKET')
     .setDescription(
       `🇺🇸 **English**\n> Select which type of ticket you would like to open in the dropdown menu!\n\n` +
         `🇩🇪 **Deutsch**\n> Wähle im Dropdown-Menü aus, welche Art von Ticket du öffnen möchtest!`
     )
+    .setColor(COLOR)
     .setFooter(FOOTER);
 
   const optionEN = new StringSelectMenuOptionBuilder()

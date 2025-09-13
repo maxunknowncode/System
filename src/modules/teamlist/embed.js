@@ -7,8 +7,9 @@ import {
   ActionRowBuilder,
   ButtonStyle,
 } from 'discord.js';
-import { FOOTER } from '../../util/footer.js';
-import { applyAuthorByLang } from '../../util/author.js';
+import { FOOTER } from '../../util/embeds/footer.js';
+import { applyAuthorByLang } from '../../util/embeds/author.js';
+import { COLOR } from '../../util/embeds/color.js';
 import {
   TEAM_BUTTON_ID_EN,
   TEAM_BUTTON_ID_DE,
@@ -44,7 +45,7 @@ export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
     : '> *Dear community, here you can find our team list. Here you can see who is part of the server team. This helps you always know whom you can trust.*';
 
   const embed = new EmbedBuilder()
-    .setColor(0xFFD700)
+    .setColor(COLOR)
     .setTitle(title)
     .setDescription(description)
     .setFooter(FOOTER);
