@@ -1,7 +1,8 @@
 import { BTN_CLAIM_ID, BTN_CLOSE_ID, TEAM_ROLE_ID, TICKET_ACTIVE_CATEGORY_ID } from './config.js';
 import { buildTicketName } from './utils.js';
-import { FOOTER } from '../../util/footer.js';
-import { applyAuthor } from '../../util/author.js';
+import { FOOTER } from '../../util/embeds/footer.js';
+import { applyAuthor } from '../../util/embeds/author.js';
+import { COLOR } from '../../util/embeds/color.js';
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -78,11 +79,14 @@ export async function openTicket(interaction, lang = 'en') {
     .setFooter(FOOTER);
   await interaction.reply({ embeds: [replyEmbed], ephemeral: true, allowedMentions: { parse: [] } });
 
-  const embed = applyAuthor(new EmbedBuilder(), 'TICKET').setDescription(
-    lang === 'de'
-      ? '> 🇩🇪 Bitte beschreibe dein Anliegen, während du wartest.'
-      : "> 🇺🇸 Please describe your issue while you’re waiting."
-  );
+  const embed = applyAuthor(new EmbedBuilder(), 'TICKET')
+    .setColor(COLOR)
+    .setFooter(FOOTER)
+    .setDescription(
+      lang === 'de'
+        ? '> 🇩🇪 Bitte beschreibe dein Anliegen, während du wartest.'
+        : '> 🇺🇸 Please describe your issue while you’re waiting.'
+    );
 
   const claimBtn = new ButtonBuilder()
     .setCustomId(BTN_CLAIM_ID)

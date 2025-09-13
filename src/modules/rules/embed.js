@@ -7,8 +7,9 @@ import {
   ActionRowBuilder,
   ButtonStyle,
 } from "discord.js";
-  import { FOOTER } from "../../util/footer.js";
-  import { applyAuthorByLang } from "../../util/author.js";
+import { FOOTER } from "../../util/embeds/footer.js";
+import { applyAuthorByLang } from "../../util/embeds/author.js";
+import { COLOR } from "../../util/embeds/color.js";
 import { RULES_BUTTON_ID_EN, RULES_BUTTON_ID_DE } from "./config.js";
 
 const FIELDS_EN = [
@@ -125,7 +126,7 @@ export function buildRulesEmbedAndComponents(lang = "en") {
     : "🛡️ *Official server rules by **The Core Team** — everyone must follow them.*";
 
   const embed = new EmbedBuilder()
-    .setColor(0xffd700)
+    .setColor(COLOR)
     .setTitle(title)
     .setDescription(description)
     .setFields(fields)

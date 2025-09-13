@@ -12,8 +12,8 @@ import {
 } from './config.js';
 import { openTicket } from './open.js';
 import { isTeam, setStatusPrefix } from './utils.js';
-import { FOOTER } from '../../util/footer.js';
-import { applyAuthor } from '../../util/author.js';
+import { FOOTER } from '../../util/embeds/footer.js';
+import { applyAuthor } from '../../util/embeds/author.js';
 import {
   ActionRowBuilder,
   ButtonBuilder,

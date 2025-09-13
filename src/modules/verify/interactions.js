@@ -10,7 +10,7 @@ import {
   VERIFY_RESET_MS,
 } from './config.js';
 import { buildVerifyEmbedAndComponents } from './embed.js';
-import { FOOTER } from '../../util/footer.js';
+import { FOOTER } from '../../util/embeds/footer.js';
 import { logger } from '../../util/logger.js';
 
 const verifyLangTimers = new Map();
