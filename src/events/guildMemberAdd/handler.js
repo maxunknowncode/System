@@ -19,7 +19,7 @@ export default {
     const channel = member.guild?.channels.cache.get(WELCOME_CHANNEL_ID);
     if (!channel) return;
 
-    const description = `Hello ${member}, welcome to **The Core**.\n\nBitte lies dir die Regeln im Channel <#${RULES_CHANNEL_ID}> durch!`;
+    const description = `> Hello ${member}, welcome to **The Core**.\n\n> Bitte lies dir die Regeln im Channel <#${RULES_CHANNEL_ID}> durch!`;
 
     const embed = new EmbedBuilder()
       .setColor(COLOR)
