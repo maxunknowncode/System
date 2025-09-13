@@ -17,6 +17,7 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildPresences, // Presence-Intent im Dev-Portal aktivieren
     GatewayIntentBits.GuildMessages, // Kein Message-Content-Intent nötig
+    GatewayIntentBits.GuildVoiceStates,
   ],
 });
 
