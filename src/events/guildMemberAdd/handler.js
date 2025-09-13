@@ -27,7 +27,7 @@ export default {
       .setDescription(description)
       .setAuthor({ name: 'The Core', iconURL: AUTHOR_ICON })
       .setFooter(FOOTER)
-      .setImage(WELCOME_IMAGE_URL);
+      .setThumbnail(WELCOME_IMAGE_URL);
 
     try {
       await channel.send({ embeds: [embed] });
