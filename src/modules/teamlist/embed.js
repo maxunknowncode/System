@@ -15,13 +15,16 @@ import {
   TEAM_BUTTON_ID_DE,
   TEAM_ROLES,
 } from './config.js';
+import { logger } from '../../util/logger.js';
 
 async function getRoleMemberMentions(guild, roleId) {
   // Cache auffüllen, falls nötig
   if (guild.members.cache.size < guild.memberCount) {
     try {
       await guild.members.fetch();
-    } catch {}
+    } catch (err) {
+      logger.error('[team] Mitglieder konnten nicht geladen werden:', err);
+    }
   }
   // Mitglieder mit der Rolle sammeln
   const members = guild.members.cache.filter(m => m.roles.cache.has(roleId));

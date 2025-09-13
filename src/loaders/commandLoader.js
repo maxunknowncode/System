@@ -29,15 +29,21 @@ export default async function commandLoader(client) {
       const filePath = path.join(dir, file);
       try {
         const mod = (await import(filePath)).default;
-        if (typeof mod?.name === 'string' && typeof mod?.description === 'string') {
+        if (
+          typeof mod?.name === 'string' &&
+          typeof mod?.description === 'string' &&
+          typeof mod?.execute === 'function'
+        ) {
           commands.set(mod.name, mod);
           loaded++;
-          } else {
-            logger.warn(`[befehle] Überspringe ${path.relative(baseDir, filePath)}: name/description fehlt`);
-          }
-        } catch (err) {
-          logger.warn(`[befehle] Laden von ${filePath} fehlgeschlagen:`, err);
+        } else {
+          logger.warn(
+            `[befehle] Überspringe ${path.relative(baseDir, filePath)}: name/description/execute fehlt`
+          );
         }
+      } catch (err) {
+        logger.warn(`[befehle] Laden von ${filePath} fehlgeschlagen:`, err);
+      }
     } else {
       for (const entry of entries.filter((e) => e.isDirectory())) {
         await traverse(path.join(dir, entry.name));

@@ -20,6 +20,7 @@ import {
   ButtonStyle,
   EmbedBuilder,
 } from 'discord.js';
+import { logger } from '../../util/logger.js';
 
 export async function handleTicketInteractions(interaction, client) {
   if (interaction.isStringSelectMenu() && interaction.customId === MENU_CUSTOM_ID) {
@@ -81,11 +82,15 @@ export async function handleTicketInteractions(interaction, client) {
               row.components.some((c) => [BTN_CLAIM_ID, BTN_CLOSE_ID, BTN_REOPEN_ID].includes(c.customId))
             )
         );
-      } catch {}
+      } catch (err) {
+        logger.error('[tickets] Startnachricht konnte nicht geladen werden:', err);
+      }
       if (TICKET_ARCHIVE_CATEGORY_ID) {
         try {
           await interaction.channel.setParent(TICKET_ARCHIVE_CATEGORY_ID);
-        } catch {}
+        } catch (err) {
+          logger.error('[tickets] Kategorie konnte nicht gesetzt werden:', err);
+        }
       }
       if (startMsg) {
         const reopenBtn = new ButtonBuilder()
@@ -134,11 +139,15 @@ export async function handleTicketInteractions(interaction, client) {
               row.components.some((c) => [BTN_REOPEN_ID, BTN_DELETE_ID].includes(c.customId))
             )
         );
-      } catch {}
+      } catch (err) {
+        logger.error('[tickets] Startnachricht konnte nicht geladen werden:', err);
+      }
       if (TICKET_ACTIVE_CATEGORY_ID) {
         try {
           await interaction.channel.setParent(TICKET_ACTIVE_CATEGORY_ID);
-        } catch {}
+        } catch (err) {
+          logger.error('[tickets] Kategorie konnte nicht gesetzt werden:', err);
+        }
       }
       await setStatusPrefix(interaction.channel, 'neutral');
       if (startMsg) {
@@ -191,7 +200,7 @@ export async function handleTicketInteractions(interaction, client) {
         '🇺🇸 **Deleting in 5 seconds…**\n\n🇩🇪 **Löschen in 5 Sekunden…**'
       );
       await interaction.update({ embeds: [embed], components: [], allowedMentions: { parse: [] } });
-      setTimeout(() => interaction.channel.delete().catch(() => {}), 5000);
+      setTimeout(() => interaction.channel.delete().catch((err) => logger.error('[tickets] Kanal konnte nicht gelöscht werden:', err)), 5000);
       return;
     }
     default:

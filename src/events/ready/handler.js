@@ -35,6 +35,8 @@ export default {
     }
     try {
       await ensureTicketPanel(client);
-    } catch {}
+    } catch (err) {
+      logger.error('[tickets] Fehler beim Sicherstellen des Panels:', err);
+    }
   },
 };
