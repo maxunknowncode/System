@@ -1,4 +1,10 @@
-import { BTN_CLAIM_ID, BTN_CLOSE_ID, TEAM_ROLE_ID, TICKET_ACTIVE_CATEGORY_ID } from './config.js';
+import {
+  BTN_CLAIM_ID,
+  BTN_CLOSE_ID,
+  TEAM_ROLE_ID,
+  TICKET_ACTIVE_CATEGORY_ID,
+  TICKET_CHANNEL_PREFIX,
+} from './config.js';
 import { buildTicketName } from './utils.js';
 import { FOOTER } from '../../util/embeds/footer.js';
 import { applyAuthor } from '../../util/embeds/author.js';
@@ -20,10 +26,14 @@ export async function openTicket(interaction, lang = 'en') {
     return;
   }
 
-  let name = buildTicketName(user);
-  if (guild.channels.cache.some((c) => c.name === name)) {
-    name += `-${Math.floor(Math.random() * 9000) + 1000}`;
-  }
+  const existing = guild.channels.cache.filter(
+    (c) =>
+      c.parentId === TICKET_ACTIVE_CATEGORY_ID && c.name.startsWith(TICKET_CHANNEL_PREFIX)
+  );
+  const index = Math.min(existing.size + 1, 99);
+
+  let name = buildTicketName(user, index);
+  // keine Zufallsnummern mehr nötig
 
   const overwrites = [
     { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },

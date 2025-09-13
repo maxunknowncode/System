@@ -8,8 +8,10 @@ export function slugUsername(name) {
     .replace(/^-|-$/g, '');
 }
 
-export function buildTicketName(user) {
-  return `${TICKET_CHANNEL_PREFIX}-${slugUsername(user.username)}`;
+export function buildTicketName(user, index) {
+  return `${TICKET_CHANNEL_PREFIX}-${slugUsername(user.username)}-${index
+    .toString()
+    .padStart(2, '0')}`;
 }
 
 export function isTeam(member) {
