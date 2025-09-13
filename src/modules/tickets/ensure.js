@@ -6,7 +6,8 @@ export async function ensureTicketPanel(client) {
   let channel;
   try {
     channel = await client.channels.fetch(TICKET_PANEL_CHANNEL_ID);
-  } catch {
+  } catch (err) {
+    logger.error('[tickets] Panel-Kanal konnte nicht abgerufen werden:', err);
     return;
   }
   if (!channel || !channel.isTextBased()) return;
@@ -16,29 +17,37 @@ export async function ensureTicketPanel(client) {
 
   try {
     message = await channel.messages.fetch(TICKET_PANEL_MESSAGE_ID);
-  } catch {}
+  } catch (err) {
+    logger.warn('[tickets] Panel-Nachricht nicht gefunden:', err);
+  }
 
   if (!message) {
     try {
       const messages = await channel.messages.fetch({ limit: 20 });
-        message = messages.find(
-          (m) =>
-            m.author.id === client.user.id &&
-            (m.components.some((row) => row.components.some((c) => c.customId === MENU_CUSTOM_ID)) ||
-              m.embeds.some((e) => e.author?.name === 'The Core - Ticket System'))
-        );
-      } catch {}
+      message = messages.find(
+        (m) =>
+          m.author.id === client.user.id &&
+          (m.components.some((row) => row.components.some((c) => c.customId === MENU_CUSTOM_ID)) ||
+            m.embeds.some((e) => e.author?.name === 'The Core - Ticket System'))
+      );
+    } catch (err) {
+      logger.error('[tickets] Nachrichten konnten nicht geladen werden:', err);
+    }
     }
 
   if (message) {
     try {
       await message.edit(payload);
       logger.info('[tickets] Panel aktualisiert');
-    } catch {}
+    } catch (err) {
+      logger.error('[tickets] Panel konnte nicht aktualisiert werden:', err);
+    }
   } else {
     try {
       await channel.send(payload);
       logger.info('[tickets] Panel erstellt');
-    } catch {}
+    } catch (err) {
+      logger.error('[tickets] Panel konnte nicht erstellt werden:', err);
+    }
   }
 }

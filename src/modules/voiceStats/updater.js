@@ -16,6 +16,8 @@ let intervalStarted = false;
 let presencesFetched = false;
 let lastHumans = null;
 let lastOnline = null;
+let membersChannel;
+let onlineChannel;
 
 async function computeCounts(guild) {
   if (!presencesFetched) {
@@ -32,11 +34,10 @@ async function computeCounts(guild) {
   return { humans, online };
 }
 
-async function setChannelName(channelId, name) {
+async function setChannelName(channel, name) {
   try {
-    const ch = await client.channels.fetch(channelId);
-    if (ch && ch.name !== name) {
-      await ch.setName(name);
+    if (channel && channel.name !== name) {
+      await channel.setName(name);
     }
   } catch (err) {
     logger.error('[voicestats] Fehler beim Umbenennen des Kanals:', err);
@@ -49,12 +50,12 @@ async function tick() {
     : client.guilds.cache.first();
   if (!guild) return;
   const { humans, online } = await computeCounts(guild);
-  if (humans !== lastHumans) {
-    await setChannelName(MEMBERS_CHANNEL_ID, `👥 Mitglieder: ${humans}`);
+  if (membersChannel && humans !== lastHumans) {
+    await setChannelName(membersChannel, `👥 Mitglieder: ${humans}`);
     lastHumans = humans;
   }
-  if (online !== lastOnline) {
-    await setChannelName(ONLINE_CHANNEL_ID, `🟢 Online: ${online}`);
+  if (onlineChannel && online !== lastOnline) {
+    await setChannelName(onlineChannel, `🟢 Online: ${online}`);
     lastOnline = online;
   }
 }
@@ -63,6 +64,12 @@ export async function startVoiceStats(c) {
   if (intervalStarted) return;
   intervalStarted = true;
   client = c;
+  try {
+    membersChannel = await client.channels.fetch(MEMBERS_CHANNEL_ID);
+    onlineChannel = await client.channels.fetch(ONLINE_CHANNEL_ID);
+  } catch (err) {
+    logger.error('[voicestats] Kanäle konnten nicht abgerufen werden:', err);
+  }
   try {
     await tick();
   } catch (err) {

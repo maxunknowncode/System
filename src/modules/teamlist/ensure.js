@@ -23,7 +23,9 @@ export async function ensureTeamMessage(client) {
   let message = null;
   try {
     message = await channel.messages.fetch(TEAM_MESSAGE_ID);
-  } catch {}
+  } catch (err) {
+    logger.error('[team] Nachricht konnte nicht abgerufen werden:', err);
+  }
 
   if (message) {
     try {

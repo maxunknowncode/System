@@ -28,7 +28,9 @@ export async function handleVerifyInteractions(interaction, client) {
         .setFooter(FOOTER);
       try {
         await interaction.reply({ embeds: [embed], ephemeral: true });
-      } catch {}
+      } catch (err) {
+        logger.error('[verify] Antwort konnte nicht gesendet werden:', err);
+      }
       logger.warn('[verify] Mitglied nicht gefunden');
       return;
     }
@@ -41,7 +43,9 @@ export async function handleVerifyInteractions(interaction, client) {
         .setFooter(FOOTER);
       try {
         await interaction.reply({ embeds: [embed], ephemeral: true });
-      } catch {}
+      } catch (err) {
+        logger.error('[verify] Antwort konnte nicht gesendet werden:', err);
+      }
       return;
     }
 
@@ -62,7 +66,9 @@ export async function handleVerifyInteractions(interaction, client) {
         .setFooter(FOOTER);
       try {
         await interaction.reply({ embeds: [embed], ephemeral: true });
-      } catch {}
+      } catch (err) {
+        logger.error('[verify] Antwort konnte nicht gesendet werden:', err);
+      }
     }
     return;
   }

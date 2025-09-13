@@ -73,7 +73,9 @@ export default {
         } else {
           await interaction.reply({ ...payload, ephemeral: true });
         }
-      } catch {}
+      } catch (err) {
+        logger.warn('[befehle] Antwort senden fehlgeschlagen:', err);
+      }
       return;
     }
 
@@ -90,7 +92,9 @@ export default {
         } else {
           await interaction.reply({ ...payload, ephemeral: true });
         }
-      } catch {}
+      } catch (err) {
+        logger.warn('[befehle] Antwort senden fehlgeschlagen:', err);
+      }
     }
   },
 };
