@@ -5,8 +5,10 @@ import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { logger } from '../util/logger.js';
 
-export default async function eventLoader(client) {
-  const baseDir = path.join(process.cwd(), 'src', 'events');
+export default async function eventLoader(
+  client,
+  baseDir = path.join(process.cwd(), 'src', 'events'),
+) {
   let loaded = 0;
 
   async function traverse(dir) {
