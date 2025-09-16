@@ -48,7 +48,7 @@ export default async function eventLoader(client) {
         }
         loaded++;
       } catch (err) {
-        logger.warn(`[ereignisse] Laden von ${filePath} fehlgeschlagen:`, err);
+        logger.error(`[ereignisse] Laden von ${filePath} fehlgeschlagen:`, err);
       }
     } else {
       for (const entry of entries.filter((e) => e.isDirectory())) {
