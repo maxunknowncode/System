@@ -10,14 +10,20 @@ export async function* walk(dir, { onError } = {}) {
     return;
   }
 
+  const subdirectories = [];
+
   for (const entry of entries) {
     const filePath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      for await (const nested of walk(filePath, { onError })) {
-        yield nested;
-      }
+      subdirectories.push(filePath);
     } else if (entry.isFile()) {
       yield filePath;
+    }
+  }
+
+  for (const subdirectory of subdirectories) {
+    for await (const nested of walk(subdirectory, { onError })) {
+      yield nested;
     }
   }
 }

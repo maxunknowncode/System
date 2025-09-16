@@ -9,9 +9,25 @@ export default async function eventLoader(client) {
   const baseDir = path.join(process.cwd(), 'src', 'events');
   let loaded = 0;
   const filesByDir = new Map();
+  const processedDirs = new Set();
 
   const handleReadError = (err, dir) => {
     logger.error('[ereignisse] Verzeichnis konnte nicht gelesen werden:', dir, err);
+  };
+
+  const hasProcessedAncestor = (directory) => {
+    for (const processed of processedDirs) {
+      if (processed === directory) {
+        continue;
+      }
+
+      const relative = path.relative(processed, directory);
+      if (relative && !relative.startsWith('..') && !path.isAbsolute(relative)) {
+        return true;
+      }
+    }
+
+    return false;
   };
 
   for await (const filePath of walk(baseDir, { onError: handleReadError })) {
@@ -21,7 +37,14 @@ export default async function eventLoader(client) {
     }
 
     const directory = path.dirname(filePath);
-    if (fileName === 'handler.js' || !filesByDir.has(directory)) {
+    if (hasProcessedAncestor(directory)) {
+      continue;
+    }
+
+    if (!filesByDir.has(directory)) {
+      filesByDir.set(directory, filePath);
+      processedDirs.add(directory);
+    } else if (fileName === 'handler.js') {
       filesByDir.set(directory, filePath);
     }
   }
