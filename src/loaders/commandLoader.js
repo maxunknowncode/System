@@ -42,7 +42,7 @@ export default async function commandLoader(client) {
           );
         }
       } catch (err) {
-        logger.warn(`[befehle] Laden von ${filePath} fehlgeschlagen:`, err);
+        logger.error(`[befehle] Laden von ${filePath} fehlgeschlagen:`, err);
       }
     } else {
       for (const entry of entries.filter((e) => e.isDirectory())) {
