@@ -11,6 +11,7 @@ export default async function commandLoader(client) {
   const filesByDir = new Map();
   const processedDirs = new Set();
 
+
   const handleReadError = (err, dir) => {
     logger.error('[befehle] Verzeichnis konnte nicht gelesen werden:', dir, err);
   };

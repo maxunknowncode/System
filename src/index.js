@@ -2,6 +2,7 @@
 ### Zweck: Einstiegspunkt – erstellt den Client, lädt Commands/Events und loggt den Bot ein.
 */
 import { Client, GatewayIntentBits } from 'discord.js';
+import path from 'node:path';
 import commandLoader from './loaders/commandLoader.js';
 import eventLoader from './loaders/eventLoader.js';
 import { logger } from './util/logger.js';
@@ -39,6 +40,9 @@ process.on('uncaughtException', (err) => {
 
 logger.info('[start] Starte…');
 await commandLoader(client);
-await eventLoader(client);
+const eventsDir = process.env.EVENTS_DIR
+  ? path.resolve(process.cwd(), process.env.EVENTS_DIR)
+  : undefined;
+await eventLoader(client, eventsDir);
 
 await client.login(process.env.TOKEN);

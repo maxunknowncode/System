@@ -11,6 +11,7 @@ const failingEventModule = `export default {
   },
 };`;
 
+
 const eventModule = (name, once = false) => `export default {
   name: '${name}',
   once: ${once},
@@ -18,25 +19,76 @@ const eventModule = (name, once = false) => `export default {
 };`;
 
 describe('eventLoader', () => {
-  it('logs errors thrown by event handlers', async () => {
-    const tempBase = await mkdtemp(path.join(tmpdir(), 'event-loader-'));
-    const eventsDir = path.join(tempBase, 'src', 'events', 'failing');
+  it('registers once event handlers with client.once and triggers only once', async () => {
+    const tempBase = await mkdtemp(path.join(tmpdir(), 'event-loader-once-'));
+    const eventsDir = path.join(tempBase, 'src', 'events', 'once');
     await mkdir(eventsDir, { recursive: true });
     const handlerPath = path.join(eventsDir, 'handler.js');
-    await writeFile(handlerPath, failingEventModule);
+    await writeFile(handlerPath, onceEventModule);
 
-    const client = { on: vi.fn(), once: vi.fn() };
-    let errorSpy;
+    const onceHandlers = new Map();
+    const client = {
+      on: vi.fn(),
+      once: vi.fn((eventName, handler) => {
+        onceHandlers.set(eventName, handler);
+      }),
+      emit: (eventName, ...args) => {
+        const handler = onceHandlers.get(eventName);
+        if (!handler) return undefined;
+        onceHandlers.delete(eventName);
+        return handler(...args);
+      },
+    };
+
     let cwdSpy;
 
     try {
       vi.resetModules();
       cwdSpy = vi.spyOn(process, 'cwd').mockReturnValue(tempBase);
+
+      const { default: eventLoader } = await import('./eventLoader.js');
+      await eventLoader(client);
+
+      expect(client.once).toHaveBeenCalledTimes(1);
+      expect(client.on).not.toHaveBeenCalled();
+      const [eventName] = client.once.mock.calls[0];
+      expect(eventName).toBe('onceEvent');
+      expect(onceHandlers.has('onceEvent')).toBe(true);
+
+      const mod = await import(handlerPath);
+      expect(mod.callCount).toBe(0);
+
+      await client.emit('onceEvent');
+      expect(mod.callCount).toBe(1);
+
+      await client.emit('onceEvent');
+      expect(mod.callCount).toBe(1);
+      expect(onceHandlers.has('onceEvent')).toBe(false);
+    } finally {
+      await rm(tempBase, { recursive: true, force: true });
+      cwdSpy?.mockRestore();
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('logs errors thrown by event handlers', async () => {
+    const tempBase = await mkdtemp(path.join(tmpdir(), 'event-loader-'));
+    const baseDir = path.join(tempBase, 'src', 'events');
+    const failingDir = path.join(baseDir, 'failing');
+    await mkdir(failingDir, { recursive: true });
+    const handlerPath = path.join(failingDir, 'handler.js');
+    await writeFile(handlerPath, failingEventModule);
+
+    const client = { on: vi.fn(), once: vi.fn() };
+    let errorSpy;
+
+    try {
+      vi.resetModules();
       const { logger } = await import('../util/logger.js');
       errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
 
       const { default: eventLoader } = await import('./eventLoader.js');
-      await eventLoader(client);
+      await eventLoader(client, baseDir);
 
       expect(client.on).toHaveBeenCalledTimes(1);
       const [eventName, handler] = client.on.mock.calls[0];
@@ -49,7 +101,6 @@ describe('eventLoader', () => {
     } finally {
       await rm(tempBase, { recursive: true, force: true });
       errorSpy?.mockRestore();
-      cwdSpy?.mockRestore();
       vi.restoreAllMocks();
     }
   });

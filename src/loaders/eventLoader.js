@@ -5,8 +5,10 @@ import path from 'node:path';
 import { logger } from '../util/logger.js';
 import { walk } from './walk.js';
 
-export default async function eventLoader(client) {
-  const baseDir = path.join(process.cwd(), 'src', 'events');
+export default async function eventLoader(
+  client,
+  baseDir = path.join(process.cwd(), 'src', 'events'),
+) {
   let loaded = 0;
   const filesByDir = new Map();
   const processedDirs = new Set();
