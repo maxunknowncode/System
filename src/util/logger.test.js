@@ -162,7 +162,7 @@ describe('setupDiscordLogging', () => {
     unsubscribe();
   });
 
-  it('sends audit logs as embeds', async () => {
+  it('sends audit logs with structured embed data', async () => {
     const send = vi.fn().mockResolvedValue();
     const { client } = createClient(send);
 
@@ -170,7 +170,13 @@ describe('setupDiscordLogging', () => {
     const unsubscribe = setupDiscordLogging(client);
     const { logger } = await import('./logger.js');
 
-    logger.warn('[audit] permissions updated');
+    logger.warn('[audit:message_delete] Nachricht entfernt', {
+      actorId: '111',
+      targetId: '222',
+      channelId: '333',
+      reason: 'Spam',
+      count: 2,
+    });
     await flushAsync();
 
     expect(send).toHaveBeenCalledTimes(1);
@@ -178,11 +184,51 @@ describe('setupDiscordLogging', () => {
     expect(payload.content).toBeUndefined();
     expect(payload.embeds).toHaveLength(1);
     const embed = payload.embeds[0];
-    expect(embed.data.description).toContain('permissions updated');
+    expect(embed.data.description).toContain('Nachricht entfernt');
     expect(embed.data.description).not.toMatch(/\[audit/i);
+
     expect(embed.data.fields).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ name: 'Kategorie', value: 'Audit' }),
+        expect.objectContaining({ name: 'Level', value: '`WARN`' }),
+        expect.objectContaining({ name: 'Aktion', value: '`message_delete`' }),
+        expect.objectContaining({ name: 'Auslöser', value: '<@111>' }),
+        expect.objectContaining({ name: 'Ziel', value: '<@222>' }),
+        expect.objectContaining({ name: 'Kanal', value: '<#333>' }),
+        expect.objectContaining({ name: 'Grund', value: 'Spam' }),
+        expect.objectContaining({ name: 'Count', value: '2' }),
+      ]),
+    );
+
+    unsubscribe();
+  });
+
+  it('sends audit logs without metadata with fallback fields', async () => {
+    const send = vi.fn().mockResolvedValue();
+    const { client } = createClient(send);
+
+    const { setupDiscordLogging } = await import('./discordLogger.js');
+    const unsubscribe = setupDiscordLogging(client);
+    const { logger } = await import('./logger.js');
+
+    logger.info('[audit:role_update] Rolle angepasst');
+    await flushAsync();
+
+    expect(send).toHaveBeenCalledTimes(1);
+    const payload = send.mock.calls[0][0];
+    expect(payload.content).toBeUndefined();
+    expect(payload.embeds).toHaveLength(1);
+    const embed = payload.embeds[0];
+    expect(embed.data.description).toContain('Rolle angepasst');
+    expect(embed.data.description).not.toMatch(/\[audit/i);
+
+    expect(embed.data.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'Level', value: '`INFO`' }),
+        expect.objectContaining({ name: 'Aktion', value: '`role_update`' }),
+        expect.objectContaining({ name: 'Auslöser', value: '_Nicht angegeben_' }),
+        expect.objectContaining({ name: 'Ziel', value: '_Nicht angegeben_' }),
+        expect.objectContaining({ name: 'Kanal', value: '_Nicht angegeben_' }),
+        expect.objectContaining({ name: 'Grund', value: '_Nicht angegeben_' }),
       ]),
     );
 
