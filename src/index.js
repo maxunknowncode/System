@@ -6,6 +6,7 @@ import path from 'node:path';
 import commandLoader from './loaders/commandLoader.js';
 import eventLoader from './loaders/eventLoader.js';
 import { logger } from './util/logger.js';
+import { setupDiscordLogging } from './util/discordLogger.js';
 
 if (!process.env.TOKEN) {
   logger.error('[start] TOKEN fehlt – Start abgebrochen.');
@@ -21,6 +22,8 @@ const client = new Client({
     GatewayIntentBits.GuildVoiceStates,
   ],
 });
+
+setupDiscordLogging(client);
 
 const shutdown = (code = 0) => {
   logger.info('[beenden] Fahre herunter…');
