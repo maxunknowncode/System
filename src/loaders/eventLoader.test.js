@@ -11,6 +11,14 @@ const failingEventModule = `export default {
   },
 };`;
 
+const onceEventModule = `export let callCount = 0;
+export default {
+  name: 'onceEvent',
+  once: true,
+  async execute() {
+    callCount += 1;
+  },
+};`;
 
 const eventModule = (name, once = false) => `export default {
   name: '${name}',
