@@ -17,6 +17,8 @@ const LEVEL_COLOURS = {
 
 const JOIN_PREFIX_REGEX = /^\s*\[join2create\]\s*/i;
 const JOIN_MATCH_REGEX = /\[join2create\]/i;
+const AUDIT_PREFIX_REGEX = /^\s*\[audit(?::[^\]]*)?\]\s*/i;
+const AUDIT_MATCH_REGEX = /\[audit(?::[^\]]*)?\]/i;
 const MAX_QUEUE_SIZE = 50;
 
 const truncate = (value, max) => {
@@ -48,11 +50,18 @@ const formatParts = (parts) => {
   return truncate(formatted.join('\n\n'), 4000);
 };
 
+const isJoin2CreateEntry = (args) =>
+  args.some((arg) => typeof arg === 'string' && JOIN_MATCH_REGEX.test(arg));
+
+const isAuditEntry = (args) =>
+  args.some((arg) => typeof arg === 'string' && AUDIT_MATCH_REGEX.test(arg));
+
 const determineContext = (args) => {
-  for (const arg of args) {
-    if (typeof arg === 'string' && JOIN_MATCH_REGEX.test(arg)) {
-      return 'join2create';
-    }
+  if (isJoin2CreateEntry(args)) {
+    return 'join2create';
+  }
+  if (isAuditEntry(args)) {
+    return 'audit';
   }
   return 'general';
 };
@@ -62,6 +71,13 @@ const stripJoinPrefix = (arg) => {
     return arg;
   }
   return arg.replace(JOIN_PREFIX_REGEX, '');
+};
+
+const stripAuditPrefix = (arg) => {
+  if (typeof arg !== 'string') {
+    return arg;
+  }
+  return arg.replace(AUDIT_PREFIX_REGEX, '');
 };
 
 export function setupDiscordLogging(client) {
@@ -112,8 +128,19 @@ export function setupDiscordLogging(client) {
       return;
     }
 
-    const cleanedArgs = context === 'join2create' ? entry.args.map(stripJoinPrefix) : entry.args;
+    let cleanedArgs = entry.args;
+    if (context === 'join2create') {
+      cleanedArgs = entry.args.map(stripJoinPrefix);
+    } else if (context === 'audit') {
+      cleanedArgs = entry.args.map(stripAuditPrefix);
+    }
+
     const description = formatParts(formatLogArgs(cleanedArgs));
+
+    if (context === 'general') {
+      await channel.send({ content: description, allowedMentions: { parse: [] } });
+      return;
+    }
 
     const embed = new EmbedBuilder()
       .setColor(LEVEL_COLOURS[entry.level] ?? LEVEL_COLOURS.info)
@@ -124,7 +151,7 @@ export function setupDiscordLogging(client) {
         { name: 'Level', value: `\`${entry.level.toUpperCase()}\``, inline: true },
         {
           name: 'Kategorie',
-          value: context === 'join2create' ? 'Join2Create' : 'Allgemein',
+          value: context === 'join2create' ? 'Join2Create' : 'Audit',
           inline: true,
         },
       )

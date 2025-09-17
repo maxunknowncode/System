@@ -1,5 +1,45 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('discord.js', () => {
+  class FakeEmbedBuilder {
+    constructor() {
+      this.data = { fields: [] };
+    }
+
+    setColor(color) {
+      this.data.color = color;
+      return this;
+    }
+
+    setAuthor(author) {
+      this.data.author = author;
+      return this;
+    }
+
+    setDescription(description) {
+      this.data.description = description;
+      return this;
+    }
+
+    setTimestamp(timestamp) {
+      this.data.timestamp = timestamp;
+      return this;
+    }
+
+    addFields(...fields) {
+      this.data.fields.push(...fields);
+      return this;
+    }
+
+    setFooter(footer) {
+      this.data.footer = footer;
+      return this;
+    }
+  }
+
+  return { EmbedBuilder: FakeEmbedBuilder };
+});
+
 const ORIGINAL_LEVEL = process.env.LOG_LEVEL;
 
 describe('logger', () => {
@@ -64,5 +104,115 @@ describe('logger', () => {
     await Promise.resolve();
 
     expect(transport).not.toHaveBeenCalled();
+  });
+});
+
+describe('setupDiscordLogging', () => {
+  const flushAsync = async () => {
+    await new Promise((resolve) => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
+  };
+
+  const createClient = (send) => {
+    const channel = {
+      isTextBased: () => true,
+      send,
+    };
+    const fetch = vi.fn().mockResolvedValue(channel);
+    return {
+      client: {
+        isReady: () => true,
+        channels: { fetch },
+      },
+      fetch,
+    };
+  };
+
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
+  });
+
+  it('sends general logs as plain text messages', async () => {
+    const send = vi.fn().mockResolvedValue();
+    const { client, fetch } = createClient(send);
+
+    const { setupDiscordLogging } = await import('./discordLogger.js');
+    const unsubscribe = setupDiscordLogging(client);
+    const { logger } = await import('./logger.js');
+
+    logger.info('general entry');
+    await flushAsync();
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledWith({
+      content: expect.stringContaining('general entry'),
+      allowedMentions: { parse: [] },
+    });
+    expect(send.mock.calls[0][0].embeds).toBeUndefined();
+
+    unsubscribe();
+  });
+
+  it('sends audit logs as embeds', async () => {
+    const send = vi.fn().mockResolvedValue();
+    const { client } = createClient(send);
+
+    const { setupDiscordLogging } = await import('./discordLogger.js');
+    const unsubscribe = setupDiscordLogging(client);
+    const { logger } = await import('./logger.js');
+
+    logger.warn('[audit] permissions updated');
+    await flushAsync();
+
+    expect(send).toHaveBeenCalledTimes(1);
+    const payload = send.mock.calls[0][0];
+    expect(payload.content).toBeUndefined();
+    expect(payload.embeds).toHaveLength(1);
+    const embed = payload.embeds[0];
+    expect(embed.data.description).toContain('permissions updated');
+    expect(embed.data.description).not.toMatch(/\[audit/i);
+    expect(embed.data.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'Kategorie', value: 'Audit' }),
+      ]),
+    );
+
+    unsubscribe();
+  });
+
+  it('sends join2create logs as embeds without prefix', async () => {
+    const send = vi.fn().mockResolvedValue();
+    const { client } = createClient(send);
+
+    const { setupDiscordLogging } = await import('./discordLogger.js');
+    const unsubscribe = setupDiscordLogging(client);
+    const { logger } = await import('./logger.js');
+
+    logger.info('[join2create] channel created');
+    await flushAsync();
+
+    expect(send).toHaveBeenCalledTimes(1);
+    const payload = send.mock.calls[0][0];
+    expect(payload.content).toBeUndefined();
+    expect(payload.embeds).toHaveLength(1);
+    const embed = payload.embeds[0];
+    expect(embed.data.description).toContain('channel created');
+    expect(embed.data.description).not.toMatch(/\[join2create/i);
+    expect(embed.data.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'Kategorie', value: 'Join2Create' }),
+      ]),
+    );
+
+    unsubscribe();
   });
 });
