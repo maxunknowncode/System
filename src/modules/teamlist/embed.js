@@ -17,13 +17,15 @@ import {
 } from './config.js';
 import { logger } from '../../util/logger.js';
 
+const teamLogger = logger.withPrefix('team');
+
 async function getRoleMemberMentions(guild, roleId) {
   // Cache auffüllen, falls nötig
   if (guild.members.cache.size < guild.memberCount) {
     try {
       await guild.members.fetch();
     } catch (err) {
-      logger.error('[team] Mitglieder konnten nicht geladen werden:', err);
+      teamLogger.error('Mitglieder konnten nicht geladen werden:', err);
     }
   }
   // Mitglieder mit der Rolle sammeln

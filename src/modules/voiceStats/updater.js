@@ -11,6 +11,8 @@ import {
 } from './config.js';
 import { logger } from '../../util/logger.js';
 
+const voiceStatsLogger = logger.withPrefix('voicestats');
+
 let client;
 let intervalStarted = false;
 let presencesFetched = false;
@@ -40,7 +42,7 @@ async function setChannelName(channel, name) {
       await channel.setName(name);
     }
   } catch (err) {
-    logger.error('[voicestats] Fehler beim Umbenennen des Kanals:', err);
+    voiceStatsLogger.error('Fehler beim Umbenennen des Kanals:', err);
   }
 }
 
@@ -68,18 +70,18 @@ export async function startVoiceStats(c) {
     membersChannel = await client.channels.fetch(MEMBERS_CHANNEL_ID);
     onlineChannel = await client.channels.fetch(ONLINE_CHANNEL_ID);
   } catch (err) {
-    logger.error('[voicestats] Kanäle konnten nicht abgerufen werden:', err);
+    voiceStatsLogger.error('Kanäle konnten nicht abgerufen werden:', err);
   }
   try {
     await tick();
   } catch (err) {
-    logger.error('[voicestats] Fehler beim Aktualisieren der Voice-Stats:', err);
+    voiceStatsLogger.error('Fehler beim Aktualisieren der Voice-Stats:', err);
   }
   const interval = setInterval(async () => {
     try {
       await tick();
     } catch (err) {
-      logger.error('[voicestats] Fehler beim Aktualisieren der Voice-Stats:', err);
+      voiceStatsLogger.error('Fehler beim Aktualisieren der Voice-Stats:', err);
     }
   }, UPDATE_EVERY_MS);
   const stop = () => clearInterval(interval);

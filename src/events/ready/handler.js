@@ -8,35 +8,42 @@ import { startVoiceStats } from '../../modules/voiceStats/updater.js';
 import { ensureTicketPanel } from '../../modules/tickets/ensure.js';
 import { logger } from '../../util/logger.js';
 
+const readyLogger = logger.withPrefix('bereit');
+const verifyLogger = logger.withPrefix('verifizierung');
+const rulesLogger = logger.withPrefix('regeln');
+const teamLogger = logger.withPrefix('team');
+const voiceStatsLogger = logger.withPrefix('voicestats');
+const ticketsLogger = logger.withPrefix('tickets');
+
 export default {
   name: 'ready',
   once: true,
   async execute(client) {
-    logger.info(`[bereit] Angemeldet als ${client.user?.tag}`);
+    readyLogger.info(`Angemeldet als ${client.user?.tag}`);
     try {
       await ensureVerifyMessage(client);
     } catch (err) {
-      logger.error('[verifizierung] Fehler beim Sicherstellen der Nachricht:', err);
+      verifyLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
     }
     try {
       await ensureRulesMessage(client);
     } catch (err) {
-      logger.error('[regeln] Fehler beim Sicherstellen der Nachricht:', err);
+      rulesLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
     }
     try {
       await ensureTeamMessage(client);
     } catch (err) {
-      logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);
+      teamLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
     }
     try {
       await startVoiceStats(client);
     } catch (err) {
-      logger.error('[voicestats] Fehler beim Starten:', err);
+      voiceStatsLogger.error('Fehler beim Starten:', err);
     }
     try {
       await ensureTicketPanel(client);
     } catch (err) {
-      logger.error('[tickets] Fehler beim Sicherstellen des Panels:', err);
+      ticketsLogger.error('Fehler beim Sicherstellen des Panels:', err);
     }
   },
 };

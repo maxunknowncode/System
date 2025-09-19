@@ -9,8 +9,12 @@ import { logger } from './util/logger.js';
 import { setupDiscordLogging } from './util/discordLogger.js';
 import { getLogChannelIds } from './util/logging/config.js';
 
+const startLogger = logger.withPrefix('start');
+const shutdownLogger = logger.withPrefix('beenden');
+const errorLogger = logger.withPrefix('fehler');
+
 if (!process.env.TOKEN) {
-  logger.error('[start] TOKEN fehlt – Start abgebrochen.');
+  startLogger.error('TOKEN fehlt – Start abgebrochen.');
   process.exit(1);
 }
 
@@ -28,22 +32,22 @@ const logChannelIds = getLogChannelIds();
 setupDiscordLogging(client, logChannelIds);
 
 const shutdown = (code = 0) => {
-  logger.info('[beenden] Fahre herunter…');
+  shutdownLogger.info('Fahre herunter…');
   client.destroy().finally(() => process.exit(code));
 };
 
 process.on('SIGINT', () => shutdown());
 process.on('SIGTERM', () => shutdown());
 process.on('unhandledRejection', (err) => {
-  logger.error('[fehler] Unbehandelte Ausnahme:', err);
+  errorLogger.error('Unbehandelte Ausnahme:', err);
   shutdown(1);
 });
 process.on('uncaughtException', (err) => {
-  logger.error('[fehler] Unbehandelte Ausnahme:', err);
+  errorLogger.error('Unbehandelte Ausnahme:', err);
   shutdown(1);
 });
 
-logger.info('[start] Starte…');
+startLogger.info('Starte…');
 await commandLoader(client);
 const eventsDir = process.env.EVENTS_DIR
   ? path.resolve(process.cwd(), process.env.EVENTS_DIR)

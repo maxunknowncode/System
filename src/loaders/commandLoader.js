@@ -5,6 +5,8 @@ import path from 'node:path';
 import { logger } from '../util/logger.js';
 import { walk } from './walk.js';
 
+const commandLogger = logger.withPrefix('befehle');
+
 export default async function commandLoader(client) {
   const baseDir = path.join(process.cwd(), 'src', 'commands');
   const commands = new Map();
@@ -13,7 +15,7 @@ export default async function commandLoader(client) {
 
 
   const handleReadError = (err, dir) => {
-    logger.error('[befehle] Verzeichnis konnte nicht gelesen werden:', dir, err);
+    commandLogger.error('Verzeichnis konnte nicht gelesen werden:', dir, err);
   };
 
   const hasProcessedAncestor = (directory) => {
@@ -60,15 +62,15 @@ export default async function commandLoader(client) {
       ) {
         commands.set(mod.name, mod);
       } else {
-        logger.warn(
-          `[befehle] Überspringe ${path.relative(baseDir, filePath)}: name/description/execute fehlt`
+        commandLogger.warn(
+          `Überspringe ${path.relative(baseDir, filePath)}: name/description/execute fehlt`
         );
       }
     } catch (err) {
-      logger.warn(`[befehle] Laden von ${filePath} fehlgeschlagen:`, err);
+      commandLogger.warn(`Laden von ${filePath} fehlgeschlagen:`, err);
     }
   }
 
   client.commands = commands;
-  logger.info(`[befehle] Geladen: ${commands.size} Befehl(e)`);
+  commandLogger.info(`Geladen: ${commands.size} Befehl(e)`);
 }

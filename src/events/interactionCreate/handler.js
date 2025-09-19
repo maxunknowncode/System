@@ -20,6 +20,8 @@ import {
 } from '../../modules/tickets/config.js';
 import { handleTicketInteractions } from '../../modules/tickets/interactions.js';
 
+const commandLogger = logger.withPrefix('befehle');
+
 export default {
   name: 'interactionCreate',
   once: false,
@@ -74,7 +76,7 @@ export default {
           await interaction.reply({ ...payload, ephemeral: true });
         }
       } catch (err) {
-        logger.warn('[befehle] Antwort senden fehlgeschlagen:', err);
+        commandLogger.warn('Antwort senden fehlgeschlagen:', err);
       }
       return;
     }
@@ -84,7 +86,7 @@ export default {
         await command.execute(interaction, client);
       }
     } catch (error) {
-      logger.error('[befehle] Ausführung fehlgeschlagen:', error);
+      commandLogger.error('Ausführung fehlgeschlagen:', error);
       const payload = { content: 'An error occurred while executing this command.' };
       try {
         if (interaction.deferred || interaction.replied) {
@@ -93,7 +95,7 @@ export default {
           await interaction.reply({ ...payload, ephemeral: true });
         }
       } catch (err) {
-        logger.warn('[befehle] Antwort senden fehlgeschlagen:', err);
+        commandLogger.warn('Antwort senden fehlgeschlagen:', err);
       }
     }
   },

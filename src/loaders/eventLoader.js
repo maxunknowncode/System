@@ -5,6 +5,8 @@ import path from 'node:path';
 import { logger } from '../util/logger.js';
 import { walk } from './walk.js';
 
+const eventsLogger = logger.withPrefix('ereignisse');
+
 export default async function eventLoader(
   client,
   baseDir = path.join(process.cwd(), 'src', 'events'),
@@ -14,7 +16,7 @@ export default async function eventLoader(
   const processedDirs = new Set();
 
   const handleReadError = (err, dir) => {
-    logger.error('[ereignisse] Verzeichnis konnte nicht gelesen werden:', dir, err);
+    eventsLogger.error('Verzeichnis konnte nicht gelesen werden:', dir, err);
   };
 
   const hasProcessedAncestor = (directory) => {
@@ -55,7 +57,7 @@ export default async function eventLoader(
     try {
       const mod = (await import(filePath)).default;
       if (!mod?.name || typeof mod.execute !== 'function') {
-        logger.warn(`[ereignisse] Überspringe ${path.relative(baseDir, filePath)}: name/execute fehlt`);
+        eventsLogger.warn(`Überspringe ${path.relative(baseDir, filePath)}: name/execute fehlt`);
         continue;
       }
 
@@ -63,7 +65,7 @@ export default async function eventLoader(
         try {
           await mod.execute(...args, client);
         } catch (err) {
-          logger.error(`[ereignisse] Fehler im Handler ${mod.name}:`, err);
+          eventsLogger.error(`Fehler im Handler ${mod.name}:`, err);
         }
       };
 
@@ -74,9 +76,9 @@ export default async function eventLoader(
       }
       loaded++;
     } catch (err) {
-      logger.warn(`[ereignisse] Laden von ${filePath} fehlgeschlagen:`, err);
+      eventsLogger.warn(`Laden von ${filePath} fehlgeschlagen:`, err);
     }
   }
 
-  logger.info(`[ereignisse] Gebunden: ${loaded} Ereignis(se)`);
+  eventsLogger.info(`Gebunden: ${loaded} Ereignis(se)`);
 }

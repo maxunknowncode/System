@@ -18,6 +18,29 @@ const AUDIT_MATCH_REGEX = /\[audit(?::[^\]]*)?\]/i;
 const AUDIT_ACTION_REGEX = /\[audit(?::([^\]]+))?\]/i;
 const MAX_QUEUE_SIZE = 50;
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const stripContextPrefix = (value, entry, fallbackRegex) => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const text = entry.context?.text;
+  if (text) {
+    const pattern = new RegExp(`^\\s*${escapeRegex(text)}\\s*`, 'i');
+    const cleaned = value.replace(pattern, '');
+    if (cleaned !== value) {
+      return cleaned;
+    }
+  }
+
+  if (fallbackRegex) {
+    return value.replace(fallbackRegex, '');
+  }
+
+  return value;
+};
+
 const formatParts = (parts) => {
   if (!parts.length) {
     return '_Keine Details verfügbar_';
@@ -40,35 +63,35 @@ const formatParts = (parts) => {
   return truncate(formatted.join('\n\n'), 4000);
 };
 
-const isJoin2CreateEntry = (args) =>
-  args.some((arg) => typeof arg === 'string' && JOIN_MATCH_REGEX.test(arg));
-
-const isAuditEntry = (args) =>
-  args.some((arg) => typeof arg === 'string' && AUDIT_MATCH_REGEX.test(arg));
-
-const determineContext = (args) => {
-  if (isJoin2CreateEntry(args)) {
+const isJoin2CreateEntry = (entry) => {
+  if (entry.context?.segments?.[0] === 'join2create') {
     return 'join2create';
   }
-  if (isAuditEntry(args)) {
+  return entry.args.some((arg) => typeof arg === 'string' && JOIN_MATCH_REGEX.test(arg))
+    ? 'join2create'
+    : null;
+};
+
+const isAuditEntry = (entry) => {
+  if (entry.context?.segments?.[0] === 'audit') {
+    return 'audit';
+  }
+  return entry.args.some((arg) => typeof arg === 'string' && AUDIT_MATCH_REGEX.test(arg)) ? 'audit' : null;
+};
+
+const determineContext = (entry) => {
+  if (isJoin2CreateEntry(entry)) {
+    return 'join2create';
+  }
+  if (isAuditEntry(entry)) {
     return 'audit';
   }
   return 'general';
 };
 
-const stripJoinPrefix = (arg) => {
-  if (typeof arg !== 'string') {
-    return arg;
-  }
-  return arg.replace(JOIN_PREFIX_REGEX, '');
-};
+const stripJoinPrefix = (arg, entry) => stripContextPrefix(arg, entry, JOIN_PREFIX_REGEX);
 
-const stripAuditPrefix = (arg) => {
-  if (typeof arg !== 'string') {
-    return arg;
-  }
-  return arg.replace(AUDIT_PREFIX_REGEX, '');
-};
+const stripAuditPrefix = (arg, entry) => stripContextPrefix(arg, entry, AUDIT_PREFIX_REGEX);
 
 const FALLBACK_FIELD_VALUE = '_Nicht angegeben_';
 
@@ -83,12 +106,19 @@ const normaliseId = (value) => {
   return null;
 };
 
-const buildAuditPayload = (args) => {
+const buildAuditPayload = (entry) => {
+  const args = entry.args;
   const metadataCandidate = args[args.length - 1];
   const metadata = isPlainObject(metadataCandidate) ? metadataCandidate : null;
 
   const formattedArgs = [];
+  const contextSegments = entry.context?.segments ?? [];
+  const contextAction =
+    contextSegments.length > 1 ? contextSegments.slice(1).join(':').trim() : '';
   let actionType = typeof metadata?.action === 'string' ? metadata.action.trim() : '';
+  if (!actionType && contextAction) {
+    actionType = contextAction;
+  }
 
   args.forEach((arg, index) => {
     if (metadata && index === args.length - 1) {
@@ -100,7 +130,7 @@ const buildAuditPayload = (args) => {
         const match = arg.match(AUDIT_ACTION_REGEX);
         actionType = match?.[1]?.trim() ?? '';
       }
-      const withoutPrefix = stripAuditPrefix(arg).trim();
+      const withoutPrefix = stripAuditPrefix(arg, entry).trim();
       if (withoutPrefix) {
         formattedArgs.push(withoutPrefix);
       }
@@ -202,7 +232,7 @@ export function setupDiscordLogging(client, options = {}) {
   };
 
   const deliver = async (entry) => {
-    const context = determineContext(entry.args);
+    const context = determineContext(entry);
     const targetId = context === 'join2create' ? joinToCreateChannelId : generalChannelId;
     const fallbackId = generalChannelId;
 
@@ -221,7 +251,7 @@ export function setupDiscordLogging(client, options = {}) {
     }
 
     if (context === 'audit') {
-      const payload = buildAuditPayload(entry.args);
+      const payload = buildAuditPayload(entry);
       const embed = new EmbedBuilder()
         .setColor(LEVEL_COLOURS[entry.level] ?? LEVEL_COLOURS.info)
         .setAuthor({ name: `System Logger • ${entry.level.toUpperCase()}`, iconURL: AUTHOR_ICON })
@@ -234,7 +264,7 @@ export function setupDiscordLogging(client, options = {}) {
       return;
     }
 
-    const cleanedArgs = entry.args.map(stripJoinPrefix);
+    const cleanedArgs = entry.args.map((arg) => stripJoinPrefix(arg, entry));
     const description = formatParts(formatLogArgs(cleanedArgs));
     const embed = new EmbedBuilder()
       .setColor(LEVEL_COLOURS[entry.level] ?? LEVEL_COLOURS.info)

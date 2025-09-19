@@ -10,6 +10,8 @@ import {
   SUGGESTIONS_IGNORE_BOTS,
 } from '../../modules/suggestions/config.js';
 
+const suggestionsLogger = logger.withPrefix('suggestions');
+
 export default {
   name: Events.MessageCreate,
   once: false,
@@ -21,7 +23,7 @@ export default {
       await message.react(SUGGESTIONS_EMOJI_UP);
       await message.react(SUGGESTIONS_EMOJI_DOWN);
     } catch (err) {
-      logger.warn('[suggestions] Reactions failed:', err?.code ?? err?.message);
+      suggestionsLogger.warn('Reactions failed:', err?.code ?? err?.message);
     }
   },
 };

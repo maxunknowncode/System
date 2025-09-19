@@ -30,9 +30,8 @@ describe('commandLoader', () => {
     try {
       vi.resetModules();
       cwdSpy = vi.spyOn(process, 'cwd').mockReturnValue(tempBase);
-      const { logger } = await import('../util/logger.js');
-      infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => {});
-      warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+      infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const { default: commandLoader } = await import('./commandLoader.js');
       await commandLoader(client);

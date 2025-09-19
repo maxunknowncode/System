@@ -22,6 +22,8 @@ import {
 } from 'discord.js';
 import { logger } from '../../util/logger.js';
 
+const ticketLogger = logger.withPrefix('tickets');
+
 export async function handleTicketInteractions(interaction, client) {
   if (interaction.isStringSelectMenu() && interaction.customId === MENU_CUSTOM_ID) {
     const value = interaction.values?.[0];
@@ -83,13 +85,13 @@ export async function handleTicketInteractions(interaction, client) {
             )
         );
       } catch (err) {
-        logger.error('[tickets] Startnachricht konnte nicht geladen werden:', err);
+        ticketLogger.error('Startnachricht konnte nicht geladen werden:', err);
       }
       if (TICKET_ARCHIVE_CATEGORY_ID) {
         try {
           await interaction.channel.setParent(TICKET_ARCHIVE_CATEGORY_ID);
         } catch (err) {
-          logger.error('[tickets] Kategorie konnte nicht gesetzt werden:', err);
+          ticketLogger.error('Kategorie konnte nicht gesetzt werden:', err);
         }
       }
       if (startMsg) {
@@ -140,13 +142,13 @@ export async function handleTicketInteractions(interaction, client) {
             )
         );
       } catch (err) {
-        logger.error('[tickets] Startnachricht konnte nicht geladen werden:', err);
+        ticketLogger.error('Startnachricht konnte nicht geladen werden:', err);
       }
       if (TICKET_ACTIVE_CATEGORY_ID) {
         try {
           await interaction.channel.setParent(TICKET_ACTIVE_CATEGORY_ID);
         } catch (err) {
-          logger.error('[tickets] Kategorie konnte nicht gesetzt werden:', err);
+          ticketLogger.error('Kategorie konnte nicht gesetzt werden:', err);
         }
       }
       await setStatusPrefix(interaction.channel, 'neutral');
@@ -200,7 +202,13 @@ export async function handleTicketInteractions(interaction, client) {
         '🇺🇸 **Deleting in 5 seconds…**\n\n🇩🇪 **Löschen in 5 Sekunden…**'
       );
       await interaction.update({ embeds: [embed], components: [], allowedMentions: { parse: [] } });
-      setTimeout(() => interaction.channel.delete().catch((err) => logger.error('[tickets] Kanal konnte nicht gelöscht werden:', err)), 5000);
+      setTimeout(
+        () =>
+          interaction.channel
+            .delete()
+            .catch((err) => ticketLogger.error('Kanal konnte nicht gelöscht werden:', err)),
+        5000,
+      );
       return;
     }
     default:

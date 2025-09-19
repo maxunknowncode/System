@@ -6,6 +6,8 @@ import { Events } from 'discord.js';
 import { logger } from '../../util/logger.js';
 import { describeDiscordEntity, formatValue, isPlainObject } from '../../util/logging/formatting.js';
 
+const auditLogger = logger.withPrefix('audit');
+
 const WARN_ACTIONS = new Set([
   AuditLogEvent.ChannelDelete,
   AuditLogEvent.ChannelOverwriteDelete,
@@ -256,9 +258,10 @@ export default {
 
       const description = parts.filter(Boolean).join(' • ') || 'Neuer Audit-Log-Eintrag';
 
-      logger[level](`[audit:${actionKey}] ${description}`, metadata);
+      const actionLogger = actionKey ? auditLogger.withPrefix(actionKey) : auditLogger;
+      actionLogger[level](description, metadata);
     } catch (err) {
-      logger.error('[audit] Verarbeitung des Audit-Log-Eintrags fehlgeschlagen:', err);
+      auditLogger.error('Verarbeitung des Audit-Log-Eintrags fehlgeschlagen:', err);
     }
   },
 };
