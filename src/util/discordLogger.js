@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { AUTHOR_ICON } from './embeds/author.js';
+import { truncate, isPlainObject, formatMetadataKey } from './logging/formatting.js';
 import { formatLogArgs, registerLogTransport } from './logger.js';
 
 const DEFAULT_GENERAL_CHANNEL_ID = '1416432156770566184';
@@ -21,13 +22,6 @@ const AUDIT_PREFIX_REGEX = /^\s*\[audit(?::[^\]]*)?\]\s*/i;
 const AUDIT_MATCH_REGEX = /\[audit(?::[^\]]*)?\]/i;
 const AUDIT_ACTION_REGEX = /\[audit(?::([^\]]+))?\]/i;
 const MAX_QUEUE_SIZE = 50;
-
-const truncate = (value, max) => {
-  if (value.length <= max) {
-    return value;
-  }
-  return `${value.slice(0, Math.max(0, max - 1))}…`;
-};
 
 const formatParts = (parts) => {
   if (!parts.length) {
@@ -83,9 +77,6 @@ const stripAuditPrefix = (arg) => {
 
 const FALLBACK_FIELD_VALUE = '_Nicht angegeben_';
 
-const isPlainObject = (value) =>
-  value !== null && typeof value === 'object' && (value.constructor === Object || Object.getPrototypeOf(value) === null);
-
 const normaliseId = (value) => {
   if (typeof value === 'string') {
     const trimmed = value.trim();
@@ -95,11 +86,6 @@ const normaliseId = (value) => {
     return String(value);
   }
   return null;
-};
-
-const formatMetadataKey = (key) => {
-  const spaced = key.replace(/[_-]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2');
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 };
 
 const buildAuditPayload = (args) => {
