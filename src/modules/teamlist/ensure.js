@@ -5,16 +5,18 @@ import { TEAM_CHANNEL_ID, TEAM_MESSAGE_ID, TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE,
 import { buildTeamEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logger.js';
 
+const teamLogger = logger.withPrefix('team');
+
 export async function ensureTeamMessage(client) {
   let channel;
   try {
     channel = await client.channels.fetch(TEAM_CHANNEL_ID);
   } catch (err) {
-    logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);
+    teamLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
     return;
   }
   if (!channel || !channel.isTextBased()) {
-    logger.warn('[team] Kanal nicht gefunden oder nicht textbasiert: ' + TEAM_CHANNEL_ID);
+    teamLogger.warn('Kanal nicht gefunden oder nicht textbasiert: ' + TEAM_CHANNEL_ID);
     return;
   }
 
@@ -24,16 +26,16 @@ export async function ensureTeamMessage(client) {
   try {
     message = await channel.messages.fetch(TEAM_MESSAGE_ID);
   } catch (err) {
-    logger.error('[team] Nachricht konnte nicht abgerufen werden:', err);
+    teamLogger.error('Nachricht konnte nicht abgerufen werden:', err);
   }
 
   if (message) {
     try {
       const { embeds, components } = await buildTeamEmbedAndComponents('en', channel.guild);
       await message.edit({ embeds, components, allowedMentions });
-      logger.info('[team] Nachricht aktualisiert');
+      teamLogger.info('Nachricht aktualisiert');
     } catch (err) {
-      logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);
+      teamLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
     }
     return;
   }
@@ -48,19 +50,19 @@ export async function ensureTeamMessage(client) {
         ))
     );
   } catch (err) {
-    logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);
+    teamLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
   }
 
   try {
     const { embeds, components } = await buildTeamEmbedAndComponents('en', channel.guild);
     if (message) {
       await message.edit({ embeds, components, allowedMentions });
-      logger.info('[team] Nachricht aktualisiert');
+      teamLogger.info('Nachricht aktualisiert');
     } else {
       await channel.send({ embeds, components, allowedMentions });
-      logger.info('[team] Nachricht erstellt');
+      teamLogger.info('Nachricht erstellt');
     }
   } catch (err) {
-    logger.error('[team] Fehler beim Sicherstellen der Nachricht:', err);
+    teamLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
   }
 }

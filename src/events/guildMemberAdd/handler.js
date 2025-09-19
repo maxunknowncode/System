@@ -12,6 +12,8 @@ import {
   WELCOME_IMAGE_URL,
 } from '../../modules/welcome/config.js';
 
+const welcomeLogger = logger.withPrefix('welcome');
+
 export default {
   name: Events.GuildMemberAdd,
   once: false,
@@ -32,7 +34,7 @@ export default {
     try {
       await channel.send({ embeds: [embed] });
     } catch (err) {
-      logger.warn('[welcome] Nachricht konnte nicht gesendet werden:', err);
+      welcomeLogger.warn('Nachricht konnte nicht gesendet werden:', err);
     }
   },
 };

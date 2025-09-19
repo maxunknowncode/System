@@ -13,6 +13,8 @@ import { buildVerifyEmbedAndComponents } from './embed.js';
 import { FOOTER } from '../../util/embeds/footer.js';
 import { logger } from '../../util/logger.js';
 
+const verifyLogger = logger.withPrefix('verify');
+
 const verifyLangTimers = new Map();
 
 export async function handleVerifyInteractions(interaction, client) {
@@ -29,9 +31,9 @@ export async function handleVerifyInteractions(interaction, client) {
       try {
         await interaction.reply({ embeds: [embed], ephemeral: true });
       } catch (err) {
-        logger.error('[verify] Antwort konnte nicht gesendet werden:', err);
+        verifyLogger.error('Antwort konnte nicht gesendet werden:', err);
       }
-      logger.warn('[verify] Mitglied nicht gefunden');
+      verifyLogger.warn('Mitglied nicht gefunden');
       return;
     }
 
@@ -44,7 +46,7 @@ export async function handleVerifyInteractions(interaction, client) {
       try {
         await interaction.reply({ embeds: [embed], ephemeral: true });
       } catch (err) {
-        logger.error('[verify] Antwort konnte nicht gesendet werden:', err);
+        verifyLogger.error('Antwort konnte nicht gesendet werden:', err);
       }
       return;
     }
@@ -58,7 +60,7 @@ export async function handleVerifyInteractions(interaction, client) {
         .setFooter(FOOTER);
       await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (err) {
-      logger.warn('[verify] Rolle konnte nicht vergeben', err);
+      verifyLogger.warn('Rolle konnte nicht vergeben', err);
       const embed = new EmbedBuilder()
         .setColor(0xFFA500)
         .setTitle('Verification')
@@ -67,7 +69,7 @@ export async function handleVerifyInteractions(interaction, client) {
       try {
         await interaction.reply({ embeds: [embed], ephemeral: true });
       } catch (err) {
-        logger.error('[verify] Antwort konnte nicht gesendet werden:', err);
+        verifyLogger.error('Antwort konnte nicht gesendet werden:', err);
       }
     }
     return;
@@ -80,9 +82,9 @@ export async function handleVerifyInteractions(interaction, client) {
     const lang = interaction.customId === VERIFY_LANG_DE_ID ? 'de' : 'en';
     try {
       await interaction.update(buildVerifyEmbedAndComponents(lang));
-      logger.info(`[verify] Sprache → ${lang.toUpperCase()}`);
+      verifyLogger.info(`Sprache → ${lang.toUpperCase()}`);
     } catch (err) {
-      logger.error('[verify] Fehler beim Umschalten der Sprache:', err);
+      verifyLogger.error('Fehler beim Umschalten der Sprache:', err);
       return;
     }
 
@@ -93,9 +95,9 @@ export async function handleVerifyInteractions(interaction, client) {
     const timeout = setTimeout(async () => {
       try {
         await interaction.message.edit(buildVerifyEmbedAndComponents('en'));
-        logger.info('[verify] Sprache → EN (Timeout)');
+        verifyLogger.info('Sprache → EN (Timeout)');
       } catch (err) {
-        logger.error('[verify] Fehler beim Zurücksetzen der Sprache:', err);
+        verifyLogger.error('Fehler beim Zurücksetzen der Sprache:', err);
       }
       verifyLangTimers.delete(messageId);
     }, VERIFY_RESET_MS);

@@ -5,16 +5,18 @@ import { RULES_CHANNEL_ID, RULES_MESSAGE_ID, RULES_BUTTON_ID_EN, RULES_BUTTON_ID
 import { buildRulesEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logger.js';
 
+const rulesLogger = logger.withPrefix('regeln');
+
 export async function ensureRulesMessage(client) {
   let channel;
   try {
     channel = await client.channels.fetch(RULES_CHANNEL_ID);
   } catch (err) {
-    logger.error('[regeln] Fehler beim Sicherstellen der Nachricht:', err);
+    rulesLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
     return;
   }
   if (!channel || !channel.isTextBased()) {
-    logger.warn('[regeln] Kanal nicht gefunden oder nicht textbasiert: ' + RULES_CHANNEL_ID);
+    rulesLogger.warn('Kanal nicht gefunden oder nicht textbasiert: ' + RULES_CHANNEL_ID);
     return;
   }
 
@@ -39,23 +41,23 @@ export async function ensureRulesMessage(client) {
         )
       );
     } catch (err) {
-      logger.error('[regeln] Fehler beim Sicherstellen der Nachricht:', err);
+      rulesLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
     }
   }
 
   if (message) {
     try {
       await message.edit(payload);
-      logger.info('[regeln] Nachricht aktualisiert');
+      rulesLogger.info('Nachricht aktualisiert');
     } catch (err) {
-      logger.error('[regeln] Fehler beim Sicherstellen der Nachricht:', err);
+      rulesLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
     }
   } else {
     try {
       await channel.send(payload);
-      logger.info('[regeln] Nachricht erstellt');
+      rulesLogger.info('Nachricht erstellt');
     } catch (err) {
-      logger.error('[regeln] Fehler beim Sicherstellen der Nachricht:', err);
+      rulesLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
     }
   }
 }

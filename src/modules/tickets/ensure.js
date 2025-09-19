@@ -2,12 +2,14 @@ import { TICKET_PANEL_CHANNEL_ID, TICKET_PANEL_MESSAGE_ID, MENU_CUSTOM_ID } from
 import { buildTicketPanel } from './panel.js';
 import { logger } from '../../util/logger.js';
 
+const ticketLogger = logger.withPrefix('tickets');
+
 export async function ensureTicketPanel(client) {
   let channel;
   try {
     channel = await client.channels.fetch(TICKET_PANEL_CHANNEL_ID);
   } catch (err) {
-    logger.error('[tickets] Panel-Kanal konnte nicht abgerufen werden:', err);
+    ticketLogger.error('Panel-Kanal konnte nicht abgerufen werden:', err);
     return;
   }
   if (!channel || !channel.isTextBased()) return;
@@ -18,7 +20,7 @@ export async function ensureTicketPanel(client) {
   try {
     message = await channel.messages.fetch(TICKET_PANEL_MESSAGE_ID);
   } catch (err) {
-    logger.warn('[tickets] Panel-Nachricht nicht gefunden:', err);
+    ticketLogger.warn('Panel-Nachricht nicht gefunden:', err);
   }
 
   if (!message) {
@@ -31,23 +33,23 @@ export async function ensureTicketPanel(client) {
             m.embeds.some((e) => e.author?.name === 'The Core - Ticket System'))
       );
     } catch (err) {
-      logger.error('[tickets] Nachrichten konnten nicht geladen werden:', err);
+      ticketLogger.error('Nachrichten konnten nicht geladen werden:', err);
     }
-    }
+  }
 
   if (message) {
     try {
       await message.edit(payload);
-      logger.info('[tickets] Panel aktualisiert');
+      ticketLogger.info('Panel aktualisiert');
     } catch (err) {
-      logger.error('[tickets] Panel konnte nicht aktualisiert werden:', err);
+      ticketLogger.error('Panel konnte nicht aktualisiert werden:', err);
     }
   } else {
     try {
       await channel.send(payload);
-      logger.info('[tickets] Panel erstellt');
+      ticketLogger.info('Panel erstellt');
     } catch (err) {
-      logger.error('[tickets] Panel konnte nicht erstellt werden:', err);
+      ticketLogger.error('Panel konnte nicht erstellt werden:', err);
     }
   }
 }

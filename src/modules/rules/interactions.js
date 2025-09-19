@@ -5,6 +5,8 @@ import { RULES_BUTTON_ID_EN, RULES_BUTTON_ID_DE, RULES_DEFAULT_LANG, RULES_RESET
 import { buildRulesEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logger.js';
 
+const rulesLogger = logger.withPrefix('regeln');
+
 const timeouts = new Map();
 
 export async function handleRulesButtons(interaction, client) {
@@ -12,9 +14,9 @@ export async function handleRulesButtons(interaction, client) {
   const message = interaction.message;
   try {
     await interaction.update(buildRulesEmbedAndComponents(lang));
-    logger.info(`[regeln] Sprache → ${lang.toUpperCase()}`);
+    rulesLogger.info(`Sprache → ${lang.toUpperCase()}`);
   } catch (err) {
-    logger.error('[regeln] Fehler beim Umschalten der Sprache:', err);
+    rulesLogger.error('Fehler beim Umschalten der Sprache:', err);
     return;
   }
 
@@ -25,9 +27,9 @@ export async function handleRulesButtons(interaction, client) {
   const timeout = setTimeout(async () => {
     try {
       await message.edit(buildRulesEmbedAndComponents(RULES_DEFAULT_LANG));
-      logger.info('[regeln] Sprache → EN (Timeout)');
+      rulesLogger.info('Sprache → EN (Timeout)');
     } catch (err) {
-      logger.error('[regeln] Fehler beim Zurücksetzen der Sprache:', err);
+      rulesLogger.error('Fehler beim Zurücksetzen der Sprache:', err);
     }
     timeouts.delete(messageId);
   }, RULES_RESET_MS);

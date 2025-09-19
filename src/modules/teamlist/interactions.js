@@ -5,6 +5,8 @@ import { TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE, TEAM_RESET_MS, TEAM_ROLES } from 
 import { buildTeamEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logger.js';
 
+const teamLogger = logger.withPrefix('team');
+
 const timeouts = new Map();
 
 export async function handleTeamButtons(interaction, client) {
@@ -12,9 +14,9 @@ export async function handleTeamButtons(interaction, client) {
   const lang = interaction.customId === TEAM_BUTTON_ID_DE ? 'de' : 'en';
   try {
     await interaction.update({ ...(await buildTeamEmbedAndComponents(lang, interaction.guild)), allowedMentions });
-    logger.info(`[team] Sprache → ${lang.toUpperCase()}`);
+    teamLogger.info(`Sprache → ${lang.toUpperCase()}`);
   } catch (err) {
-    logger.error('[team] Fehler beim Umschalten der Sprache:', err);
+    teamLogger.error('Fehler beim Umschalten der Sprache:', err);
     return;
   }
 
@@ -26,9 +28,9 @@ export async function handleTeamButtons(interaction, client) {
     try {
       const payload = await buildTeamEmbedAndComponents('en', interaction.guild);
       await interaction.message.edit({ ...payload, allowedMentions });
-      logger.info('[team] Sprache → EN (Timeout)');
+      teamLogger.info('Sprache → EN (Timeout)');
     } catch (err) {
-      logger.error('[team] Fehler beim Zurücksetzen der Sprache:', err);
+      teamLogger.error('Fehler beim Zurücksetzen der Sprache:', err);
     }
     timeouts.delete(messageId);
   }, TEAM_RESET_MS);

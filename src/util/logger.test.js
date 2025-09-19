@@ -92,6 +92,35 @@ describe('logger', () => {
     expect(entry.timestamp).toBeInstanceOf(Date);
   });
 
+  it('creates prefixed logger contexts and notifies transports with context data', async () => {
+    process.env.LOG_LEVEL = 'debug';
+    vi.resetModules();
+    const { logger, registerLogTransport } = await import('./logger.js');
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const transport = vi.fn();
+    const unsubscribe = registerLogTransport(transport);
+
+    const prefixed = logger.withPrefix('test');
+    prefixed.info('message', { foo: 'bar' });
+
+    await Promise.resolve();
+
+    expect(infoSpy).toHaveBeenCalledTimes(1);
+    expect(infoSpy).toHaveBeenCalledWith('[test] message', { foo: 'bar' });
+    expect(transport).toHaveBeenCalledTimes(1);
+    const entry = transport.mock.calls[0][0];
+    expect(entry.args[0]).toBe('[test] message');
+    expect(entry.context).toMatchObject({
+      label: 'test',
+      segments: ['test'],
+      text: '[test]',
+    });
+    expect(entry.context.metadata).toBeUndefined();
+
+    unsubscribe();
+    infoSpy.mockRestore();
+  });
+
   it('skips transports for filtered levels', async () => {
     process.env.LOG_LEVEL = 'error';
     vi.resetModules();
@@ -176,7 +205,8 @@ describe('setupDiscordLogging', () => {
     const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
     const { logger } = await import('./logger.js');
 
-    logger.warn('[audit:message_delete] Nachricht entfernt', {
+    const auditLogger = logger.withPrefix('audit').withPrefix('message_delete');
+    auditLogger.warn('Nachricht entfernt', {
       actorId: '111',
       targetId: '222',
       channelId: '333',
@@ -217,7 +247,8 @@ describe('setupDiscordLogging', () => {
     const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
     const { logger } = await import('./logger.js');
 
-    logger.info('[audit:role_update] Rolle angepasst');
+    const auditLogger = logger.withPrefix('audit').withPrefix('role_update');
+    auditLogger.info('Rolle angepasst');
     await flushAsync();
 
     expect(send).toHaveBeenCalledTimes(1);
@@ -251,7 +282,8 @@ describe('setupDiscordLogging', () => {
     const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
     const { logger } = await import('./logger.js');
 
-    logger.info('[join2create] channel created');
+    const joinLogger = logger.withPrefix('join2create');
+    joinLogger.info('channel created');
     await flushAsync();
 
     expect(send).toHaveBeenCalledTimes(1);

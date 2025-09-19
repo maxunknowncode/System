@@ -5,16 +5,18 @@ import { VERIFY_CHANNEL_ID, VERIFY_BUTTON_ID, VERIFY_DEFAULT_LANG, VERIFY_MESSAG
 import { buildVerifyEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logger.js';
 
+const verifyLogger = logger.withPrefix('verify');
+
 export default async function ensureVerifyMessage(client) {
   let channel;
   try {
     channel = await client.channels.fetch(VERIFY_CHANNEL_ID);
   } catch (err) {
-    logger.error('[verify] Fehler beim Sicherstellen der Nachricht:', err);
+    verifyLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
     return;
   }
   if (!channel || !channel.isTextBased()) {
-    logger.warn('[verify] Kanal nicht gefunden oder nicht textbasiert: ' + VERIFY_CHANNEL_ID);
+    verifyLogger.warn('Kanal nicht gefunden oder nicht textbasiert: ' + VERIFY_CHANNEL_ID);
     return;
   }
 
@@ -38,23 +40,23 @@ export default async function ensureVerifyMessage(client) {
         )
       );
     } catch (err) {
-      logger.error('[verify] Fehler beim Sicherstellen der Nachricht:', err);
+      verifyLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
     }
   }
 
   if (message) {
     try {
       await message.edit(payload);
-      logger.info('[verify] Nachricht aktualisiert');
+      verifyLogger.info('Nachricht aktualisiert');
     } catch (err) {
-      logger.error('[verify] Fehler beim Sicherstellen der Nachricht:', err);
+      verifyLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
     }
   } else {
     try {
       await channel.send(payload);
-      logger.info('[verify] Nachricht erstellt');
+      verifyLogger.info('Nachricht erstellt');
     } catch (err) {
-      logger.error('[verify] Fehler beim Sicherstellen der Nachricht:', err);
+      verifyLogger.error('Fehler beim Sicherstellen der Nachricht:', err);
     }
   }
 }

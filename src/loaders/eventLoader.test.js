@@ -92,8 +92,7 @@ describe('eventLoader', () => {
 
     try {
       vi.resetModules();
-      const { logger } = await import('../util/logger.js');
-      errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+      errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const { default: eventLoader } = await import('./eventLoader.js');
       await eventLoader(client, baseDir);
@@ -133,9 +132,8 @@ describe('eventLoader', () => {
     try {
       vi.resetModules();
       cwdSpy = vi.spyOn(process, 'cwd').mockReturnValue(tempBase);
-      const { logger } = await import('../util/logger.js');
-      infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => {});
-      warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+      infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const { default: eventLoader } = await import('./eventLoader.js');
       await eventLoader(client);

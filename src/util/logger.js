@@ -8,10 +8,29 @@ const current = process.env.LOG_LEVEL?.toLowerCase() || 'info';
 const currentIndex = levels.indexOf(current);
 const transports = new Set();
 
-const createEntry = (level, args) => ({
+const cloneMetadata = (metadata) => {
+  if (metadata == null) {
+    return undefined;
+  }
+  return { ...metadata };
+};
+
+const buildContextPayload = (context) => {
+  const segments = context?.segments ?? [];
+  const label = segments.length ? segments.join(':') : undefined;
+  return {
+    segments: [...segments],
+    label,
+    text: label ? `[${label}]` : undefined,
+    metadata: cloneMetadata(context?.metadata),
+  };
+};
+
+const createEntry = (level, args, context) => ({
   level,
   args,
   timestamp: new Date(),
+  context: buildContextPayload(context),
 });
 
 const notifyTransports = (entry) => {
@@ -34,19 +53,74 @@ const formatValue = (value) => {
   return inspect(value, { depth: 3, colors: false });
 };
 
-function log(level, ...args) {
-  if (levels.indexOf(level) >= currentIndex) {
-    console[level](...args);
-    notifyTransports(createEntry(level, args));
+const applyPrefix = (segments, args) => {
+  if (!segments?.length) {
+    return args;
   }
-}
 
-export const logger = {
-  debug: (...args) => log('debug', ...args),
-  info: (...args) => log('info', ...args),
-  warn: (...args) => log('warn', ...args),
-  error: (...args) => log('error', ...args),
+  const label = segments.join(':');
+  const prefix = `[${label}]`;
+  if (args.length === 0) {
+    return [prefix];
+  }
+
+  const [first, ...rest] = args;
+  if (typeof first === 'string') {
+    const suffix = first.length ? ` ${first}` : '';
+    return [`${prefix}${suffix}`, ...rest];
+  }
+
+  return [prefix, ...args];
 };
+
+const mergeMetadata = (parentMetadata, metadata) => {
+  const isObject = (value) => value && typeof value === 'object';
+
+  if (!isObject(parentMetadata) && !isObject(metadata)) {
+    return undefined;
+  }
+
+  if (!isObject(parentMetadata)) {
+    return { ...metadata };
+  }
+
+  if (!isObject(metadata)) {
+    return { ...parentMetadata };
+  }
+
+  return { ...parentMetadata, ...metadata };
+};
+
+const createLoggerInstance = (context) => {
+  const call = (level) => (...args) => {
+    if (levels.indexOf(level) < currentIndex) {
+      return;
+    }
+
+    const argsWithPrefix = applyPrefix(context.segments, args);
+    console[level](...argsWithPrefix);
+    notifyTransports(createEntry(level, argsWithPrefix, context));
+  };
+
+  const withPrefix = (prefix, metadata) => {
+    const trimmed = typeof prefix === 'string' ? prefix.trim() : '';
+    const segments = trimmed ? [...context.segments, trimmed] : [...context.segments];
+    const combinedMetadata = mergeMetadata(context.metadata, metadata);
+    return createLoggerInstance({ segments, metadata: combinedMetadata });
+  };
+
+  return {
+    debug: call('debug'),
+    info: call('info'),
+    warn: call('warn'),
+    error: call('error'),
+    withPrefix,
+  };
+};
+
+export const logger = createLoggerInstance({ segments: [], metadata: undefined });
+
+export const createLoggerContext = (prefix, metadata) => logger.withPrefix(prefix, metadata);
 
 export const logLevels = levels;
 
