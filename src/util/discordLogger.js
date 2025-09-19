@@ -11,37 +11,12 @@ const LEVEL_COLOURS = {
   error: 0xe74c3c,
 };
 
-const JOIN_PREFIX_REGEX = /^\s*\[join2create\]\s*/i;
 const JOIN_MATCH_REGEX = /\[join2create\]/i;
-const AUDIT_PREFIX_REGEX = /^\s*\[audit(?::[^\]]*)?\]\s*/i;
 const AUDIT_MATCH_REGEX = /\[audit(?::[^\]]*)?\]/i;
 const AUDIT_ACTION_REGEX = /\[audit(?::([^\]]+))?\]/i;
 const MAX_QUEUE_SIZE = 50;
 const DISCORD_PLAIN_TEXT_LIMIT = 2000; // Discord text messages are limited to 2000 characters.
 const DISCORD_EMBED_DESCRIPTION_LIMIT = 4000; // Embed descriptions may use up to 4096 characters; we keep a safety margin.
-
-const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-const stripContextPrefix = (value, entry, fallbackRegex) => {
-  if (typeof value !== 'string') {
-    return value;
-  }
-
-  const text = entry.context?.text;
-  if (text) {
-    const pattern = new RegExp(`^\\s*${escapeRegex(text)}\\s*`, 'i');
-    const cleaned = value.replace(pattern, '');
-    if (cleaned !== value) {
-      return cleaned;
-    }
-  }
-
-  if (fallbackRegex) {
-    return value.replace(fallbackRegex, '');
-  }
-
-  return value;
-};
 
 // Default to the embed limit because most logs are delivered via embeds (Discord allows 4096 characters).
 const formatParts = (parts, maxTotalLength = DISCORD_EMBED_DESCRIPTION_LIMIT) => {
@@ -70,7 +45,8 @@ const isJoin2CreateEntry = (entry) => {
   if (entry.context?.segments?.[0] === 'join2create') {
     return 'join2create';
   }
-  return entry.args.some((arg) => typeof arg === 'string' && JOIN_MATCH_REGEX.test(arg))
+  const args = entry.rawArgs ?? entry.args;
+  return args.some((arg) => typeof arg === 'string' && JOIN_MATCH_REGEX.test(arg))
     ? 'join2create'
     : null;
 };
@@ -79,7 +55,8 @@ const isAuditEntry = (entry) => {
   if (entry.context?.segments?.[0] === 'audit') {
     return 'audit';
   }
-  return entry.args.some((arg) => typeof arg === 'string' && AUDIT_MATCH_REGEX.test(arg)) ? 'audit' : null;
+  const args = entry.rawArgs ?? entry.args;
+  return args.some((arg) => typeof arg === 'string' && AUDIT_MATCH_REGEX.test(arg)) ? 'audit' : null;
 };
 
 const determineContext = (entry) => {
@@ -91,10 +68,6 @@ const determineContext = (entry) => {
   }
   return 'general';
 };
-
-const stripJoinPrefix = (arg, entry) => stripContextPrefix(arg, entry, JOIN_PREFIX_REGEX);
-
-const stripAuditPrefix = (arg, entry) => stripContextPrefix(arg, entry, AUDIT_PREFIX_REGEX);
 
 const FALLBACK_FIELD_VALUE = '_Nicht angegeben_';
 
@@ -110,7 +83,7 @@ const normaliseId = (value) => {
 };
 
 const buildAuditPayload = (entry) => {
-  const args = entry.args;
+  const args = entry.rawArgs ?? entry.args;
   const metadataCandidate = args[args.length - 1];
   const metadata = isPlainObject(metadataCandidate) ? metadataCandidate : null;
 
@@ -133,9 +106,9 @@ const buildAuditPayload = (entry) => {
         const match = arg.match(AUDIT_ACTION_REGEX);
         actionType = match?.[1]?.trim() ?? '';
       }
-      const withoutPrefix = stripAuditPrefix(arg, entry).trim();
-      if (withoutPrefix) {
-        formattedArgs.push(withoutPrefix);
+      const trimmed = arg.trim();
+      if (trimmed) {
+        formattedArgs.push(trimmed);
       }
       return;
     }
@@ -247,9 +220,11 @@ export function setupDiscordLogging(client, options = {}) {
       return;
     }
 
+    const rawArgs = entry.rawArgs ?? entry.args;
+
     if (context === 'general') {
       // Plain text messages must respect the 2000 character Discord limit.
-      const description = formatParts(formatLogArgs(entry.args), DISCORD_PLAIN_TEXT_LIMIT);
+      const description = formatParts(formatLogArgs(rawArgs), DISCORD_PLAIN_TEXT_LIMIT);
       await channel.send({ content: description, allowedMentions: { parse: [] } });
       return;
     }
@@ -268,8 +243,7 @@ export function setupDiscordLogging(client, options = {}) {
       return;
     }
 
-    const cleanedArgs = entry.args.map((arg) => stripJoinPrefix(arg, entry));
-    const description = formatParts(formatLogArgs(cleanedArgs));
+    const description = formatParts(formatLogArgs(rawArgs));
     const embed = new EmbedBuilder()
       .setColor(LEVEL_COLOURS[entry.level] ?? LEVEL_COLOURS.info)
       .setAuthor({ name: `System Logger • ${entry.level.toUpperCase()}`, iconURL: AUTHOR_ICON })
