@@ -113,6 +113,11 @@ describe('setupDiscordLogging', () => {
     await new Promise((resolve) => setImmediate(resolve));
   };
 
+  const CHANNEL_IDS = Object.freeze({
+    generalChannelId: 'general-channel',
+    joinToCreateChannelId: 'join2create-channel',
+  });
+
   const createClient = (send) => {
     const channel = {
       isTextBased: () => true,
@@ -145,13 +150,14 @@ describe('setupDiscordLogging', () => {
     const { client, fetch } = createClient(send);
 
     const { setupDiscordLogging } = await import('./discordLogger.js');
-    const unsubscribe = setupDiscordLogging(client);
+    const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
     const { logger } = await import('./logger.js');
 
     logger.info('general entry');
     await flushAsync();
 
     expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith(CHANNEL_IDS.generalChannelId);
     expect(send).toHaveBeenCalledTimes(1);
     expect(send).toHaveBeenCalledWith({
       content: expect.stringContaining('general entry'),
@@ -167,7 +173,7 @@ describe('setupDiscordLogging', () => {
     const { client } = createClient(send);
 
     const { setupDiscordLogging } = await import('./discordLogger.js');
-    const unsubscribe = setupDiscordLogging(client);
+    const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
     const { logger } = await import('./logger.js');
 
     logger.warn('[audit:message_delete] Nachricht entfernt', {
@@ -180,6 +186,7 @@ describe('setupDiscordLogging', () => {
     await flushAsync();
 
     expect(send).toHaveBeenCalledTimes(1);
+    expect(client.channels.fetch).toHaveBeenCalledWith(CHANNEL_IDS.generalChannelId);
     const payload = send.mock.calls[0][0];
     expect(payload.content).toBeUndefined();
     expect(payload.embeds).toHaveLength(1);
@@ -207,13 +214,14 @@ describe('setupDiscordLogging', () => {
     const { client } = createClient(send);
 
     const { setupDiscordLogging } = await import('./discordLogger.js');
-    const unsubscribe = setupDiscordLogging(client);
+    const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
     const { logger } = await import('./logger.js');
 
     logger.info('[audit:role_update] Rolle angepasst');
     await flushAsync();
 
     expect(send).toHaveBeenCalledTimes(1);
+    expect(client.channels.fetch).toHaveBeenCalledWith(CHANNEL_IDS.generalChannelId);
     const payload = send.mock.calls[0][0];
     expect(payload.content).toBeUndefined();
     expect(payload.embeds).toHaveLength(1);
@@ -240,13 +248,14 @@ describe('setupDiscordLogging', () => {
     const { client } = createClient(send);
 
     const { setupDiscordLogging } = await import('./discordLogger.js');
-    const unsubscribe = setupDiscordLogging(client);
+    const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
     const { logger } = await import('./logger.js');
 
     logger.info('[join2create] channel created');
     await flushAsync();
 
     expect(send).toHaveBeenCalledTimes(1);
+    expect(client.channels.fetch).toHaveBeenCalledWith(CHANNEL_IDS.joinToCreateChannelId);
     const payload = send.mock.calls[0][0];
     expect(payload.content).toBeUndefined();
     expect(payload.embeds).toHaveLength(1);
