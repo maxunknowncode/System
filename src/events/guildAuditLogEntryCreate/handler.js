@@ -4,7 +4,12 @@
 import { AuditLogEvent } from 'discord-api-types/v10';
 import { Events } from 'discord.js';
 import { logger } from '../../util/logger.js';
-import { describeDiscordEntity, formatValue, isPlainObject } from '../../util/logging/formatting.js';
+import {
+  describeDiscordEntity,
+  formatMetadataKey,
+  formatValue,
+  isPlainObject,
+} from '../../util/logging/formatting.js';
 
 const auditLogger = logger.withPrefix('audit');
 
@@ -91,11 +96,6 @@ const summariseChanges = (changes) => {
   };
 };
 
-const formatFieldLabel = (key) => {
-  const spaced = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ');
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
-};
-
 const summariseExtra = (extra, metadata) => {
   if (extra == null) {
     return [];
@@ -168,7 +168,7 @@ const summariseExtra = (extra, metadata) => {
           continue;
         }
         metadata[key] = value;
-        summary.push(`${formatFieldLabel(key)}: ${formatValue(value)}`);
+        summary.push(`${formatMetadataKey(key)}: ${formatValue(value)}`);
       }
     }
 
