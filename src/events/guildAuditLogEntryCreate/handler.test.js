@@ -56,19 +56,20 @@ describe('guildAuditLogEntryCreate handler', () => {
     expect(warnSpy).toHaveBeenCalledTimes(1);
     expect(infoSpy).not.toHaveBeenCalled();
     const [message, metadata] = warnSpy.mock.calls[0];
-    expect(message).toMatch(/^\[audit:message_delete]/);
-    expect(message).toContain('Aktion Message Delete (Delete)');
-    expect(message).toContain('Details:');
-    expect(metadata).toMatchObject({
+    expect(message).toBe(
+      '[audit:message_delete] Aktion Message Delete (Delete) • Ziel [User]: User#1234 (222) • Änderungen: count: 2 • Details: Kanal: allgemein (333); Anzahl: 2',
+    );
+    expect(metadata).toEqual({
       action: 'message_delete',
       actionType: 'Delete',
       actorId: '1111',
-      targetId: '222',
       channelId: '333',
-      reason: 'Spam',
       count: 2,
-      guildId: '999',
       entryId: 'audit-123',
+      guildId: '999',
+      reason: 'Spam',
+      targetId: '222',
+      targetType: 'User',
     });
 
     warnSpy.mockRestore();
@@ -94,13 +95,18 @@ describe('guildAuditLogEntryCreate handler', () => {
     expect(infoSpy).toHaveBeenCalledTimes(1);
     expect(warnSpy).not.toHaveBeenCalled();
     const [message, metadata] = infoSpy.mock.calls[0];
-    expect(message).toMatch(/^\[audit:role_update]/);
-    expect(message).toContain('Änderungen:');
-    expect(metadata).toMatchObject({
+    expect(message).toBe(
+      '[audit:role_update] Aktion Role Update (Update) • Ziel [Role]: Example Rolle (2222) • Änderungen: name: Alte Rolle → Neue Rolle; permissions: {"allow":"8"}',
+    );
+    expect(metadata).toEqual({
       action: 'role_update',
+      actionType: 'Update',
       actorId: '1111',
-      targetId: '2222',
+      entryId: 'log-entry-1',
       guildId: '999',
+      reason: 'Routine-Anpassung',
+      targetId: '2222',
+      targetType: 'Role',
     });
 
     warnSpy.mockRestore();
