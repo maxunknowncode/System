@@ -1,13 +1,8 @@
 import { EmbedBuilder } from 'discord.js';
 import { AUTHOR_ICON } from './embeds/author.js';
 import { truncate, isPlainObject, formatMetadataKey } from './logging/formatting.js';
+import { getLogChannelIds } from './logging/config.js';
 import { formatLogArgs, registerLogTransport } from './logger.js';
-
-const DEFAULT_GENERAL_CHANNEL_ID = '1416432156770566184';
-const DEFAULT_JOIN2CREATE_CHANNEL_ID = '1416432173690519562';
-
-const generalChannelId = process.env.LOG_CHANNEL_GENERAL_ID ?? DEFAULT_GENERAL_CHANNEL_ID;
-const joinToCreateChannelId = process.env.LOG_CHANNEL_JOIN2CREATE_ID ?? DEFAULT_JOIN2CREATE_CHANNEL_ID;
 
 const LEVEL_COLOURS = {
   debug: 0x95a5a6,
@@ -166,7 +161,12 @@ const buildAuditPayload = (args) => {
   return { description, fields };
 };
 
-export function setupDiscordLogging(client) {
+export function setupDiscordLogging(client, options = {}) {
+  const fallbackChannelIds = getLogChannelIds();
+  const generalChannelId = options.generalChannelId ?? fallbackChannelIds.generalChannelId;
+  const joinToCreateChannelId =
+    options.joinToCreateChannelId ?? fallbackChannelIds.joinToCreateChannelId;
+
   const channelCache = new Map();
   const queue = [];
   let ready = Boolean(client.isReady?.());

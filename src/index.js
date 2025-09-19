@@ -7,6 +7,7 @@ import commandLoader from './loaders/commandLoader.js';
 import eventLoader from './loaders/eventLoader.js';
 import { logger } from './util/logger.js';
 import { setupDiscordLogging } from './util/discordLogger.js';
+import { getLogChannelIds } from './util/logging/config.js';
 
 if (!process.env.TOKEN) {
   logger.error('[start] TOKEN fehlt – Start abgebrochen.');
@@ -23,7 +24,8 @@ const client = new Client({
   ],
 });
 
-setupDiscordLogging(client);
+const logChannelIds = getLogChannelIds();
+setupDiscordLogging(client, logChannelIds);
 
 const shutdown = (code = 0) => {
   logger.info('[beenden] Fahre herunter…');
