@@ -89,6 +89,7 @@ describe('logger', () => {
     expect(entry.level).toBe('info');
     expect(entry.args[0]).toBe('hello');
     expect(entry.args[1]).toEqual({ foo: 'bar' });
+    expect(entry.rawArgs).toEqual(['hello', { foo: 'bar' }]);
     expect(entry.timestamp).toBeInstanceOf(Date);
   });
 
@@ -110,6 +111,8 @@ describe('logger', () => {
     expect(transport).toHaveBeenCalledTimes(1);
     const entry = transport.mock.calls[0][0];
     expect(entry.args[0]).toBe('[test] message');
+    expect(entry.rawArgs[0]).toBe('message');
+    expect(entry.rawArgs[1]).toEqual({ foo: 'bar' });
     expect(entry.context).toMatchObject({
       label: 'test',
       segments: ['test'],
@@ -192,7 +195,29 @@ describe('setupDiscordLogging', () => {
       content: expect.stringContaining('general entry'),
       allowedMentions: { parse: [] },
     });
+    expect(send.mock.calls[0][0].content.trim()).toBe('general entry');
     expect(send.mock.calls[0][0].embeds).toBeUndefined();
+
+    unsubscribe();
+  });
+
+  it('includes context labels for general logs with prefixes', async () => {
+    const send = vi.fn().mockResolvedValue();
+    const { client, fetch } = createClient(send);
+
+    const { setupDiscordLogging } = await import('./discordLogger.js');
+    const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
+    const { logger } = await import('./logger.js');
+
+    const prefixed = logger.withPrefix('jobs').withPrefix('worker');
+    prefixed.warn('started');
+    await flushAsync();
+
+    expect(fetch).toHaveBeenCalledWith(CHANNEL_IDS.generalChannelId);
+    expect(send).toHaveBeenCalledTimes(1);
+    const payload = send.mock.calls[0][0];
+    expect(payload.embeds).toBeUndefined();
+    expect(payload.content?.trim()).toBe('[jobs:worker] started');
 
     unsubscribe();
   });
@@ -248,6 +273,7 @@ describe('setupDiscordLogging', () => {
     const embed = payload.embeds[0];
     expect(embed.data.description).toContain('Nachricht entfernt');
     expect(embed.data.description).not.toMatch(/\[audit/i);
+    expect(embed.data.description.trim()).toBe('Nachricht entfernt');
 
     expect(embed.data.fields).toEqual(
       expect.arrayContaining([
@@ -284,6 +310,7 @@ describe('setupDiscordLogging', () => {
     const embed = payload.embeds[0];
     expect(embed.data.description).toContain('Rolle angepasst');
     expect(embed.data.description).not.toMatch(/\[audit/i);
+    expect(embed.data.description.trim()).toBe('Rolle angepasst');
 
     expect(embed.data.fields).toEqual(
       expect.arrayContaining([
@@ -319,6 +346,7 @@ describe('setupDiscordLogging', () => {
     const embed = payload.embeds[0];
     expect(embed.data.description).toContain('channel created');
     expect(embed.data.description).not.toMatch(/\[join2create/i);
+    expect(embed.data.description.trim()).toBe('channel created');
     expect(embed.data.fields).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: 'Kategorie', value: 'Join2Create' }),
