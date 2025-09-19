@@ -17,6 +17,8 @@ const AUDIT_PREFIX_REGEX = /^\s*\[audit(?::[^\]]*)?\]\s*/i;
 const AUDIT_MATCH_REGEX = /\[audit(?::[^\]]*)?\]/i;
 const AUDIT_ACTION_REGEX = /\[audit(?::([^\]]+))?\]/i;
 const MAX_QUEUE_SIZE = 50;
+const DISCORD_PLAIN_TEXT_LIMIT = 2000; // Discord text messages are limited to 2000 characters.
+const DISCORD_EMBED_DESCRIPTION_LIMIT = 4000; // Embed descriptions may use up to 4096 characters; we keep a safety margin.
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -41,7 +43,8 @@ const stripContextPrefix = (value, entry, fallbackRegex) => {
   return value;
 };
 
-const formatParts = (parts) => {
+// Default to the embed limit because most logs are delivered via embeds (Discord allows 4096 characters).
+const formatParts = (parts, maxTotalLength = DISCORD_EMBED_DESCRIPTION_LIMIT) => {
   if (!parts.length) {
     return '_Keine Details verfügbar_';
   }
@@ -60,7 +63,7 @@ const formatParts = (parts) => {
     return truncate(trimmed, 1000);
   });
 
-  return truncate(formatted.join('\n\n'), 4000);
+  return truncate(formatted.join('\n\n'), maxTotalLength);
 };
 
 const isJoin2CreateEntry = (entry) => {
@@ -245,7 +248,8 @@ export function setupDiscordLogging(client, options = {}) {
     }
 
     if (context === 'general') {
-      const description = formatParts(formatLogArgs(entry.args));
+      // Plain text messages must respect the 2000 character Discord limit.
+      const description = formatParts(formatLogArgs(entry.args), DISCORD_PLAIN_TEXT_LIMIT);
       await channel.send({ content: description, allowedMentions: { parse: [] } });
       return;
     }

@@ -197,6 +197,31 @@ describe('setupDiscordLogging', () => {
     unsubscribe();
   });
 
+  it('truncates long general logs to the plain text limit', async () => {
+    const send = vi.fn().mockResolvedValue();
+    const { client } = createClient(send);
+
+    const { setupDiscordLogging } = await import('./discordLogger.js');
+    const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
+    const { logger } = await import('./logger.js');
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+    const parts = Array.from({ length: 5 }, (_, index) => String.fromCharCode(65 + index).repeat(1500));
+    logger.info(...parts);
+    await flushAsync();
+
+    expect(send).toHaveBeenCalledTimes(1);
+    const payload = send.mock.calls[0][0];
+    expect(payload.embeds).toBeUndefined();
+    expect(payload.content).toBeDefined();
+    expect(payload.content.length).toBeLessThanOrEqual(2000);
+    expect(payload.content.length).toBeGreaterThan(1900);
+    expect(payload.content.endsWith('…')).toBe(true);
+
+    unsubscribe();
+    infoSpy.mockRestore();
+  });
+
   it('sends audit logs with structured embed data', async () => {
     const send = vi.fn().mockResolvedValue();
     const { client } = createClient(send);
@@ -301,5 +326,33 @@ describe('setupDiscordLogging', () => {
     );
 
     unsubscribe();
+  });
+
+  it('allows embed descriptions to use the higher limit', async () => {
+    const send = vi.fn().mockResolvedValue();
+    const { client } = createClient(send);
+
+    const { setupDiscordLogging } = await import('./discordLogger.js');
+    const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
+    const { logger } = await import('./logger.js');
+
+    const joinLogger = logger.withPrefix('join2create');
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const parts = Array.from({ length: 5 }, (_, index) => String.fromCharCode(65 + index).repeat(1500));
+    joinLogger.info(...parts);
+    await flushAsync();
+
+    expect(send).toHaveBeenCalledTimes(1);
+    const payload = send.mock.calls[0][0];
+    expect(payload.content).toBeUndefined();
+    expect(payload.embeds).toHaveLength(1);
+    const description = payload.embeds[0].data.description;
+    expect(description).toBeDefined();
+    expect(description.length).toBe(4000);
+    expect(description.length).toBeGreaterThan(2000);
+    expect(description.endsWith('…')).toBe(true);
+
+    unsubscribe();
+    infoSpy.mockRestore();
   });
 });
