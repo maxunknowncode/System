@@ -26,9 +26,10 @@ const buildContextPayload = (context) => {
   };
 };
 
-const createEntry = (level, args, context) => ({
+const createEntry = (level, args, rawArgs, context) => ({
   level,
   args,
+  rawArgs,
   timestamp: new Date(),
   context: buildContextPayload(context),
 });
@@ -99,7 +100,7 @@ const createLoggerInstance = (context) => {
 
     const argsWithPrefix = applyPrefix(context.segments, args);
     console[level](...argsWithPrefix);
-    notifyTransports(createEntry(level, argsWithPrefix, context));
+    notifyTransports(createEntry(level, argsWithPrefix, args, context));
   };
 
   const withPrefix = (prefix, metadata) => {
