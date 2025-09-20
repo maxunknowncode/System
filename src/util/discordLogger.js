@@ -216,4 +216,157 @@ export function setupDiscordLogging(client, options = {}) {
     } catch (err) {
       channelCache.set(channelId, null);
       internalLog('error', `Kanal ${channelId} konnte nicht geladen werden:`, err);
-      retur
+      return null;
+    }
+  };
+
+  const formatDescription = (args, limit = DISCORD_EMBED_DESCRIPTION_LIMIT) => {
+    const list = Array.isArray(args) ? args : [];
+    return formatParts(formatLogArgs(list), limit);
+  };
+
+  const createBaseEmbed = (entry) => {
+    const level = entry.level ?? 'info';
+    const embed = new EmbedBuilder()
+      .setColor(LEVEL_COLOURS[level] ?? LEVEL_COLOURS.info)
+      .setTimestamp(entry.timestamp ?? new Date());
+
+    embed.setAuthor({ name: 'The Core Logs', iconURL: AUTHOR_ICON });
+    embed.addFields({ name: 'Level', value: `\`${level.toUpperCase()}\``, inline: true });
+
+    const segments = entry.context?.segments ?? [];
+    const label = segments.length ? segments.join(':') : null;
+    if (label && label !== 'audit' && label !== 'join2create') {
+      embed.addFields({ name: 'Kontext', value: `\`${truncate(label, 256)}\``, inline: true });
+    }
+
+    return embed;
+  };
+
+  const buildJoinToCreatePayload = (entry) => {
+    const raw = entry.rawArgs ?? entry.args ?? [];
+    const cleaned = Array.isArray(raw)
+      ? raw
+          .map((value) => {
+            if (typeof value !== 'string') {
+              return value;
+            }
+            const withoutTag = value.replace(JOIN_MATCH_REGEX, '').trim();
+            return withoutTag.length ? withoutTag : null;
+          })
+          .filter((value) => value !== null)
+      : [];
+    const description = formatDescription(cleaned);
+    const embed = createBaseEmbed(entry).setDescription(description);
+    embed.addFields({ name: 'Kategorie', value: 'Join2Create', inline: true });
+    return { embeds: [embed], allowedMentions: { parse: [] } };
+  };
+
+  const buildAuditMessage = (entry) => {
+    const audit = buildAuditPayload(entry);
+    const embed = createBaseEmbed(entry).setDescription(audit.description);
+    embed.addFields({ name: 'Kategorie', value: 'Audit', inline: true });
+    if (audit.fields.length) {
+      embed.addFields(...audit.fields);
+    }
+    return { embeds: [embed], allowedMentions: { parse: [] } };
+  };
+
+  const buildGeneralMessage = (entry) => ({
+    content: formatDescription(entry.args, DISCORD_PLAIN_TEXT_LIMIT),
+    allowedMentions: { parse: [] },
+  });
+
+  const buildPayloadForEntry = (entry) => {
+    const context = determineContext(entry);
+    if (context === 'join2create') {
+      return {
+        payload: buildJoinToCreatePayload(entry),
+        channelId: joinToCreateChannelId ?? generalChannelId,
+      };
+    }
+    if (context === 'audit') {
+      return { payload: buildAuditMessage(entry), channelId: generalChannelId };
+    }
+    return { payload: buildGeneralMessage(entry), channelId: generalChannelId };
+  };
+
+  let processing = false;
+
+  const processQueue = async () => {
+    if (processing || !ready) {
+      return;
+    }
+
+    processing = true;
+    try {
+      while (queue.length) {
+        const entry = queue.shift();
+        if (!entry) {
+          continue;
+        }
+
+        try {
+          const { payload, channelId } = buildPayloadForEntry(entry);
+          if (!channelId) {
+            internalLog('warn', 'Kein Kanal für Discord-Logs konfiguriert – Eintrag verworfen.');
+            continue;
+          }
+
+          const channel = await resolveChannel(channelId);
+          if (!channel) {
+            continue;
+          }
+
+          await channel.send(payload);
+        } catch (err) {
+          internalLog('error', 'Senden des Discord-Logs fehlgeschlagen:', err);
+        }
+      }
+    } finally {
+      processing = false;
+    }
+  };
+
+  const enqueue = (entry) => {
+    if (queue.length >= MAX_QUEUE_SIZE) {
+      queue.shift();
+      internalLog('warn', 'Discord-Log-Warteschlange voll – ältesten Eintrag verworfen.');
+    }
+    queue.push(entry);
+    void processQueue();
+  };
+
+  const unsubscribe = registerLogTransport((entry) => {
+    enqueue(entry);
+  });
+
+  let removeReadyListener = null;
+
+  if (!ready) {
+    const readyListener = () => {
+      ready = true;
+      void processQueue();
+    };
+
+    const addMethod = client?.on ?? client?.addListener ?? null;
+    if (typeof addMethod === 'function') {
+      addMethod.call(client, 'ready', readyListener);
+      const offMethod = client?.off ?? client?.removeListener ?? client?.removeEventListener ?? null;
+      if (typeof offMethod === 'function') {
+        removeReadyListener = () => {
+          offMethod.call(client, 'ready', readyListener);
+        };
+      }
+    }
+  }
+
+  if (ready) {
+    void processQueue();
+  }
+
+  return () => {
+    removeReadyListener?.();
+    unsubscribe();
+  };
+}
