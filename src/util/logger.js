@@ -98,9 +98,12 @@ const createLoggerInstance = (context) => {
       return;
     }
 
-    const argsWithPrefix = applyPrefix(context.segments, args);
+    const rawArgs = args;
+    const argsWithPrefix = applyPrefix(context.segments, rawArgs);
     console[level](...argsWithPrefix);
-    notifyTransports(createEntry(level, argsWithPrefix, args, context));
+
+    // Wichtig: entry mit korrekten rawArgs **und** context erstellen
+    notifyTransports(createEntry(level, argsWithPrefix, rawArgs, context));
   };
 
   const withPrefix = (prefix, metadata) => {
