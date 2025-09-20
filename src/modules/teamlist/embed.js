@@ -42,7 +42,7 @@ async function getRoleMemberMentions(guild, roleId) {
 export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
   const isDe = lang === 'de';
 
-  const title = isDe ? '💠 Das Serverteam 💠' : '💠 The Server Team 💠';
+  const title = isDe ? 'Das Serverteam' : 'The Server Team';
 
   // Beschreibungen: beide Varianten als Quote ("> ") und kursiv (*...*)
   const description = isDe
