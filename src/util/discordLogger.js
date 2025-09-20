@@ -41,12 +41,22 @@ const formatParts = (parts, maxTotalLength = DISCORD_EMBED_DESCRIPTION_LIMIT) =>
   return truncate(formatted.join('\n\n'), maxTotalLength);
 };
 
+const getRawArgs = (entry) => {
+  if (Array.isArray(entry.rawArgs)) {
+    return entry.rawArgs;
+  }
+  if (Array.isArray(entry.args)) {
+    return entry.args;
+  }
+  return [];
+};
+
 const isJoin2CreateEntry = (entry) => {
   if (entry.context?.segments?.[0] === 'join2create') {
     return 'join2create';
   }
-  const args = entry.rawArgs ?? entry.args;
-  return args.some((arg) => typeof arg === 'string' && JOIN_MATCH_REGEX.test(arg))
+  const rawArgs = getRawArgs(entry);
+  return rawArgs.some((arg) => typeof arg === 'string' && JOIN_MATCH_REGEX.test(arg))
     ? 'join2create'
     : null;
 };
@@ -55,8 +65,8 @@ const isAuditEntry = (entry) => {
   if (entry.context?.segments?.[0] === 'audit') {
     return 'audit';
   }
-  const args = entry.rawArgs ?? entry.args;
-  return args.some((arg) => typeof arg === 'string' && AUDIT_MATCH_REGEX.test(arg)) ? 'audit' : null;
+  const rawArgs = getRawArgs(entry);
+  return rawArgs.some((arg) => typeof arg === 'string' && AUDIT_MATCH_REGEX.test(arg)) ? 'audit' : null;
 };
 
 const determineContext = (entry) => {
@@ -71,25 +81,6 @@ const determineContext = (entry) => {
 
 const FALLBACK_FIELD_VALUE = '_Nicht angegeben_';
 
-const withContextLabel = (entry, args) => {
-  const labelText = entry.context?.text;
-  if (!labelText) {
-    return args;
-  }
-
-  if (args.length === 0) {
-    return [labelText];
-  }
-
-  const [first, ...rest] = args;
-  if (typeof first === 'string') {
-    const suffix = first.length ? ` ${first}` : '';
-    return [`${labelText}${suffix}`, ...rest];
-  }
-
-  return [labelText, ...args];
-};
-
 const normaliseId = (value) => {
   if (typeof value === 'string') {
     const trimmed = value.trim();
@@ -102,7 +93,7 @@ const normaliseId = (value) => {
 };
 
 const buildAuditPayload = (entry) => {
-  const args = entry.rawArgs ?? entry.args;
+  const args = getRawArgs(entry);
   const metadataCandidate = args[args.length - 1];
   const metadata = isPlainObject(metadataCandidate) ? metadataCandidate : null;
 
@@ -125,9 +116,12 @@ const buildAuditPayload = (entry) => {
         const match = arg.match(AUDIT_ACTION_REGEX);
         actionType = match?.[1]?.trim() ?? '';
       }
-      const trimmed = arg.trim();
-      if (trimmed) {
-        formattedArgs.push(trimmed);
+      const closingIndex = arg.indexOf(']');
+      if (closingIndex >= 0) {
+        const remainder = arg.slice(closingIndex + 1).trim();
+        if (remainder) {
+          formattedArgs.push(remainder);
+        }
       }
       return;
     }
@@ -222,93 +216,4 @@ export function setupDiscordLogging(client, options = {}) {
     } catch (err) {
       channelCache.set(channelId, null);
       internalLog('error', `Kanal ${channelId} konnte nicht geladen werden:`, err);
-      return null;
-    }
-  };
-
-  const deliver = async (entry) => {
-    const context = determineContext(entry);
-    const targetId = context === 'join2create' ? joinToCreateChannelId : generalChannelId;
-    const fallbackId = generalChannelId;
-
-    let channel = await resolveChannel(targetId);
-    if (!channel && targetId !== fallbackId) {
-      channel = await resolveChannel(fallbackId);
-    }
-    if (!channel) {
-      return;
-    }
-
-    const rawArgs = entry.rawArgs ?? entry.args;
-
-    if (context === 'general') {
-      // Plain text messages must respect the 2000 character Discord limit.
-      const decoratedArgs = withContextLabel(entry, rawArgs);
-      const description = formatParts(formatLogArgs(decoratedArgs), DISCORD_PLAIN_TEXT_LIMIT);
-      await channel.send({ content: description, allowedMentions: { parse: [] } });
-      return;
-    }
-
-    if (context === 'audit') {
-      const payload = buildAuditPayload(entry);
-      const embed = new EmbedBuilder()
-        .setColor(LEVEL_COLOURS[entry.level] ?? LEVEL_COLOURS.info)
-        .setAuthor({ name: `System Logger • ${entry.level.toUpperCase()}`, iconURL: AUTHOR_ICON })
-        .setDescription(payload.description)
-        .setTimestamp(entry.timestamp)
-        .addFields({ name: 'Level', value: `\`${entry.level.toUpperCase()}\``, inline: true }, ...payload.fields)
-        .setFooter({ text: 'Automatisches Logsystem' });
-
-      await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
-      return;
-    }
-
-    const description = formatParts(formatLogArgs(rawArgs));
-    const embed = new EmbedBuilder()
-      .setColor(LEVEL_COLOURS[entry.level] ?? LEVEL_COLOURS.info)
-      .setAuthor({ name: `System Logger • ${entry.level.toUpperCase()}`, iconURL: AUTHOR_ICON })
-      .setDescription(description)
-      .setTimestamp(entry.timestamp)
-      .addFields(
-        { name: 'Level', value: `\`${entry.level.toUpperCase()}\``, inline: true },
-        { name: 'Kategorie', value: 'Join2Create', inline: true },
-      )
-      .setFooter({ text: 'Automatisches Logsystem' });
-
-    await channel.send({ embeds: [embed], allowedMentions: { parse: [] } });
-  };
-
-  const flushQueue = () => {
-    if (!ready || queue.length === 0) {
-      return;
-    }
-
-    const entries = queue.splice(0, queue.length);
-    for (const entry of entries) {
-      void deliver(entry).catch((err) => internalLog('error', 'Fehler beim Senden eines Log-Eintrags:', err));
-    }
-  };
-
-  const handler = (entry) => {
-    if (!ready) {
-      queue.push(entry);
-      if (queue.length > MAX_QUEUE_SIZE) {
-        queue.shift();
-      }
-      return;
-    }
-
-    void deliver(entry).catch((err) => internalLog('error', 'Fehler beim Senden eines Log-Eintrags:', err));
-  };
-
-  const unsubscribe = registerLogTransport(handler);
-
-  if (!ready) {
-    client.once('ready', () => {
-      ready = true;
-      flushQueue();
-    });
-  }
-
-  return unsubscribe;
-}
+      retur

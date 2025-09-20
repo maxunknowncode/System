@@ -271,7 +271,7 @@ describe('setupDiscordLogging', () => {
     expect(payload.content).toBeUndefined();
     expect(payload.embeds).toHaveLength(1);
     const embed = payload.embeds[0];
-    expect(embed.data.description).toContain('Nachricht entfernt');
+    expect(embed.data.description).toBe('Nachricht entfernt');
     expect(embed.data.description).not.toMatch(/\[audit/i);
     expect(embed.data.description.trim()).toBe('Nachricht entfernt');
 
@@ -308,7 +308,7 @@ describe('setupDiscordLogging', () => {
     expect(payload.content).toBeUndefined();
     expect(payload.embeds).toHaveLength(1);
     const embed = payload.embeds[0];
-    expect(embed.data.description).toContain('Rolle angepasst');
+    expect(embed.data.description).toBe('Rolle angepasst');
     expect(embed.data.description).not.toMatch(/\[audit/i);
     expect(embed.data.description.trim()).toBe('Rolle angepasst');
 
@@ -344,7 +344,7 @@ describe('setupDiscordLogging', () => {
     expect(payload.content).toBeUndefined();
     expect(payload.embeds).toHaveLength(1);
     const embed = payload.embeds[0];
-    expect(embed.data.description).toContain('channel created');
+    expect(embed.data.description).toBe('channel created');
     expect(embed.data.description).not.toMatch(/\[join2create/i);
     expect(embed.data.description.trim()).toBe('channel created');
     expect(embed.data.fields).toEqual(

@@ -26,9 +26,10 @@ const buildContextPayload = (context) => {
   };
 };
 
-const createEntry = (level, args, context) => ({
+const createEntry = (level, args, rawArgs, context) => ({
   level,
   args,
+  rawArgs,
   timestamp: new Date(),
   context: buildContextPayload(context),
 });
@@ -100,8 +101,9 @@ const createLoggerInstance = (context) => {
     const rawArgs = args;
     const argsWithPrefix = applyPrefix(context.segments, rawArgs);
     console[level](...argsWithPrefix);
-    const entry = { ...createEntry(level, argsWithPrefix, context), rawArgs };
-    notifyTransports(entry);
+
+    // Wichtig: entry mit korrekten rawArgs **und** context erstellen
+    notifyTransports(createEntry(level, argsWithPrefix, rawArgs, context));
   };
 
   const withPrefix = (prefix, metadata) => {
