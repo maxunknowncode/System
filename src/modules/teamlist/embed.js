@@ -19,6 +19,11 @@ import { logger } from '../../util/logger.js';
 
 const teamLogger = logger.withPrefix('team');
 
+export const TEAM_TITLES = {
+  en: 'The Server Team',
+  de: 'Das Serverteam',
+};
+
 async function getRoleMemberMentions(guild, roleId) {
   // Cache auffüllen, falls nötig
   if (guild.members.cache.size < guild.memberCount) {
@@ -41,8 +46,7 @@ async function getRoleMemberMentions(guild, roleId) {
 
 export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
   const isDe = lang === 'de';
-
-  const title = isDe ? 'Das Serverteam' : 'The Server Team';
+  const title = isDe ? TEAM_TITLES.de : TEAM_TITLES.en;
 
   // Beschreibungen: beide Varianten als Quote ("> ") und kursiv (*...*)
   const description = isDe

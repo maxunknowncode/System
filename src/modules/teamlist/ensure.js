@@ -2,10 +2,15 @@
 ### Zweck: Stellt sicher, dass genau eine Teamlisten-Nachricht existiert.
 */
 import { TEAM_CHANNEL_ID, TEAM_MESSAGE_ID, TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE, TEAM_ROLES } from './config.js';
-import { buildTeamEmbedAndComponents } from './embed.js';
+import { buildTeamEmbedAndComponents, TEAM_TITLES } from './embed.js';
 import { logger } from '../../util/logger.js';
 
 const teamLogger = logger.withPrefix('team');
+const FALLBACK_EMBED_TITLES = new Set([
+  ...Object.values(TEAM_TITLES),
+  '💠 The Server Team 💠',
+  '💠 Das Serverteam 💠',
+]);
 
 export async function ensureTeamMessage(client) {
   let channel;
@@ -44,7 +49,7 @@ export async function ensureTeamMessage(client) {
     const messages = await channel.messages.fetch({ limit: 10 });
     message = messages.find((m) =>
       m.author?.id === client.user?.id &&
-      (m.embeds.some((e) => e.title === '💠 The Server Team 💠' || e.title === '💠 Das Serverteam 💠') ||
+      (m.embeds.some((e) => e?.title && FALLBACK_EMBED_TITLES.has(e.title)) ||
         m.components.some((row) =>
           row.components.some((c) => c.customId === TEAM_BUTTON_ID_EN || c.customId === TEAM_BUTTON_ID_DE)
         ))
