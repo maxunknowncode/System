@@ -88,7 +88,7 @@ describe('logger', () => {
     const entry = transport.mock.calls[0][0];
     expect(entry.level).toBe('info');
     expect(entry.args[0]).toBe('hello');
-    expect(entry.args[1]).toEqual({ foo: 'bar' });
+    expect(entry.args[1]).toBe("{ foo: 'bar' }");
     expect(entry.rawArgs).toEqual(['hello', { foo: 'bar' }]);
     expect(entry.timestamp).toBeInstanceOf(Date);
   });
@@ -107,7 +107,7 @@ describe('logger', () => {
     await Promise.resolve();
 
     expect(infoSpy).toHaveBeenCalledTimes(1);
-    expect(infoSpy).toHaveBeenCalledWith('[test] message', { foo: 'bar' });
+    expect(infoSpy).toHaveBeenCalledWith('[test] message', "{ foo: 'bar' }");
     expect(transport).toHaveBeenCalledTimes(1);
     const entry = transport.mock.calls[0][0];
     expect(entry.args[0]).toBe('[test] message');
@@ -136,6 +136,41 @@ describe('logger', () => {
     await Promise.resolve();
 
     expect(transport).not.toHaveBeenCalled();
+  });
+
+  it('formats error instances with their stack for console output', async () => {
+    process.env.LOG_LEVEL = 'debug';
+    vi.resetModules();
+    const { logger } = await import('./logger.js');
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const error = new Error('Boom');
+    error.stack = 'Error: Boom\n    at test (file.js:1:1)';
+    logger.error(error);
+
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy).toHaveBeenCalledWith(error.stack);
+    errorSpy.mockRestore();
+  });
+
+  it('splits colon separated prefixes into multiple context segments', async () => {
+    process.env.LOG_LEVEL = 'debug';
+    vi.resetModules();
+    const { logger, registerLogTransport } = await import('./logger.js');
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const transport = vi.fn();
+    registerLogTransport(transport);
+
+    const prefixed = logger.withPrefix('audit:message_delete');
+    prefixed.info('entry');
+
+    await Promise.resolve();
+
+    expect(infoSpy).toHaveBeenCalledWith('[audit:message_delete] entry');
+    const entry = transport.mock.calls[0][0];
+    expect(entry.context.segments).toEqual(['audit', 'message_delete']);
+    expect(entry.context.label).toBe('audit:message_delete');
+    infoSpy.mockRestore();
   });
 });
 
@@ -290,6 +325,32 @@ describe('setupDiscordLogging', () => {
     unsubscribe();
   });
 
+  it('treats combined audit prefixes as audit embeds in the general channel', async () => {
+    const send = vi.fn().mockResolvedValue();
+    const { client } = createClient(send);
+
+    const { setupDiscordLogging } = await import('./discordLogger.js');
+    const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
+    const { logger } = await import('./logger.js');
+
+    logger.withPrefix('audit:message_delete').info('combined prefix');
+    await flushAsync();
+
+    expect(client.channels.fetch).toHaveBeenCalledWith(CHANNEL_IDS.generalChannelId);
+    const payload = send.mock.calls[0][0];
+    expect(payload.content).toBeUndefined();
+    expect(payload.embeds).toHaveLength(1);
+    const embed = payload.embeds[0];
+    expect(embed.data.description).toBe('combined prefix');
+    expect(embed.data.fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'Kategorie', value: 'Audit' }),
+      ]),
+    );
+
+    unsubscribe();
+  });
+
   it('sends audit logs without metadata with fallback fields', async () => {
     const send = vi.fn().mockResolvedValue();
     const { client } = createClient(send);
@@ -382,5 +443,75 @@ describe('setupDiscordLogging', () => {
 
     unsubscribe();
     infoSpy.mockRestore();
+  });
+
+  it('prefers channel IDs configured via environment variables', async () => {
+    process.env.LOG_CHANNEL_GENERAL_ID = 'env-general';
+    process.env.LOG_CHANNEL_JOIN2CREATE_ID = 'env-join';
+    const send = vi.fn().mockResolvedValue();
+    const { client, fetch } = createClient(send);
+
+    const { setupDiscordLogging } = await import('./discordLogger.js');
+    const unsubscribe = setupDiscordLogging(client);
+    const { logger } = await import('./logger.js');
+
+    try {
+      logger.info('general env entry');
+      logger.withPrefix('join2create').info('join env entry');
+      await flushAsync();
+
+      expect(fetch).toHaveBeenCalledWith('env-general');
+      expect(fetch).toHaveBeenCalledWith('env-join');
+    } finally {
+      unsubscribe();
+      delete process.env.LOG_CHANNEL_GENERAL_ID;
+      delete process.env.LOG_CHANNEL_JOIN2CREATE_ID;
+    }
+  });
+
+  it('falls back to default channel IDs when environment variables are missing', async () => {
+    delete process.env.LOG_CHANNEL_GENERAL_ID;
+    delete process.env.LOG_CHANNEL_JOIN2CREATE_ID;
+    const send = vi.fn().mockResolvedValue();
+    const { client, fetch } = createClient(send);
+
+    const { DEFAULT_LOG_CHANNEL_IDS } = await import('./logging/config.js');
+    const { setupDiscordLogging } = await import('./discordLogger.js');
+    const unsubscribe = setupDiscordLogging(client);
+    const { logger } = await import('./logger.js');
+
+    logger.info('default general');
+    await flushAsync();
+
+    expect(fetch).toHaveBeenCalledWith(DEFAULT_LOG_CHANNEL_IDS.generalChannelId);
+
+    unsubscribe();
+  });
+
+  it('logs warnings when configured channels are invalid', async () => {
+    process.env.LOG_CHANNEL_GENERAL_ID = '   ';
+    process.env.LOG_CHANNEL_JOIN2CREATE_ID = '';
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const send = vi.fn().mockResolvedValue();
+    const { client } = createClient(send);
+
+    const { setupDiscordLogging } = await import('./discordLogger.js');
+    const unsubscribe = setupDiscordLogging(client);
+
+    try {
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[discord-logging]',
+        expect.stringContaining('Kein gültiger allgemeiner Discord-Log-Kanal konfiguriert'),
+      );
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[discord-logging]',
+        expect.stringContaining('Kein gültiger Join2Create-Log-Kanal konfiguriert'),
+      );
+    } finally {
+      unsubscribe();
+      warnSpy.mockRestore();
+      delete process.env.LOG_CHANNEL_GENERAL_ID;
+      delete process.env.LOG_CHANNEL_JOIN2CREATE_ID;
+    }
   });
 });
