@@ -1,6 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { AUTHOR_ICON } from './embeds/author.js';
-import { truncate, isPlainObject, formatMetadataKey } from './logging/formatting.js';
+import { truncate, isPlainObject } from './logging/formatting.js';
 import { getLogChannelIds } from './logging/config.js';
 import { formatLogArgs, registerLogTransport } from './logger.js';
 
@@ -133,49 +133,45 @@ const buildAuditPayload = (entry) => {
 
   const actorId = normaliseId(metadata?.actorId ?? metadata?.actor);
   const targetId = normaliseId(metadata?.targetId ?? metadata?.target);
-  const channelId = normaliseId(metadata?.channelId ?? metadata?.channel);
-
   const actionFieldValue = actionType ? `\`${truncate(actionType, 256)}\`` : FALLBACK_FIELD_VALUE;
-  const actorFieldValue = actorId ? `<@${actorId}>` : FALLBACK_FIELD_VALUE;
-  const targetFieldValue = targetId ? `<@${targetId}>` : FALLBACK_FIELD_VALUE;
-  const channelFieldValue = channelId ? `<#${channelId}>` : FALLBACK_FIELD_VALUE;
+
+  let actorFieldValue = FALLBACK_FIELD_VALUE;
+  if (typeof metadata?.actorMention === 'string' && metadata.actorMention.trim()) {
+    actorFieldValue = truncate(metadata.actorMention.trim(), 1024);
+  } else if (actorId) {
+    actorFieldValue = `<@${actorId}>`;
+  } else if (typeof metadata?.actorLabel === 'string' && metadata.actorLabel.trim()) {
+    actorFieldValue = truncate(metadata.actorLabel.trim(), 1024);
+  }
+
+  const targetMention = typeof metadata?.targetMention === 'string' ? metadata.targetMention.trim() : '';
+  const targetLabel = typeof metadata?.targetLabel === 'string' ? metadata.targetLabel.trim() : '';
+
+  let targetFieldValue = FALLBACK_FIELD_VALUE;
+  if (targetMention) {
+    targetFieldValue = truncate(targetMention, 1024);
+  } else if (targetId) {
+    targetFieldValue = `<@${targetId}>`;
+  } else if (targetLabel) {
+    targetFieldValue = truncate(targetLabel, 1024);
+  }
+
+  if (targetFieldValue === FALLBACK_FIELD_VALUE && targetLabel) {
+    targetFieldValue = truncate(targetLabel, 1024);
+  }
 
   const rawReason = metadata?.reason;
   const reasonText = typeof rawReason === 'string' ? rawReason.trim() : rawReason != null ? String(rawReason) : '';
-  const reasonFieldValue = reasonText ? truncate(reasonText, 1024) : FALLBACK_FIELD_VALUE;
-
-  const knownKeys = new Set(['actorId', 'actor', 'targetId', 'target', 'channelId', 'channel', 'reason', 'action']);
-  const additionalFields = [];
-
-  if (metadata) {
-    for (const [key, value] of Object.entries(metadata)) {
-      if (knownKeys.has(key)) {
-        continue;
-      }
-
-      if (value == null) {
-        additionalFields.push({ name: formatMetadataKey(key), value: FALLBACK_FIELD_VALUE, inline: false });
-        continue;
-      }
-
-      const [formatted] = formatLogArgs([value]);
-      const cleanedValue = formatted?.trim();
-      additionalFields.push({
-        name: formatMetadataKey(key),
-        value: cleanedValue ? truncate(cleanedValue, 1024) : FALLBACK_FIELD_VALUE,
-        inline: false,
-      });
-    }
-  }
 
   const fields = [
     { name: 'Aktion', value: actionFieldValue, inline: true },
     { name: 'Auslöser', value: actorFieldValue, inline: true },
     { name: 'Ziel', value: targetFieldValue, inline: true },
-    { name: 'Kanal', value: channelFieldValue, inline: true },
-    { name: 'Grund', value: reasonFieldValue, inline: false },
-    ...additionalFields,
   ];
+
+  if (reasonText) {
+    fields.push({ name: 'Grund', value: truncate(reasonText, 1024), inline: false });
+  }
 
   return { description, fields };
 };

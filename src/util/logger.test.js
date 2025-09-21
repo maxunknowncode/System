@@ -313,14 +313,15 @@ describe('setupDiscordLogging', () => {
     expect(embed.data.fields).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: 'Level', value: '`WARN`' }),
+        expect.objectContaining({ name: 'Kategorie', value: 'Audit' }),
         expect.objectContaining({ name: 'Aktion', value: '`message_delete`' }),
         expect.objectContaining({ name: 'Auslöser', value: '<@111>' }),
         expect.objectContaining({ name: 'Ziel', value: '<@222>' }),
-        expect.objectContaining({ name: 'Kanal', value: '<#333>' }),
         expect.objectContaining({ name: 'Grund', value: 'Spam' }),
-        expect.objectContaining({ name: 'Count', value: '2' }),
       ]),
     );
+    expect(embed.data.fields.some((field) => field.name === 'Kanal')).toBe(false);
+    expect(embed.data.fields.some((field) => field.name === 'Count')).toBe(false);
 
     unsubscribe();
   });
@@ -376,13 +377,13 @@ describe('setupDiscordLogging', () => {
     expect(embed.data.fields).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: 'Level', value: '`INFO`' }),
+        expect.objectContaining({ name: 'Kategorie', value: 'Audit' }),
         expect.objectContaining({ name: 'Aktion', value: '`role_update`' }),
         expect.objectContaining({ name: 'Auslöser', value: '_Nicht angegeben_' }),
         expect.objectContaining({ name: 'Ziel', value: '_Nicht angegeben_' }),
-        expect.objectContaining({ name: 'Kanal', value: '_Nicht angegeben_' }),
-        expect.objectContaining({ name: 'Grund', value: '_Nicht angegeben_' }),
       ]),
     );
+    expect(embed.data.fields.some((field) => field.name === 'Grund')).toBe(false);
 
     unsubscribe();
   });

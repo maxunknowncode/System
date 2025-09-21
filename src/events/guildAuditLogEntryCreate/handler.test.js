@@ -57,17 +57,17 @@ describe('guildAuditLogEntryCreate handler', () => {
     expect(infoSpy).not.toHaveBeenCalled();
     const [message, metadata] = warnSpy.mock.calls[0];
     expect(message).toBe(
-      '[audit:message_delete] Aktion Message Delete (Delete) • Ziel [User]: User#1234 (222) • Änderungen: count: 2 • Details: Kanal: allgemein (333); Anzahl: 2',
+      '[audit:message_delete] Message Delete: User#1234 (222) • Kanal: <#333>, Anzahl: 2 • Änderungen: Count',
     );
     expect(metadata).toContain("action: 'message_delete'");
     expect(metadata).toContain("actorId: '1111'");
-    expect(metadata).toContain("channelId: '333'");
-    expect(metadata).toContain("count: 2");
-    expect(metadata).toContain("entryId: 'audit-123'");
-    expect(metadata).toContain("guildId: '999'");
-    expect(metadata).toContain("reason: 'Spam'");
     expect(metadata).toContain("targetId: '222'");
-    expect(metadata).toContain("targetType: 'User'");
+    expect(metadata).toContain("targetMention: '<@222>'");
+    expect(metadata).toContain("reason: 'Spam'");
+    expect(metadata).not.toContain('entryId');
+    expect(metadata).not.toContain('guildId');
+    expect(metadata).not.toContain('targetType');
+    expect(metadata).not.toContain('channelId');
 
     warnSpy.mockRestore();
     infoSpy.mockRestore();
@@ -93,15 +93,16 @@ describe('guildAuditLogEntryCreate handler', () => {
     expect(warnSpy).not.toHaveBeenCalled();
     const [message, metadata] = infoSpy.mock.calls[0];
     expect(message).toBe(
-      '[audit:role_update] Aktion Role Update (Update) • Ziel [Role]: Example Rolle (2222) • Änderungen: name: Alte Rolle → Neue Rolle; permissions: {"allow":"8"}',
+      '[audit:role_update] Role Update: Example Rolle (2222) • Änderungen: Name, Permissions',
     );
     expect(metadata).toContain("action: 'role_update'");
     expect(metadata).toContain("actorId: '1111'");
-    expect(metadata).toContain("entryId: 'log-entry-1'");
-    expect(metadata).toContain("guildId: '999'");
-    expect(metadata).toContain("reason: 'Routine-Anpassung'");
     expect(metadata).toContain("targetId: '2222'");
-    expect(metadata).toContain("targetType: 'Role'");
+    expect(metadata).toContain("targetMention: '<@&2222>'");
+    expect(metadata).toContain("reason: 'Routine-Anpassung'");
+    expect(metadata).not.toContain('entryId');
+    expect(metadata).not.toContain('guildId');
+    expect(metadata).not.toContain('targetType');
 
     warnSpy.mockRestore();
     infoSpy.mockRestore();
