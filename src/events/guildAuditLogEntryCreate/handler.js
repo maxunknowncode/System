@@ -63,37 +63,38 @@ const toTitleCase = (value) => {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 };
 
-const summariseChanges = (changes) => {
+const summariseChangeKeys = (changes) => {
   if (!Array.isArray(changes) || changes.length === 0) {
-    return { items: [], remaining: 0 };
+    return null;
   }
-  const MAX_CHANGES = 4;
-  const relevant = changes.slice(0, MAX_CHANGES);
-  const items = relevant.map((change) => {
-    const hasOld = Object.prototype.hasOwnProperty.call(change, 'old');
-    const hasNew = Object.prototype.hasOwnProperty.call(change, 'new');
-    const formattedOld = hasOld ? formatValue(change.old) : null;
-    const formattedNew = hasNew ? formatValue(change.new) : null;
 
-    if (hasOld && hasNew) {
-      if (formattedOld === formattedNew) {
-        return `${change.key}: ${formattedNew}`;
-      }
-      return `${change.key}: ${formattedOld} → ${formattedNew}`;
+  const uniqueKeys = [];
+  for (const change of changes) {
+    if (!change || typeof change !== 'object' || !change.key) {
+      continue;
     }
-    if (hasNew) {
-      return `${change.key}: ${formattedNew}`;
+    const formattedKey = formatMetadataKey(change.key);
+    if (!formattedKey) {
+      continue;
     }
-    if (hasOld) {
-      return `${change.key}: ${formattedOld}`;
+    if (!uniqueKeys.includes(formattedKey)) {
+      uniqueKeys.push(formattedKey);
     }
-    return change.key;
-  });
+  }
 
-  return {
-    items,
-    remaining: Math.max(0, changes.length - relevant.length),
-  };
+  if (uniqueKeys.length === 0) {
+    return null;
+  }
+
+  const MAX_KEYS = 3;
+  const displayed = uniqueKeys.slice(0, MAX_KEYS);
+  let summary = displayed.join(', ');
+  const remaining = uniqueKeys.length - displayed.length;
+  if (remaining > 0) {
+    summary += ` (+${remaining} weitere)`;
+  }
+
+  return `Änderungen: ${summary}`;
 };
 
 const summariseExtra = (extra, metadata) => {
@@ -205,15 +206,6 @@ export default {
       const level = WARN_ACTIONS.has(action) || actionType === 'Delete' ? 'warn' : 'info';
 
       const metadata = { action: actionKey };
-      if (actionType) {
-        metadata.actionType = actionType;
-      }
-      if (id) {
-        metadata.entryId = id;
-      }
-      if (guild?.id) {
-        metadata.guildId = guild.id;
-      }
       const actorId = executorId ?? executor?.id ?? null;
       if (actorId) {
         metadata.actorId = actorId;
@@ -222,41 +214,73 @@ export default {
       if (resolvedTargetId) {
         metadata.targetId = resolvedTargetId;
       }
-      if (targetType) {
-        metadata.targetType = targetType;
-      }
-      if (reason) {
-        metadata.reason = reason;
+      const reasonText = typeof reason === 'string' ? reason.trim() : '';
+      if (reasonText) {
+        metadata.reason = reasonText;
       }
 
       const targetDescription =
         describeDiscordEntity(target) ?? (resolvedTargetId ? `ID ${resolvedTargetId}` : null);
-      const changeSummary = summariseChanges(changes);
-      const extraSummary = summariseExtra(extra, metadata);
-
-      if (!metadata.channelId && targetType && ['Channel', 'Thread', 'StageInstance'].includes(targetType) && target?.id) {
-        metadata.channelId = String(target.id);
+      if (targetDescription) {
+        metadata.targetLabel = targetDescription;
       }
 
-      const parts = [];
-      const actionTypeLabel = actionType ? ` (${actionType})` : '';
-      parts.push(`Aktion ${readableAction}${actionTypeLabel}`);
+      const createTargetMention = () => {
+        if (!resolvedTargetId) {
+          return null;
+        }
+        switch (targetType) {
+          case 'User':
+          case 'Member':
+          case 'Owner':
+            return `<@${resolvedTargetId}>`;
+          case 'Role':
+            return `<@&${resolvedTargetId}>`;
+          case 'Channel':
+          case 'Thread':
+          case 'StageInstance':
+            return `<#${resolvedTargetId}>`;
+          default:
+            return null;
+        }
+      };
 
-      if (targetDescription || targetType) {
-        const typeHint = targetType && targetType !== 'Unknown' ? ` [${targetType}]` : '';
-        parts.push(`Ziel${typeHint}: ${targetDescription ?? 'Unbekannt'}`);
+      const targetMention = createTargetMention();
+      if (targetMention) {
+        metadata.targetMention = targetMention;
       }
 
-      if (changeSummary.items.length) {
-        const suffix = changeSummary.remaining ? ` (+${changeSummary.remaining} weitere)` : '';
-        parts.push(`Änderungen: ${changeSummary.items.join('; ')}${suffix}`);
+      const extraMetadata = {};
+      const extraSummary = summariseExtra(extra, extraMetadata);
+      const changeSummary = summariseChangeKeys(changes);
+
+      const extraSegments = [];
+      const channelId = extraMetadata.channelId;
+      if (channelId) {
+        extraSegments.push(`Kanal: <#${channelId}>`);
+      }
+      const filteredExtraSummary = extraSummary.filter((item) => !item.startsWith('Kanal:'));
+      extraSegments.push(...filteredExtraSummary);
+      const displayedExtra = extraSegments.slice(0, 2);
+
+      const summarySegments = [];
+      if (targetDescription) {
+        summarySegments.push(`${readableAction}: ${targetDescription}`);
+      } else if (resolvedTargetId) {
+        summarySegments.push(`${readableAction}: ID ${resolvedTargetId}`);
+      } else {
+        summarySegments.push(readableAction);
       }
 
-      if (extraSummary.length) {
-        parts.push(`Details: ${extraSummary.join('; ')}`);
+      if (displayedExtra.length) {
+        summarySegments.push(displayedExtra.join(', '));
       }
 
-      const description = parts.filter(Boolean).join(' • ') || 'Neuer Audit-Log-Eintrag';
+      if (changeSummary) {
+        summarySegments.push(changeSummary);
+      }
+
+      const description = summarySegments.filter(Boolean).join(' • ') || readableAction || 'Audit Log';
 
       const actionLogger = actionKey ? auditLogger.withPrefix(actionKey) : auditLogger;
       actionLogger[level](description, metadata);
