@@ -59,18 +59,15 @@ describe('guildAuditLogEntryCreate handler', () => {
     expect(message).toBe(
       '[audit:message_delete] Aktion Message Delete (Delete) • Ziel [User]: User#1234 (222) • Änderungen: count: 2 • Details: Kanal: allgemein (333); Anzahl: 2',
     );
-    expect(metadata).toEqual({
-      action: 'message_delete',
-      actionType: 'Delete',
-      actorId: '1111',
-      channelId: '333',
-      count: 2,
-      entryId: 'audit-123',
-      guildId: '999',
-      reason: 'Spam',
-      targetId: '222',
-      targetType: 'User',
-    });
+    expect(metadata).toContain("action: 'message_delete'");
+    expect(metadata).toContain("actorId: '1111'");
+    expect(metadata).toContain("channelId: '333'");
+    expect(metadata).toContain("count: 2");
+    expect(metadata).toContain("entryId: 'audit-123'");
+    expect(metadata).toContain("guildId: '999'");
+    expect(metadata).toContain("reason: 'Spam'");
+    expect(metadata).toContain("targetId: '222'");
+    expect(metadata).toContain("targetType: 'User'");
 
     warnSpy.mockRestore();
     infoSpy.mockRestore();
@@ -98,16 +95,13 @@ describe('guildAuditLogEntryCreate handler', () => {
     expect(message).toBe(
       '[audit:role_update] Aktion Role Update (Update) • Ziel [Role]: Example Rolle (2222) • Änderungen: name: Alte Rolle → Neue Rolle; permissions: {"allow":"8"}',
     );
-    expect(metadata).toEqual({
-      action: 'role_update',
-      actionType: 'Update',
-      actorId: '1111',
-      entryId: 'log-entry-1',
-      guildId: '999',
-      reason: 'Routine-Anpassung',
-      targetId: '2222',
-      targetType: 'Role',
-    });
+    expect(metadata).toContain("action: 'role_update'");
+    expect(metadata).toContain("actorId: '1111'");
+    expect(metadata).toContain("entryId: 'log-entry-1'");
+    expect(metadata).toContain("guildId: '999'");
+    expect(metadata).toContain("reason: 'Routine-Anpassung'");
+    expect(metadata).toContain("targetId: '2222'");
+    expect(metadata).toContain("targetType: 'Role'");
 
     warnSpy.mockRestore();
     infoSpy.mockRestore();

@@ -182,9 +182,12 @@ const buildAuditPayload = (entry) => {
 
 export function setupDiscordLogging(client, options = {}) {
   const fallbackChannelIds = getLogChannelIds();
-  const generalChannelId = options.generalChannelId ?? fallbackChannelIds.generalChannelId;
-  const joinToCreateChannelId =
-    options.joinToCreateChannelId ?? fallbackChannelIds.joinToCreateChannelId;
+  const generalChannelId = normaliseId(
+    options.generalChannelId ?? fallbackChannelIds.generalChannelId,
+  );
+  const joinToCreateChannelId = normaliseId(
+    options.joinToCreateChannelId ?? fallbackChannelIds.joinToCreateChannelId,
+  );
 
   const channelCache = new Map();
   const queue = [];
@@ -194,6 +197,23 @@ export function setupDiscordLogging(client, options = {}) {
     const method = level === 'error' ? 'error' : 'warn';
     console[method]('[discord-logging]', ...args);
   };
+
+  if (!generalChannelId) {
+    internalLog(
+      'warn',
+      'Kein gültiger allgemeiner Discord-Log-Kanal konfiguriert (LOG_CHANNEL_GENERAL_ID) – Einträge werden verworfen.',
+    );
+  }
+
+  if (!joinToCreateChannelId) {
+    const followUp = generalChannelId
+      ? 'verwende allgemeinen Kanal.'
+      : 'Join2Create-Einträge werden verworfen.';
+    internalLog(
+      'warn',
+      `Kein gültiger Join2Create-Log-Kanal konfiguriert (LOG_CHANNEL_JOIN2CREATE_ID) – ${followUp}`,
+    );
+  }
 
   const resolveChannel = async (channelId) => {
     if (!channelId) {

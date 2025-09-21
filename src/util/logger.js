@@ -15,6 +15,33 @@ const cloneMetadata = (metadata) => {
   return { ...metadata };
 };
 
+const splitSegmentValue = (value) => {
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => splitSegmentValue(item));
+  }
+
+  if (value == null) {
+    return [];
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(':')
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0);
+  }
+
+  const stringValue = String(value).trim();
+  return stringValue ? [stringValue] : [];
+};
+
+const normaliseSegments = (segments) => {
+  if (segments == null) {
+    return [];
+  }
+  return splitSegmentValue(segments);
+};
+
 const buildContextPayload = (context) => {
   const segments = context?.segments ?? [];
   const label = segments.length ? segments.join(':') : undefined;
@@ -52,6 +79,11 @@ const formatValue = (value) => {
     return value;
   }
   return inspect(value, { depth: 3, colors: false });
+};
+
+const formatArguments = (args) => {
+  const list = Array.isArray(args) ? args : [];
+  return list.map(formatValue);
 };
 
 const applyPrefix = (segments, args) => {
@@ -92,24 +124,33 @@ const mergeMetadata = (parentMetadata, metadata) => {
   return { ...parentMetadata, ...metadata };
 };
 
-const createLoggerInstance = (context) => {
+const createLoggerInstance = (inputContext = {}) => {
+  const baseSegments = normaliseSegments(inputContext?.segments ?? []);
+  const baseMetadata = inputContext?.metadata;
+  const normalizedContext = {
+    segments: [...baseSegments],
+    metadata: baseMetadata,
+  };
+
   const call = (level) => (...args) => {
     if (levels.indexOf(level) < currentIndex) {
       return;
     }
 
     const rawArgs = args;
-    const argsWithPrefix = applyPrefix(context.segments, rawArgs);
-    console[level](...argsWithPrefix);
+    const formattedArgs = formatArguments(rawArgs);
+    const argsWithPrefix = applyPrefix(normalizedContext.segments, formattedArgs);
+    const consoleMethod = typeof console[level] === 'function' ? console[level] : console.log;
+    consoleMethod(...argsWithPrefix);
 
     // Wichtig: entry mit korrekten rawArgs **und** context erstellen
-    notifyTransports(createEntry(level, argsWithPrefix, rawArgs, context));
+    notifyTransports(createEntry(level, argsWithPrefix, rawArgs, normalizedContext));
   };
 
   const withPrefix = (prefix, metadata) => {
-    const trimmed = typeof prefix === 'string' ? prefix.trim() : '';
-    const segments = trimmed ? [...context.segments, trimmed] : [...context.segments];
-    const combinedMetadata = mergeMetadata(context.metadata, metadata);
+    const additionalSegments = splitSegmentValue(prefix);
+    const segments = [...normalizedContext.segments, ...additionalSegments];
+    const combinedMetadata = mergeMetadata(normalizedContext.metadata, metadata);
     return createLoggerInstance({ segments, metadata: combinedMetadata });
   };
 
@@ -128,7 +169,7 @@ export const createLoggerContext = (prefix, metadata) => logger.withPrefix(prefi
 
 export const logLevels = levels;
 
-export const formatLogArgs = (args) => args.map(formatValue);
+export const formatLogArgs = (args) => formatArguments(args);
 
 export function registerLogTransport(handler) {
   if (typeof handler !== 'function') {
