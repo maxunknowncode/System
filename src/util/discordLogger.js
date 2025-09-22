@@ -1,5 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
-import { AUTHOR_ICON } from './embeds/author.js';
+import { applyAuthorByLang } from './embeds/author.js';
 import { truncate, isPlainObject } from './logging/formatting.js';
 import { getLogChannelIds } from './logging/config.js';
 import { formatLogArgs, registerLogTransport } from './logger.js';
@@ -15,30 +15,41 @@ const JOIN_MATCH_REGEX = /\[join2create\]/i;
 const AUDIT_MATCH_REGEX = /\[audit(?::[^\]]*)?\]/i;
 const AUDIT_ACTION_REGEX = /\[audit(?::([^\]]+))?\]/i;
 const MAX_QUEUE_SIZE = 50;
-const DISCORD_PLAIN_TEXT_LIMIT = 2000; // Discord text messages are limited to 2000 characters.
-const DISCORD_EMBED_DESCRIPTION_LIMIT = 4000; // Embed descriptions may use up to 4096 characters; we keep a safety margin.
+const DESCRIPTION_LIMIT = 200;
+const FIELD_VALUE_LIMIT = 60;
+const FALLBACK_FIELD_VALUE = '—';
 
-// Default to the embed limit because most logs are delivered via embeds (Discord allows 4096 characters).
-const formatParts = (parts, maxTotalLength = DISCORD_EMBED_DESCRIPTION_LIMIT) => {
-  if (!parts.length) {
-    return '_Keine Details verfügbar_';
+const collapseToSingleLine = (value) => value.replace(/\s+/g, ' ').trim();
+
+const buildDescriptionText = (values, limit = DESCRIPTION_LIMIT) => {
+  if (!Array.isArray(values) || values.length === 0) {
+    return FALLBACK_FIELD_VALUE;
   }
 
-  const formatted = parts.map((part) => {
-    const trimmed = part.trim();
-    if (!trimmed) {
-      return '—';
-    }
+  const formatted = formatLogArgs(values)
+    .map((part) => (typeof part === 'string' ? part : part == null ? '' : String(part)))
+    .map((part) => collapseToSingleLine(part))
+    .filter((part) => part.length > 0);
 
-    if (trimmed.includes('\n')) {
-      const truncated = truncate(trimmed, 1900);
-      return `\u0060\u0060\u0060\n${truncated}\n\u0060\u0060\u0060`;
-    }
+  if (!formatted.length) {
+    return FALLBACK_FIELD_VALUE;
+  }
 
-    return truncate(trimmed, 1000);
-  });
+  const [first, ...rest] = formatted;
+  const combined = rest.length ? `${first} • ${rest.join(' • ')}` : first;
+  return truncate(combined, limit);
+};
 
-  return truncate(formatted.join('\n\n'), maxTotalLength);
+const normaliseFieldText = (value) => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed ? truncate(trimmed, FIELD_VALUE_LIMIT) : FALLBACK_FIELD_VALUE;
+  }
+  if (value == null) {
+    return FALLBACK_FIELD_VALUE;
+  }
+  const stringValue = String(value).trim();
+  return stringValue ? truncate(stringValue, FIELD_VALUE_LIMIT) : FALLBACK_FIELD_VALUE;
 };
 
 const getRawArgs = (entry) => {
@@ -79,8 +90,6 @@ const determineContext = (entry) => {
   return 'general';
 };
 
-const FALLBACK_FIELD_VALUE = '_Nicht angegeben_';
-
 const normaliseId = (value) => {
   if (typeof value === 'string') {
     const trimmed = value.trim();
@@ -97,7 +106,6 @@ const buildAuditPayload = (entry) => {
   const metadataCandidate = args[args.length - 1];
   const metadata = isPlainObject(metadataCandidate) ? metadataCandidate : null;
 
-  const formattedArgs = [];
   const contextSegments = entry.context?.segments ?? [];
   const contextAction =
     contextSegments.length > 1 ? contextSegments.slice(1).join(':').trim() : '';
@@ -106,71 +114,69 @@ const buildAuditPayload = (entry) => {
     actionType = contextAction;
   }
 
-  args.forEach((arg, index) => {
-    if (metadata && index === args.length - 1) {
-      return;
-    }
-
+  const messageParts = metadata ? args.slice(0, -1) : args;
+  const cleanedParts = messageParts.map((arg) => {
     if (typeof arg === 'string' && AUDIT_MATCH_REGEX.test(arg)) {
       if (!actionType) {
         const match = arg.match(AUDIT_ACTION_REGEX);
         actionType = match?.[1]?.trim() ?? '';
       }
       const closingIndex = arg.indexOf(']');
-      if (closingIndex >= 0) {
-        const remainder = arg.slice(closingIndex + 1).trim();
-        if (remainder) {
-          formattedArgs.push(remainder);
-        }
-      }
-      return;
+      return closingIndex >= 0 ? arg.slice(closingIndex + 1).trim() : '';
     }
-
-    formattedArgs.push(arg);
+    return arg;
   });
 
-  const description = formatParts(formatLogArgs(formattedArgs));
+  const description = buildDescriptionText(cleanedParts);
 
   const actorId = normaliseId(metadata?.actorId ?? metadata?.actor);
   const targetId = normaliseId(metadata?.targetId ?? metadata?.target);
-  const actionFieldValue = actionType ? `\`${truncate(actionType, 256)}\`` : FALLBACK_FIELD_VALUE;
 
-  let actorFieldValue = FALLBACK_FIELD_VALUE;
-  if (typeof metadata?.actorMention === 'string' && metadata.actorMention.trim()) {
-    actorFieldValue = truncate(metadata.actorMention.trim(), 1024);
+  const actorMention =
+    typeof metadata?.actorMention === 'string' ? metadata.actorMention.trim() : '';
+  const actorLabel =
+    typeof metadata?.actorLabel === 'string' ? metadata.actorLabel.trim() : '';
+  const targetMention =
+    typeof metadata?.targetMention === 'string' ? metadata.targetMention.trim() : '';
+  const targetLabel =
+    typeof metadata?.targetLabel === 'string' ? metadata.targetLabel.trim() : '';
+
+  const actionFieldValue = normaliseFieldText(actionType);
+
+  let actorFieldValue = '';
+  if (actorMention) {
+    actorFieldValue = actorMention;
   } else if (actorId) {
     actorFieldValue = `<@${actorId}>`;
-  } else if (typeof metadata?.actorLabel === 'string' && metadata.actorLabel.trim()) {
-    actorFieldValue = truncate(metadata.actorLabel.trim(), 1024);
+  } else if (actorLabel) {
+    actorFieldValue = actorLabel;
   }
 
-  const targetMention = typeof metadata?.targetMention === 'string' ? metadata.targetMention.trim() : '';
-  const targetLabel = typeof metadata?.targetLabel === 'string' ? metadata.targetLabel.trim() : '';
-
-  let targetFieldValue = FALLBACK_FIELD_VALUE;
+  let targetFieldValue = '';
   if (targetMention) {
-    targetFieldValue = truncate(targetMention, 1024);
-  } else if (targetId) {
-    targetFieldValue = `<@${targetId}>`;
+    targetFieldValue = targetMention;
   } else if (targetLabel) {
-    targetFieldValue = truncate(targetLabel, 1024);
-  }
-
-  if (targetFieldValue === FALLBACK_FIELD_VALUE && targetLabel) {
-    targetFieldValue = truncate(targetLabel, 1024);
+    targetFieldValue = targetLabel;
+  } else if (targetId) {
+    targetFieldValue = targetId;
   }
 
   const rawReason = metadata?.reason;
-  const reasonText = typeof rawReason === 'string' ? rawReason.trim() : rawReason != null ? String(rawReason) : '';
+  const reasonText =
+    typeof rawReason === 'string'
+      ? rawReason.trim()
+      : rawReason != null
+      ? String(rawReason).trim()
+      : '';
 
   const fields = [
     { name: 'Aktion', value: actionFieldValue, inline: true },
-    { name: 'Auslöser', value: actorFieldValue, inline: true },
-    { name: 'Ziel', value: targetFieldValue, inline: true },
+    { name: 'Auslöser', value: normaliseFieldText(actorFieldValue), inline: true },
+    { name: 'Ziel', value: normaliseFieldText(targetFieldValue), inline: true },
   ];
 
   if (reasonText) {
-    fields.push({ name: 'Grund', value: truncate(reasonText, 1024), inline: false });
+    fields.push({ name: 'Grund', value: normaliseFieldText(reasonText), inline: false });
   }
 
   return { description, fields };
@@ -236,27 +242,13 @@ export function setupDiscordLogging(client, options = {}) {
     }
   };
 
-  const formatDescription = (args, limit = DISCORD_EMBED_DESCRIPTION_LIMIT) => {
-    const list = Array.isArray(args) ? args : [];
-    return formatParts(formatLogArgs(list), limit);
-  };
-
   const createBaseEmbed = (entry) => {
     const level = entry.level ?? 'info';
     const embed = new EmbedBuilder()
       .setColor(LEVEL_COLOURS[level] ?? LEVEL_COLOURS.info)
       .setTimestamp(entry.timestamp ?? new Date());
 
-    embed.setAuthor({ name: 'The Core Logs', iconURL: AUTHOR_ICON });
-    embed.addFields({ name: 'Level', value: `\`${level.toUpperCase()}\``, inline: true });
-
-    const segments = entry.context?.segments ?? [];
-    const label = segments.length ? segments.join(':') : null;
-    if (label && label !== 'audit' && label !== 'join2create') {
-      embed.addFields({ name: 'Kontext', value: `\`${truncate(label, 256)}\``, inline: true });
-    }
-
-    return embed;
+    return applyAuthorByLang(embed, 'LOGS', 'de');
   };
 
   const buildJoinToCreatePayload = (entry) => {
@@ -272,26 +264,25 @@ export function setupDiscordLogging(client, options = {}) {
           })
           .filter((value) => value !== null)
       : [];
-    const description = formatDescription(cleaned);
+    const description = buildDescriptionText(cleaned);
     const embed = createBaseEmbed(entry).setDescription(description);
-    embed.addFields({ name: 'Kategorie', value: 'Join2Create', inline: true });
     return { embeds: [embed], allowedMentions: { parse: [] } };
   };
 
   const buildAuditMessage = (entry) => {
     const audit = buildAuditPayload(entry);
     const embed = createBaseEmbed(entry).setDescription(audit.description);
-    embed.addFields({ name: 'Kategorie', value: 'Audit', inline: true });
     if (audit.fields.length) {
       embed.addFields(...audit.fields);
     }
     return { embeds: [embed], allowedMentions: { parse: [] } };
   };
 
-  const buildGeneralMessage = (entry) => ({
-    content: formatDescription(entry.args, DISCORD_PLAIN_TEXT_LIMIT),
-    allowedMentions: { parse: [] },
-  });
+  const buildGeneralMessage = (entry) => {
+    const description = buildDescriptionText(entry.args ?? []);
+    const embed = createBaseEmbed(entry).setDescription(description);
+    return { embeds: [embed], allowedMentions: { parse: [] } };
+  };
 
   const buildPayloadForEntry = (entry) => {
     const context = determineContext(entry);

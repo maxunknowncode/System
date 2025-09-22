@@ -7,8 +7,6 @@ import { logger } from '../../util/logger.js';
 import {
   describeDiscordEntity,
   formatMetadataKey,
-  formatValue,
-  isPlainObject,
 } from '../../util/logging/formatting.js';
 
 const auditLogger = logger.withPrefix('audit');
@@ -91,94 +89,176 @@ const summariseChangeKeys = (changes) => {
   let summary = displayed.join(', ');
   const remaining = uniqueKeys.length - displayed.length;
   if (remaining > 0) {
-    summary += ` (+${remaining} weitere)`;
+    summary += ` +${remaining}`;
   }
 
-  return `Änderungen: ${summary}`;
+  return `${summary} geändert`;
 };
 
-const summariseExtra = (extra, metadata) => {
-  if (extra == null) {
+const extractExtraDetails = (extra) => {
+  if (!extra || typeof extra !== 'object') {
+    return { channelId: null, count: null };
+  }
+
+  const details = { channelId: null, count: null };
+
+  const resolveId = (value) => {
+    if (!value) {
+      return null;
+    }
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      return trimmed ? trimmed : null;
+    }
+    if (typeof value === 'number' || typeof value === 'bigint') {
+      return String(value);
+    }
+    return null;
+  };
+
+  const channelId =
+    resolveId(extra.channel?.id) ??
+    resolveId(extra.channelId) ??
+    resolveId(extra.guild?.id);
+  if (channelId) {
+    details.channelId = channelId;
+  }
+
+  const countKeys = ['count', 'removed', 'membersRemoved', 'messagesDeleted'];
+  for (const key of countKeys) {
+    if (typeof extra[key] === 'number' && Number.isFinite(extra[key])) {
+      details.count = extra[key];
+      break;
+    }
+  }
+
+  return details;
+};
+
+const ACTION_EMOJI_RULES = [
+  { check: (key) => key?.includes('bulk_delete'), emoji: '🧹' },
+  {
+    check: (key) =>
+      key?.includes('kick') || key?.includes('prune') || key?.includes('disconnect') || key?.includes('move'),
+    emoji: '👢',
+  },
+  { check: (key) => key?.includes('ban'), emoji: '🔨' },
+  { check: (key) => key?.includes('delete'), emoji: '🗑️' },
+  { check: (key) => key?.includes('create'), emoji: '🆕' },
+  { check: (key) => key?.includes('update') || key?.includes('overwrite'), emoji: '✏️' },
+];
+
+const DEFAULT_EMOJI = 'ℹ️';
+
+const getActionEmoji = (actionKey) => {
+  if (!actionKey) {
+    return DEFAULT_EMOJI;
+  }
+  const lower = actionKey.toLowerCase();
+  for (const { check, emoji } of ACTION_EMOJI_RULES) {
+    if (check(lower)) {
+      return emoji;
+    }
+  }
+  return DEFAULT_EMOJI;
+};
+
+const determineVerb = (actionKey) => {
+  if (!actionKey) {
+    return null;
+  }
+  const lower = actionKey.toLowerCase();
+  if (lower.includes('bulk_delete')) {
+    return 'bulk_delete';
+  }
+  if (
+    lower.includes('kick') ||
+    lower.includes('prune') ||
+    lower.includes('disconnect') ||
+    lower.includes('move')
+  ) {
+    return 'kick';
+  }
+  if (lower.includes('ban')) {
+    return lower.includes('remove') ? 'unban' : 'ban';
+  }
+  if (/_delete$/.test(lower)) {
+    return 'delete';
+  }
+  if (/_create$/.test(lower)) {
+    return 'create';
+  }
+  if (/_update$/.test(lower) || lower.includes('overwrite')) {
+    return 'update';
+  }
+  return null;
+};
+
+const SUBJECT_LABELS = {
+  channel: 'Channel',
+  role: 'Rolle',
+  member: 'Mitglied',
+  user: 'User',
+  message: 'Nachricht',
+  messages: 'Nachrichten',
+  webhook: 'Webhook',
+  emoji: 'Emoji',
+  sticker: 'Sticker',
+  integration: 'Integration',
+  thread: 'Thread',
+  stage: 'Stage',
+  stage_instance: 'Stage',
+  guild_scheduled_event: 'Event',
+  soundboard_sound: 'Sound',
+  auto_moderation_rule: 'AutoMod-Regel',
+  application_command: 'Command',
+};
+
+const VERB_PARTS = new Set([
+  'create',
+  'delete',
+  'update',
+  'add',
+  'remove',
+  'kick',
+  'ban',
+  'bulk',
+  'prune',
+  'move',
+  'disconnect',
+  'enable',
+  'disable',
+]);
+
+const getSubjectParts = (actionKey) => {
+  if (!actionKey) {
     return [];
   }
+  const segments = actionKey.split('_').filter(Boolean);
+  while (segments.length && VERB_PARTS.has(segments[segments.length - 1])) {
+    segments.pop();
+  }
+  return segments;
+};
 
-  const summary = [];
-  const handled = new Set();
-
-  if (typeof extra === 'object') {
-    if ('channel' in extra) {
-      const channel = extra.channel;
-      const channelId = channel?.id ?? extra.channelId ?? null;
-      if (channelId) {
-        if (!metadata.channelId) {
-          metadata.channelId = String(channelId);
-        }
-        const label = describeDiscordEntity(channel) ?? `#${channelId}`;
-        summary.push(`Kanal: ${label}`);
-      }
-      handled.add('channel');
-    }
-
-    if ('channelId' in extra && extra.channelId && !metadata.channelId) {
-      metadata.channelId = String(extra.channelId);
-      handled.add('channelId');
-    }
-
-    const mappedFields = [
-      ['count', 'Anzahl'],
-      ['removed', 'Entfernt'],
-      ['membersRemoved', 'Entfernt'],
-      ['days', 'Tage'],
-      ['deleteMemberDays', 'Tage'],
-      ['integrationType', 'Integration'],
-      ['autoModerationRuleName', 'Regel'],
-      ['autoModerationRuleTriggerType', 'Trigger'],
-      ['messageId', 'Nachricht'],
-      ['applicationId', 'Application'],
-    ];
-
-    for (const [key, label] of mappedFields) {
-      if (extra[key] == null) {
-        continue;
-      }
-      handled.add(key);
-      metadata[key] = extra[key];
-      summary.push(`${label}: ${formatValue(extra[key])}`);
-    }
-
-    if ('id' in extra && extra.id != null) {
-      metadata.extraId = extra.id;
-      handled.add('id');
-      const label = describeDiscordEntity(extra);
-      if (label) {
-        summary.push(`Bezug: ${label}`);
-      }
-    }
-
-    if (!handled.has('user') && extra.user) {
-      const label = describeDiscordEntity(extra.user);
-      if (label) {
-        summary.push(`Bezug: ${label}`);
-      }
-      handled.add('user');
-    }
-
-    if (isPlainObject(extra)) {
-      for (const [key, value] of Object.entries(extra)) {
-        if (handled.has(key) || value == null) {
-          continue;
-        }
-        metadata[key] = value;
-        summary.push(`${formatMetadataKey(key)}: ${formatValue(value)}`);
-      }
-    }
-
-    return summary;
+const formatSubjectLabel = (actionKey, verb) => {
+  const parts = getSubjectParts(actionKey);
+  if (!parts.length) {
+    return toTitleCase(actionKey);
   }
 
-  metadata.extra = extra;
-  summary.push(`Zusatzdaten: ${formatValue(extra)}`);
-  return summary;
+  const joined = parts.join('_');
+  if (verb === 'bulk_delete' && parts[parts.length - 1] === 'message') {
+    return 'Nachrichten';
+  }
+  if (SUBJECT_LABELS[joined]) {
+    return SUBJECT_LABELS[joined];
+  }
+  const last = parts[parts.length - 1];
+  if (SUBJECT_LABELS[last]) {
+    return SUBJECT_LABELS[last];
+  }
+  return parts.map((part) => toTitleCase(part)).join(' ');
 };
 
 export default {
@@ -197,7 +277,6 @@ export default {
         reason,
         extra,
         changes,
-        id,
       } = entry;
 
       const actionName = typeof action === 'number' ? AuditLogEvent[action] : typeof action === 'string' ? action : null;
@@ -250,37 +329,59 @@ export default {
         metadata.targetMention = targetMention;
       }
 
-      const extraMetadata = {};
-      const extraSummary = summariseExtra(extra, extraMetadata);
+      const actorLabel = describeDiscordEntity(executor);
+      if (actorLabel) {
+        metadata.actorLabel = actorLabel;
+      }
+
+      const extraDetails = extractExtraDetails(extra);
+      if (extraDetails.channelId) {
+        metadata.channelId = extraDetails.channelId;
+      }
+
       const changeSummary = summariseChangeKeys(changes);
+      const verb = determineVerb(actionKey);
+      const subjectLabel = formatSubjectLabel(actionKey, verb);
+      const emoji = getActionEmoji(actionKey);
 
-      const extraSegments = [];
-      const channelId = extraMetadata.channelId;
-      if (channelId) {
-        extraSegments.push(`Kanal: <#${channelId}>`);
+      const channelMention = extraDetails.channelId ? `<#${extraDetails.channelId}>` : null;
+      const targetDisplay = targetMention ?? targetDescription ?? (resolvedTargetId ? `ID ${resolvedTargetId}` : '—');
+
+      let descriptionCore;
+      switch (verb) {
+        case 'bulk_delete': {
+          const location = channelMention ?? (targetMention?.startsWith('<#') ? targetMention : null) ?? targetDisplay;
+          const countSuffix = typeof extraDetails.count === 'number' ? ` (${extraDetails.count})` : '';
+          descriptionCore = `Nachrichten gelöscht in ${location ?? '—'}${countSuffix}`;
+          break;
+        }
+        case 'delete':
+          descriptionCore = `${subjectLabel} gelöscht: ${targetDisplay}`;
+          break;
+        case 'create':
+          descriptionCore = `${subjectLabel} erstellt: ${targetDisplay}`;
+          break;
+        case 'update':
+          descriptionCore = `${subjectLabel} aktualisiert: ${targetDisplay}`;
+          break;
+        case 'kick':
+          descriptionCore = `Kick: ${targetDisplay}`;
+          break;
+        case 'ban':
+          descriptionCore = `Ban: ${targetDisplay}`;
+          break;
+        case 'unban':
+          descriptionCore = `Unban: ${targetDisplay}`;
+          break;
+        default:
+          descriptionCore = `${subjectLabel}: ${targetDisplay}`;
+          break;
       }
-      const filteredExtraSummary = extraSummary.filter((item) => !item.startsWith('Kanal:'));
-      extraSegments.push(...filteredExtraSummary);
-      const displayedExtra = extraSegments.slice(0, 2);
 
-      const summarySegments = [];
-      if (targetDescription) {
-        summarySegments.push(`${readableAction}: ${targetDescription}`);
-      } else if (resolvedTargetId) {
-        summarySegments.push(`${readableAction}: ID ${resolvedTargetId}`);
-      } else {
-        summarySegments.push(readableAction);
-      }
-
-      if (displayedExtra.length) {
-        summarySegments.push(displayedExtra.join(', '));
-      }
-
+      let description = `${emoji} ${descriptionCore}`.trim();
       if (changeSummary) {
-        summarySegments.push(changeSummary);
+        description += ` — ${changeSummary}`;
       }
-
-      const description = summarySegments.filter(Boolean).join(' • ') || readableAction || 'Audit Log';
 
       const actionLogger = actionKey ? auditLogger.withPrefix(actionKey) : auditLogger;
       actionLogger[level](description, metadata);
