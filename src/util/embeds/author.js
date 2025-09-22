@@ -23,6 +23,10 @@ export const AUTHORS = {
     en: "The Core - Announcements",
     de: "The Core - Ankündigungen",
   },
+  LOGS: {
+    en: "The Core – Logs",
+    de: "The Core – Logs",
+  },
 };
 
 /**
@@ -30,7 +34,7 @@ export const AUTHORS = {
  * und gewählter Sprache ('en' oder 'de'). Fällt auf 'en' oder 'The Core' zurück, wenn nichts gefunden wird.
  *
  * @param {EmbedBuilder} embed
- * @param {"VERIFY"|"RULES"|"TEAM"|"ANN"} context
+ * @param {"VERIFY"|"RULES"|"TEAM"|"ANN"|"LOGS"} context
  * @param {"en"|"de"} lang
  * @returns {EmbedBuilder}
  */

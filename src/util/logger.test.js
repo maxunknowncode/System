@@ -212,7 +212,7 @@ describe('setupDiscordLogging', () => {
     vi.restoreAllMocks();
   });
 
-  it('sends general logs as plain text messages', async () => {
+  it('sends general logs as embeds', async () => {
     const send = vi.fn().mockResolvedValue();
     const { client, fetch } = createClient(send);
 
@@ -226,12 +226,14 @@ describe('setupDiscordLogging', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenCalledWith(CHANNEL_IDS.generalChannelId);
     expect(send).toHaveBeenCalledTimes(1);
-    expect(send).toHaveBeenCalledWith({
-      content: expect.stringContaining('general entry'),
-      allowedMentions: { parse: [] },
-    });
-    expect(send.mock.calls[0][0].content.trim()).toBe('general entry');
-    expect(send.mock.calls[0][0].embeds).toBeUndefined();
+    const payload = send.mock.calls[0][0];
+    expect(payload.content).toBeUndefined();
+    expect(payload.allowedMentions).toEqual({ parse: [] });
+    expect(payload.embeds).toHaveLength(1);
+    const embed = payload.embeds[0];
+    expect(embed.data.description).toBe('general entry');
+    expect(embed.data.author?.name).toBe('The Core – Logs');
+    expect(embed.data.fields ?? []).toEqual([]);
 
     unsubscribe();
   });
@@ -251,13 +253,14 @@ describe('setupDiscordLogging', () => {
     expect(fetch).toHaveBeenCalledWith(CHANNEL_IDS.generalChannelId);
     expect(send).toHaveBeenCalledTimes(1);
     const payload = send.mock.calls[0][0];
-    expect(payload.embeds).toBeUndefined();
-    expect(payload.content?.trim()).toBe('[jobs:worker] started');
+    expect(payload.content).toBeUndefined();
+    expect(payload.embeds).toHaveLength(1);
+    expect(payload.embeds[0].data.description?.trim()).toBe('[jobs:worker] started');
 
     unsubscribe();
   });
 
-  it('truncates long general logs to the plain text limit', async () => {
+  it('truncates long general logs to ~200 characters', async () => {
     const send = vi.fn().mockResolvedValue();
     const { client } = createClient(send);
 
@@ -272,11 +275,13 @@ describe('setupDiscordLogging', () => {
 
     expect(send).toHaveBeenCalledTimes(1);
     const payload = send.mock.calls[0][0];
-    expect(payload.embeds).toBeUndefined();
-    expect(payload.content).toBeDefined();
-    expect(payload.content.length).toBeLessThanOrEqual(2000);
-    expect(payload.content.length).toBeGreaterThan(1900);
-    expect(payload.content.endsWith('…')).toBe(true);
+    expect(payload.content).toBeUndefined();
+    expect(payload.embeds).toHaveLength(1);
+    const description = payload.embeds[0].data.description;
+    expect(description).toBeDefined();
+    expect(description.length).toBeLessThanOrEqual(200);
+    expect(description.length).toBeGreaterThan(180);
+    expect(description.endsWith('…')).toBe(true);
 
     unsubscribe();
     infoSpy.mockRestore();
@@ -294,6 +299,7 @@ describe('setupDiscordLogging', () => {
     auditLogger.warn('Nachricht entfernt', {
       actorId: '111',
       targetId: '222',
+      targetMention: '<@222>',
       channelId: '333',
       reason: 'Spam',
       count: 2,
@@ -310,18 +316,12 @@ describe('setupDiscordLogging', () => {
     expect(embed.data.description).not.toMatch(/\[audit/i);
     expect(embed.data.description.trim()).toBe('Nachricht entfernt');
 
-    expect(embed.data.fields).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ name: 'Level', value: '`WARN`' }),
-        expect.objectContaining({ name: 'Kategorie', value: 'Audit' }),
-        expect.objectContaining({ name: 'Aktion', value: '`message_delete`' }),
-        expect.objectContaining({ name: 'Auslöser', value: '<@111>' }),
-        expect.objectContaining({ name: 'Ziel', value: '<@222>' }),
-        expect.objectContaining({ name: 'Grund', value: 'Spam' }),
-      ]),
-    );
-    expect(embed.data.fields.some((field) => field.name === 'Kanal')).toBe(false);
-    expect(embed.data.fields.some((field) => field.name === 'Count')).toBe(false);
+    expect(embed.data.fields).toEqual([
+      { name: 'Aktion', value: 'message_delete', inline: true },
+      { name: 'Auslöser', value: '<@111>', inline: true },
+      { name: 'Ziel', value: '<@222>', inline: true },
+      { name: 'Grund', value: 'Spam', inline: false },
+    ]);
 
     unsubscribe();
   });
@@ -343,11 +343,11 @@ describe('setupDiscordLogging', () => {
     expect(payload.embeds).toHaveLength(1);
     const embed = payload.embeds[0];
     expect(embed.data.description).toBe('combined prefix');
-    expect(embed.data.fields).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ name: 'Kategorie', value: 'Audit' }),
-      ]),
-    );
+    expect(embed.data.fields).toEqual([
+      { name: 'Aktion', value: 'message_delete', inline: true },
+      { name: 'Auslöser', value: '—', inline: true },
+      { name: 'Ziel', value: '—', inline: true },
+    ]);
 
     unsubscribe();
   });
@@ -374,16 +374,11 @@ describe('setupDiscordLogging', () => {
     expect(embed.data.description).not.toMatch(/\[audit/i);
     expect(embed.data.description.trim()).toBe('Rolle angepasst');
 
-    expect(embed.data.fields).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ name: 'Level', value: '`INFO`' }),
-        expect.objectContaining({ name: 'Kategorie', value: 'Audit' }),
-        expect.objectContaining({ name: 'Aktion', value: '`role_update`' }),
-        expect.objectContaining({ name: 'Auslöser', value: '_Nicht angegeben_' }),
-        expect.objectContaining({ name: 'Ziel', value: '_Nicht angegeben_' }),
-      ]),
-    );
-    expect(embed.data.fields.some((field) => field.name === 'Grund')).toBe(false);
+    expect(embed.data.fields).toEqual([
+      { name: 'Aktion', value: 'role_update', inline: true },
+      { name: 'Auslöser', value: '—', inline: true },
+      { name: 'Ziel', value: '—', inline: true },
+    ]);
 
     unsubscribe();
   });
@@ -409,16 +404,12 @@ describe('setupDiscordLogging', () => {
     expect(embed.data.description).toBe('channel created');
     expect(embed.data.description).not.toMatch(/\[join2create/i);
     expect(embed.data.description.trim()).toBe('channel created');
-    expect(embed.data.fields).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ name: 'Kategorie', value: 'Join2Create' }),
-      ]),
-    );
+    expect(embed.data.fields ?? []).toEqual([]);
 
     unsubscribe();
   });
 
-  it('allows embed descriptions to use the higher limit', async () => {
+  it('limits join2create embed descriptions to ~200 characters', async () => {
     const send = vi.fn().mockResolvedValue();
     const { client } = createClient(send);
 
@@ -438,8 +429,8 @@ describe('setupDiscordLogging', () => {
     expect(payload.embeds).toHaveLength(1);
     const description = payload.embeds[0].data.description;
     expect(description).toBeDefined();
-    expect(description.length).toBe(4000);
-    expect(description.length).toBeGreaterThan(2000);
+    expect(description.length).toBeLessThanOrEqual(200);
+    expect(description.length).toBeGreaterThan(180);
     expect(description.endsWith('…')).toBe(true);
 
     unsubscribe();

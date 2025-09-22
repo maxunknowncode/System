@@ -56,18 +56,16 @@ describe('guildAuditLogEntryCreate handler', () => {
     expect(warnSpy).toHaveBeenCalledTimes(1);
     expect(infoSpy).not.toHaveBeenCalled();
     const [message, metadata] = warnSpy.mock.calls[0];
-    expect(message).toBe(
-      '[audit:message_delete] Message Delete: User#1234 (222) • Kanal: <#333>, Anzahl: 2 • Änderungen: Count',
-    );
+    expect(message).toBe('[audit:message_delete] 🗑️ Nachricht gelöscht: <@222> — Count geändert');
     expect(metadata).toContain("action: 'message_delete'");
     expect(metadata).toContain("actorId: '1111'");
     expect(metadata).toContain("targetId: '222'");
     expect(metadata).toContain("targetMention: '<@222>'");
     expect(metadata).toContain("reason: 'Spam'");
+    expect(metadata).toContain("channelId: '333'");
     expect(metadata).not.toContain('entryId');
     expect(metadata).not.toContain('guildId');
     expect(metadata).not.toContain('targetType');
-    expect(metadata).not.toContain('channelId');
 
     warnSpy.mockRestore();
     infoSpy.mockRestore();
@@ -93,7 +91,7 @@ describe('guildAuditLogEntryCreate handler', () => {
     expect(warnSpy).not.toHaveBeenCalled();
     const [message, metadata] = infoSpy.mock.calls[0];
     expect(message).toBe(
-      '[audit:role_update] Role Update: Example Rolle (2222) • Änderungen: Name, Permissions',
+      '[audit:role_update] ✏️ Rolle aktualisiert: <@&2222> — Name, Permissions geändert',
     );
     expect(metadata).toContain("action: 'role_update'");
     expect(metadata).toContain("actorId: '1111'");
