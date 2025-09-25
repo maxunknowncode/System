@@ -19,6 +19,14 @@ export default {
         });
         await channel.permissionOverwrites.edit(member, {
           ManageChannels: true,
+          Connect: true,
+          Speak: true,
+          UseVAD: true,
+        });
+        await channel.permissionOverwrites.edit('1354909911691038862', {
+          Connect: true,
+          Speak: true,
+          UseVAD: true,
         });
         createdChannels.add(channel.id);
         await newState.setChannel(channel);
