@@ -20,7 +20,10 @@ export default async function ensureVerifyMessage(client) {
     return;
   }
 
-  const payload = buildVerifyEmbedAndComponents(VERIFY_DEFAULT_LANG);
+  const payload = {
+    ...buildVerifyEmbedAndComponents(VERIFY_DEFAULT_LANG),
+    allowedMentions: { parse: [] },
+  };
   let message = null;
 
   if (VERIFY_MESSAGE_ID) {

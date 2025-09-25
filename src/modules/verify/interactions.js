@@ -81,7 +81,10 @@ export async function handleVerifyInteractions(interaction, client) {
   ) {
     const lang = interaction.customId === VERIFY_LANG_DE_ID ? 'de' : 'en';
     try {
-      await interaction.update(buildVerifyEmbedAndComponents(lang));
+      await interaction.update({
+        ...buildVerifyEmbedAndComponents(lang),
+        allowedMentions: { parse: [] },
+      });
       verifyLogger.info(`Sprache → ${lang.toUpperCase()}`);
     } catch (err) {
       verifyLogger.error('Fehler beim Umschalten der Sprache:', err);
@@ -94,7 +97,10 @@ export async function handleVerifyInteractions(interaction, client) {
     }
     const timeout = setTimeout(async () => {
       try {
-        await interaction.message.edit(buildVerifyEmbedAndComponents('en'));
+        await interaction.message.edit({
+          ...buildVerifyEmbedAndComponents('en'),
+          allowedMentions: { parse: [] },
+        });
         verifyLogger.info('Sprache → EN (Timeout)');
       } catch (err) {
         verifyLogger.error('Fehler beim Zurücksetzen der Sprache:', err);
