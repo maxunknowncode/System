@@ -21,13 +21,13 @@ export default {
     const channel = member.guild?.channels.cache.get(WELCOME_CHANNEL_ID);
     if (!channel) return;
 
-    const description = `> Hello ${member}, welcome to **The Core**.\n\n> Bitte lies dir die Regeln im Channel <#${RULES_CHANNEL_ID}> durch!`;
+    const description = `> Hello ${member}, welcome to **The Core**.\n\n> Please read the rules in channel <#${RULES_CHANNEL_ID}>!`;
 
     const embed = new EmbedBuilder()
       .setColor(COLOR)
       .setTitle('Welcome!')
       .setDescription(description)
-      .setAuthor({ name: 'The Core', iconURL: AUTHOR_ICON })
+      .setAuthor({ name: 'The Core Welcome/Willkommen', iconURL: AUTHOR_ICON })
       .setFooter(FOOTER)
       .setThumbnail(WELCOME_IMAGE_URL);
 
