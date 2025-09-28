@@ -7,6 +7,9 @@ export const AUTHORS = {
     en: "The Core - Ticket System",
     de: "The Core - Ticket System",
   },
+  WELCOME: {
+    en: "The Core Welcome/Willkommen",
+  },
   VERIFY: {
     en: "The Core - Verify System",
     de: "The Core - Verify System",
@@ -34,7 +37,7 @@ export const AUTHORS = {
  * und gewählter Sprache ('en' oder 'de'). Fällt auf 'en' oder 'The Core' zurück, wenn nichts gefunden wird.
  *
  * @param {EmbedBuilder} embed
- * @param {"VERIFY"|"RULES"|"TEAM"|"ANN"|"LOGS"} context
+ * @param {"VERIFY"|"RULES"|"TEAM"|"ANN"|"LOGS"|"WELCOME"} context
  * @param {"en"|"de"} lang
  * @returns {EmbedBuilder}
  */
@@ -49,7 +52,7 @@ export function applyAuthorByLang(embed, context, lang = "en") {
  * Verwendet standardmäßig die englische Variante.
  *
  * @param {EmbedBuilder} embed
- * @param {"TICKET"|"VERIFY"|"RULES"|"TEAM"|"ANN"} context
+ * @param {"TICKET"|"VERIFY"|"RULES"|"TEAM"|"ANN"|"WELCOME"} context
  * @returns {EmbedBuilder}
  */
 export function applyAuthor(embed, context) {

@@ -4,7 +4,7 @@
 import { Events, EmbedBuilder } from 'discord.js';
 import { COLOR } from '../../util/embeds/color.js';
 import { FOOTER } from '../../util/embeds/footer.js';
-import { AUTHOR_ICON } from '../../util/embeds/author.js';
+import { applyAuthor } from '../../util/embeds/author.js';
 import { logger } from '../../util/logger.js';
 import {
   WELCOME_CHANNEL_ID,
@@ -23,11 +23,10 @@ export default {
 
     const description = `> Hello ${member}, welcome to **The Core**.\n\n> Please read the rules in channel <#${RULES_CHANNEL_ID}>!`;
 
-    const embed = new EmbedBuilder()
+    const embed = applyAuthor(new EmbedBuilder(), 'WELCOME')
       .setColor(COLOR)
       .setTitle('Welcome!')
       .setDescription(description)
-      .setAuthor({ name: 'The Core Welcome/Willkommen', iconURL: AUTHOR_ICON })
       .setFooter(FOOTER)
       .setThumbnail(WELCOME_IMAGE_URL);
 
