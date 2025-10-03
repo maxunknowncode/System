@@ -6,7 +6,7 @@ import { ensureRulesMessage } from '../../modules/rules/ensure.js';
 import { ensureTeamMessage } from '../../modules/teamlist/ensure.js';
 import { startVoiceStats } from '../../modules/voiceStats/updater.js';
 import { ensureTicketPanel } from '../../modules/tickets/ensure.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 
 const readyLogger = logger.withPrefix('bereit');
 const verifyLogger = logger.withPrefix('verifizierung');

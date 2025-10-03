@@ -2,7 +2,7 @@
 ### Zweck: Lädt rekursiv Event-Handler (handler.js|index.js) und bindet sie am Client (on/once).
 */
 import path from 'node:path';
-import { logger } from '../util/logger.js';
+import { logger } from '../util/logging/logger.js';
 import { walk } from './walk.js';
 
 const eventsLogger = logger.withPrefix('ereignisse');

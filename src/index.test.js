@@ -48,7 +48,7 @@ describe('index entrypoint', () => {
 
     vi.doMock('./loaders/commandLoader.js', () => ({ default: vi.fn().mockResolvedValue() }));
     vi.doMock('./loaders/eventLoader.js', () => ({ default: vi.fn().mockResolvedValue() }));
-    vi.doMock('./util/discordLogger.js', () => ({ setupDiscordLogging: vi.fn() }));
+    vi.doMock('./util/logging/discordTransport.js', () => ({ setupDiscordLogging: vi.fn() }));
     vi.doMock('./util/logging/config.js', () => ({
       getLogChannelIds: vi.fn().mockReturnValue({
         generalChannelId: 'general',

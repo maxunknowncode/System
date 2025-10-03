@@ -3,7 +3,7 @@
 */
 import { RULES_BUTTON_ID_EN, RULES_BUTTON_ID_DE, RULES_DEFAULT_LANG, RULES_RESET_MS } from './config.js';
 import { buildRulesEmbedAndComponents } from './embed.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 
 const rulesLogger = logger.withPrefix('regeln');
 

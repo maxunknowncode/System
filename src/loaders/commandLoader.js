@@ -2,7 +2,7 @@
 ### Zweck: Lädt rekursiv gültige Commands (command.js|index.js) in client.commands und fasst die Anzahl zusammen.
 */
 import path from 'node:path';
-import { logger } from '../util/logger.js';
+import { logger } from '../util/logging/logger.js';
 import { walk } from './walk.js';
 
 const commandLogger = logger.withPrefix('befehle');

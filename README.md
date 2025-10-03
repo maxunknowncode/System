@@ -147,7 +147,7 @@ Nachfolgend sämtliche relevanten Konstanten (siehe `src/modules/**/config.js`).
 - Erfordert Intents `GuildMembers`, `GuildPresences`, `GuildVoiceStates`.
 
 ### Weitere Hilfen
-- `src/util/logger.js` bietet einfachen konsolenbasierten Logger; steuerbar über `LOG_LEVEL`.
+- `src/util/logging/logger.js` bietet einfachen konsolenbasierten Logger; steuerbar über `LOG_LEVEL`.
 - `src/util/embeds/*` liefert wiederverwendbare Embed-Eigenschaften (Farbe, Footer, Autoren-Label und Icon).
 - `scripts/cleanup-commands.js` ist als Platzhalter für zukünftiges Entfernen nicht mehr genutzter Commands vorgesehen.
 

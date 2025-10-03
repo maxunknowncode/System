@@ -3,7 +3,7 @@
 */
 import { RULES_CHANNEL_ID, RULES_MESSAGE_ID, RULES_BUTTON_ID_EN, RULES_BUTTON_ID_DE, RULES_DEFAULT_LANG } from './config.js';
 import { buildRulesEmbedAndComponents } from './embed.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 
 const rulesLogger = logger.withPrefix('regeln');
 

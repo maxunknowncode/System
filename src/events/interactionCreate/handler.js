@@ -7,7 +7,7 @@ import { RULES_BUTTON_ID_EN, RULES_BUTTON_ID_DE } from '../../modules/rules/conf
 import { handleRulesButtons } from '../../modules/rules/interactions.js';
 import { TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE } from '../../modules/teamlist/config.js';
 import { handleTeamButtons } from '../../modules/teamlist/interactions.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 import {
   MENU_CUSTOM_ID,
   BTN_CLAIM_ID,

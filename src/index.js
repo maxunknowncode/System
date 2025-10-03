@@ -5,8 +5,8 @@ import { Client, GatewayIntentBits } from 'discord.js';
 import path from 'node:path';
 import commandLoader from './loaders/commandLoader.js';
 import eventLoader from './loaders/eventLoader.js';
-import { logger } from './util/logger.js';
-import { setupDiscordLogging } from './util/discordLogger.js';
+import { logger } from './util/logging/logger.js';
+import { setupDiscordLogging } from './util/logging/discordTransport.js';
 import { getLogChannelIds } from './util/logging/config.js';
 
 const startLogger = logger.withPrefix('start');

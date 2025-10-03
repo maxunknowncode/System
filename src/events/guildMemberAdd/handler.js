@@ -5,7 +5,7 @@ import { Events, EmbedBuilder } from 'discord.js';
 import { COLOR } from '../../util/embeds/color.js';
 import { FOOTER } from '../../util/embeds/footer.js';
 import { AUTHOR_ICON } from '../../util/embeds/author.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 import {
   WELCOME_CHANNEL_ID,
   RULES_CHANNEL_ID,

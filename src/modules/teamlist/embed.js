@@ -15,7 +15,7 @@ import {
   TEAM_BUTTON_ID_DE,
   TEAM_ROLES,
 } from './config.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 
 const teamLogger = logger.withPrefix('team');
 
