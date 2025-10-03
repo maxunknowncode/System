@@ -1,7 +1,7 @@
 import { EmbedBuilder } from 'discord.js';
-import { applyAuthorByLang } from './embeds/author.js';
-import { truncate, isPlainObject } from './logging/formatting.js';
-import { getLogChannelIds } from './logging/config.js';
+import { applyAuthorByLang } from '../embeds/author.js';
+import { truncate, isPlainObject } from './formatting.js';
+import { getLogChannelIds } from './config.js';
 import { formatLogArgs, registerLogTransport } from './logger.js';
 
 const LEVEL_COLOURS = {

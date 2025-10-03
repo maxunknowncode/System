@@ -20,7 +20,7 @@ import {
   ButtonStyle,
   EmbedBuilder,
 } from 'discord.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 
 const ticketLogger = logger.withPrefix('tickets');
 

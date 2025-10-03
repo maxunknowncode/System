@@ -9,7 +9,7 @@ import {
   UPDATE_EVERY_MS,
   ONLINE_STATUSES,
 } from './config.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 
 const voiceStatsLogger = logger.withPrefix('voicestats');
 

@@ -1,6 +1,6 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { JOIN_TO_CREATE_CHANNEL_ID } from '../../modules/join2create/config.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 
 const joinLogger = logger.withPrefix('join2create');
 

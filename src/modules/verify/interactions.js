@@ -11,7 +11,7 @@ import {
 } from './config.js';
 import { buildVerifyEmbedAndComponents } from './embed.js';
 import { FOOTER } from '../../util/embeds/footer.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 
 const verifyLogger = logger.withPrefix('verify');
 

@@ -1,6 +1,6 @@
 import { TICKET_PANEL_CHANNEL_ID, TICKET_PANEL_MESSAGE_ID, MENU_CUSTOM_ID } from './config.js';
 import { buildTicketPanel } from './panel.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 
 const ticketLogger = logger.withPrefix('tickets');
 

@@ -4,7 +4,7 @@
 import { REST, Routes } from 'discord.js';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
-import { logger } from '../src/util/logger.js';
+import { logger } from '../src/util/logging/logger.js';
 
 const token = process.env.TOKEN;
 const clientId = process.env.CLIENT_ID;

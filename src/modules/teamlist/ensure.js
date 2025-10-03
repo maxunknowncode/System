@@ -3,7 +3,7 @@
 */
 import { TEAM_CHANNEL_ID, TEAM_MESSAGE_ID, TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE, TEAM_ROLES } from './config.js';
 import { buildTeamEmbedAndComponents, TEAM_TITLES } from './embed.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 
 const teamLogger = logger.withPrefix('team');
 const FALLBACK_EMBED_TITLES = new Set([

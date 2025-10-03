@@ -2,7 +2,7 @@
 ### Zweck: Reagiert auf neue Nachrichten im Vorschlagskanal und setzt Abstimmungsreaktionen.
 */
 import { Events } from 'discord.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 import {
   SUGGESTIONS_CHANNEL_ID,
   SUGGESTIONS_EMOJI_UP,

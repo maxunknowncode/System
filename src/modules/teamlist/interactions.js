@@ -3,7 +3,7 @@
 */
 import { TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE, TEAM_RESET_MS, TEAM_ROLES } from './config.js';
 import { buildTeamEmbedAndComponents } from './embed.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 
 const teamLogger = logger.withPrefix('team');
 

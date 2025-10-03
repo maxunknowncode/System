@@ -3,7 +3,7 @@
 */
 import { VERIFY_CHANNEL_ID, VERIFY_BUTTON_ID, VERIFY_DEFAULT_LANG, VERIFY_MESSAGE_ID } from './config.js';
 import { buildVerifyEmbedAndComponents } from './embed.js';
-import { logger } from '../../util/logger.js';
+import { logger } from '../../util/logging/logger.js';
 
 const verifyLogger = logger.withPrefix('verify');
 
