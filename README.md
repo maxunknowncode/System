@@ -152,7 +152,7 @@ Nachfolgend sämtliche relevanten Konstanten (siehe `src/modules/**/config.js`).
 - `scripts/cleanup-commands.js` ist als Platzhalter für zukünftiges Entfernen nicht mehr genutzter Commands vorgesehen.
 
 ## Tests & Qualitätssicherung
-- **Logger-Test:** `src/util/logger.test.js` verifiziert die Einhaltung des `LOG_LEVEL`.
+- **Logger-Test:** `src/util/logging/logger.test.js` verifiziert die Einhaltung des `LOG_LEVEL`.
 - Empfohlener Workflow: `npm run lint` → `npm test` → `npm start`.
 
 ## Wartung & Anpassung
