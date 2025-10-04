@@ -1,8 +1,8 @@
 /*
 ### Zweck: Slash-Command /ping – zeigt Ping, Roundtrip, Uptime und Serverzeit als Embed.
 */
-import { EmbedBuilder } from 'discord.js';
-import { FOOTER } from '../../util/embeds/footer.js';
+import { coreEmbed } from '../../util/embeds/core.js';
+import { detectLangFromInteraction } from '../../util/embeds/lang.js';
 
 export default {
   name: 'ping',
@@ -15,7 +15,7 @@ export default {
     const uptimeMs = client.uptime ?? 0;
     const uptime = formatDuration(uptimeMs);
 
-    const embed = new EmbedBuilder()
+    const embed = coreEmbed('ANN', detectLangFromInteraction(interaction))
       .setTitle('🟢 The Core System — Status')
       .setDescription('✅ Operational.')
       .addFields(
@@ -23,9 +23,7 @@ export default {
         { name: '⏱️ Roundtrip', value: `${roundtrip} ms`, inline: true },
         { name: '⏳ Uptime', value: uptime, inline: true },
         { name: '🕒 Server Time', value: new Date().toISOString(), inline: false }
-      )
-      .setColor(0xFFD700)
-      .setFooter(FOOTER);
+      );
 
     await interaction.editReply({ embeds: [embed] });
   },

@@ -1,10 +1,8 @@
 /*
 ### Zweck: Baut die Verify-Embed samt Sprach- und Verify-Buttons.
 */
-import { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
-import { FOOTER } from '../../util/embeds/footer.js';
-import { applyAuthorByLang } from '../../util/embeds/author.js';
-import { COLOR } from '../../util/embeds/color.js';
+import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
+import { coreEmbed } from '../../util/embeds/core.js';
 import {
   VERIFY_BUTTON_ID,
   VERIFY_LANG_EN_ID,
@@ -46,13 +44,10 @@ export function buildVerifyEmbedAndComponents(lang = VERIFY_DEFAULT_LANG) {
         },
       ];
 
-  const embed = new EmbedBuilder()
-    .setColor(COLOR)
+  const embed = coreEmbed('VERIFY', lang)
     .setTitle(title)
     .setDescription(description)
-    .addFields(fields)
-    .setFooter(FOOTER);
-  applyAuthorByLang(embed, 'VERIFY', lang);
+    .addFields(fields);
 
   // ✅ Verify-Button (grün)
   const verifyButton = new ButtonBuilder()

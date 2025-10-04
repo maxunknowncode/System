@@ -1,10 +1,9 @@
 /*
 ### Zweck: Reagiert auf neue Mitglieder und sendet eine Willkommensnachricht.
 */
-import { Events, EmbedBuilder } from 'discord.js';
-import { COLOR } from '../../util/embeds/color.js';
-import { FOOTER } from '../../util/embeds/footer.js';
-import { AUTHOR_ICON } from '../../util/embeds/author.js';
+import { Events } from 'discord.js';
+import { coreEmbed } from '../../util/embeds/core.js';
+import { detectLangFromInteraction } from '../../util/embeds/lang.js';
 import { logger } from '../../util/logging/logger.js';
 import {
   WELCOME_CHANNEL_ID,
@@ -23,12 +22,11 @@ export default {
 
     const description = `> Hello ${member}, welcome to **The Core**.\n\n> Please read the rules in channel <#${RULES_CHANNEL_ID}>!`;
 
-    const embed = new EmbedBuilder()
-      .setColor(COLOR)
+    const lang = detectLangFromInteraction(member);
+
+    const embed = coreEmbed('WELCOME', lang)
       .setTitle('Welcome!')
       .setDescription(description)
-      .setAuthor({ name: 'The Core Welcome/Willkommen', iconURL: AUTHOR_ICON })
-      .setFooter(FOOTER)
       .setThumbnail(WELCOME_IMAGE_URL);
 
     try {

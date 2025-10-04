@@ -1,15 +1,8 @@
 /*
 ### Zweck: Baut die Rules-Embed und die Sprachwahl-Buttons.
 */
-import {
-  EmbedBuilder,
-  ButtonBuilder,
-  ActionRowBuilder,
-  ButtonStyle,
-} from "discord.js";
-import { FOOTER } from "../../util/embeds/footer.js";
-import { applyAuthorByLang } from "../../util/embeds/author.js";
-import { COLOR } from "../../util/embeds/color.js";
+import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from "discord.js";
+import { coreEmbed } from "../../util/embeds/core.js";
 import { RULES_BUTTON_ID_EN, RULES_BUTTON_ID_DE } from "./config.js";
 
 const FIELDS_EN = [
@@ -125,13 +118,10 @@ export function buildRulesEmbedAndComponents(lang = "en") {
     ? "🛡️ *Offizielle Server-Regeln von **The Core Team** — alle müssen sich daran halten.*"
     : "🛡️ *Official server rules by **The Core Team** — everyone must follow them.*";
 
-  const embed = new EmbedBuilder()
-    .setColor(COLOR)
+  const embed = coreEmbed("RULES", lang)
     .setTitle(title)
     .setDescription(description)
-    .setFields(fields)
-    .setFooter(FOOTER);
-  applyAuthorByLang(embed, "RULES", lang);
+    .setFields(fields);
 
   const enButton = new ButtonBuilder()
     .setCustomId(RULES_BUTTON_ID_EN)
