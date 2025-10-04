@@ -56,7 +56,7 @@ describe('logger', () => {
   it('logs only above set level', async () => {
     process.env.LOG_LEVEL = 'warn';
     vi.resetModules();
-    const { logger } = await import('./logging/logger.js');
+    const { logger } = await import('./logger.js');
     const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -76,7 +76,7 @@ describe('logger', () => {
   it('notifies transports for emitted logs', async () => {
     process.env.LOG_LEVEL = 'debug';
     vi.resetModules();
-    const { logger, registerLogTransport } = await import('./logging/logger.js');
+    const { logger, registerLogTransport } = await import('./logger.js');
     const transport = vi.fn();
     registerLogTransport(transport);
 
@@ -96,7 +96,7 @@ describe('logger', () => {
   it('creates prefixed logger contexts and notifies transports with context data', async () => {
     process.env.LOG_LEVEL = 'debug';
     vi.resetModules();
-    const { logger, registerLogTransport } = await import('./logging/logger.js');
+    const { logger, registerLogTransport } = await import('./logger.js');
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
     const transport = vi.fn();
     const unsubscribe = registerLogTransport(transport);
@@ -127,7 +127,7 @@ describe('logger', () => {
   it('skips transports for filtered levels', async () => {
     process.env.LOG_LEVEL = 'error';
     vi.resetModules();
-    const { logger, registerLogTransport } = await import('./logging/logger.js');
+    const { logger, registerLogTransport } = await import('./logger.js');
     const transport = vi.fn();
     registerLogTransport(transport);
 
@@ -141,7 +141,7 @@ describe('logger', () => {
   it('formats error instances with their stack for console output', async () => {
     process.env.LOG_LEVEL = 'debug';
     vi.resetModules();
-    const { logger } = await import('./logging/logger.js');
+    const { logger } = await import('./logger.js');
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const error = new Error('Boom');
@@ -156,7 +156,7 @@ describe('logger', () => {
   it('splits colon separated prefixes into multiple context segments', async () => {
     process.env.LOG_LEVEL = 'debug';
     vi.resetModules();
-    const { logger, registerLogTransport } = await import('./logging/logger.js');
+    const { logger, registerLogTransport } = await import('./logger.js');
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
     const transport = vi.fn();
     registerLogTransport(transport);
@@ -216,9 +216,9 @@ describe('setupDiscordLogging', () => {
     const send = vi.fn().mockResolvedValue();
     const { client, fetch } = createClient(send);
 
-    const { setupDiscordLogging } = await import('./logging/discordTransport.js');
+    const { setupDiscordLogging } = await import('./discordTransport.js');
     const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
-    const { logger } = await import('./logging/logger.js');
+    const { logger } = await import('./logger.js');
 
     logger.info('general entry');
     await flushAsync();
@@ -242,9 +242,9 @@ describe('setupDiscordLogging', () => {
     const send = vi.fn().mockResolvedValue();
     const { client, fetch } = createClient(send);
 
-    const { setupDiscordLogging } = await import('./logging/discordTransport.js');
+    const { setupDiscordLogging } = await import('./discordTransport.js');
     const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
-    const { logger } = await import('./logging/logger.js');
+    const { logger } = await import('./logger.js');
 
     const prefixed = logger.withPrefix('jobs').withPrefix('worker');
     prefixed.warn('started');
@@ -264,9 +264,9 @@ describe('setupDiscordLogging', () => {
     const send = vi.fn().mockResolvedValue();
     const { client } = createClient(send);
 
-    const { setupDiscordLogging } = await import('./logging/discordTransport.js');
+    const { setupDiscordLogging } = await import('./discordTransport.js');
     const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
-    const { logger } = await import('./logging/logger.js');
+    const { logger } = await import('./logger.js');
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
 
     const parts = Array.from({ length: 5 }, (_, index) => String.fromCharCode(65 + index).repeat(1500));
@@ -291,9 +291,9 @@ describe('setupDiscordLogging', () => {
     const send = vi.fn().mockResolvedValue();
     const { client } = createClient(send);
 
-    const { setupDiscordLogging } = await import('./logging/discordTransport.js');
+    const { setupDiscordLogging } = await import('./discordTransport.js');
     const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
-    const { logger } = await import('./logging/logger.js');
+    const { logger } = await import('./logger.js');
 
     const auditLogger = logger.withPrefix('audit').withPrefix('message_delete');
     auditLogger.warn('Nachricht entfernt', {
@@ -330,9 +330,9 @@ describe('setupDiscordLogging', () => {
     const send = vi.fn().mockResolvedValue();
     const { client } = createClient(send);
 
-    const { setupDiscordLogging } = await import('./logging/discordTransport.js');
+    const { setupDiscordLogging } = await import('./discordTransport.js');
     const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
-    const { logger } = await import('./logging/logger.js');
+    const { logger } = await import('./logger.js');
 
     logger.withPrefix('audit:message_delete').info('combined prefix');
     await flushAsync();
@@ -356,9 +356,9 @@ describe('setupDiscordLogging', () => {
     const send = vi.fn().mockResolvedValue();
     const { client } = createClient(send);
 
-    const { setupDiscordLogging } = await import('./logging/discordTransport.js');
+    const { setupDiscordLogging } = await import('./discordTransport.js');
     const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
-    const { logger } = await import('./logging/logger.js');
+    const { logger } = await import('./logger.js');
 
     const auditLogger = logger.withPrefix('audit').withPrefix('role_update');
     auditLogger.info('Rolle angepasst');
@@ -387,9 +387,9 @@ describe('setupDiscordLogging', () => {
     const send = vi.fn().mockResolvedValue();
     const { client } = createClient(send);
 
-    const { setupDiscordLogging } = await import('./logging/discordTransport.js');
+    const { setupDiscordLogging } = await import('./discordTransport.js');
     const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
-    const { logger } = await import('./logging/logger.js');
+    const { logger } = await import('./logger.js');
 
     const joinLogger = logger.withPrefix('join2create');
     joinLogger.info('channel created');
@@ -413,9 +413,9 @@ describe('setupDiscordLogging', () => {
     const send = vi.fn().mockResolvedValue();
     const { client } = createClient(send);
 
-    const { setupDiscordLogging } = await import('./logging/discordTransport.js');
+    const { setupDiscordLogging } = await import('./discordTransport.js');
     const unsubscribe = setupDiscordLogging(client, CHANNEL_IDS);
-    const { logger } = await import('./logging/logger.js');
+    const { logger } = await import('./logger.js');
 
     const joinLogger = logger.withPrefix('join2create');
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
@@ -443,9 +443,9 @@ describe('setupDiscordLogging', () => {
     const send = vi.fn().mockResolvedValue();
     const { client, fetch } = createClient(send);
 
-    const { setupDiscordLogging } = await import('./logging/discordTransport.js');
+    const { setupDiscordLogging } = await import('./discordTransport.js');
     const unsubscribe = setupDiscordLogging(client);
-    const { logger } = await import('./logging/logger.js');
+    const { logger } = await import('./logger.js');
 
     try {
       logger.info('general env entry');
@@ -467,10 +467,10 @@ describe('setupDiscordLogging', () => {
     const send = vi.fn().mockResolvedValue();
     const { client, fetch } = createClient(send);
 
-    const { DEFAULT_LOG_CHANNEL_IDS } = await import('./logging/config.js');
-    const { setupDiscordLogging } = await import('./logging/discordTransport.js');
+    const { DEFAULT_LOG_CHANNEL_IDS } = await import('./config.js');
+    const { setupDiscordLogging } = await import('./discordTransport.js');
     const unsubscribe = setupDiscordLogging(client);
-    const { logger } = await import('./logging/logger.js');
+    const { logger } = await import('./logger.js');
 
     logger.info('default general');
     await flushAsync();
@@ -487,7 +487,7 @@ describe('setupDiscordLogging', () => {
     const send = vi.fn().mockResolvedValue();
     const { client } = createClient(send);
 
-    const { setupDiscordLogging } = await import('./logging/discordTransport.js');
+    const { setupDiscordLogging } = await import('./discordTransport.js');
     const unsubscribe = setupDiscordLogging(client);
 
     try {
