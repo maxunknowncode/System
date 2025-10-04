@@ -6,15 +6,12 @@ import {
   TICKET_CHANNEL_PREFIX,
 } from './config.js';
 import { buildTicketName } from './utils.js';
-import { FOOTER } from '../../util/embeds/footer.js';
-import { applyAuthor } from '../../util/embeds/author.js';
-import { COLOR } from '../../util/embeds/color.js';
+import { coreEmbed } from '../../util/embeds/core.js';
 import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
   ChannelType,
-  EmbedBuilder,
   PermissionsBitField,
 } from 'discord.js';
 
@@ -79,20 +76,16 @@ export async function openTicket(interaction, lang = 'en') {
   }
 
   const ticketChannel = channel.toString();
-  const replyEmbed = new EmbedBuilder()
+  const replyEmbed = coreEmbed('TICKET', lang)
     .setTitle(lang === 'de' ? 'Erfolgreich – Ticket erstellt' : 'Successfully - Ticket Created')
     .setDescription(
       lang === 'de'
         ? `Ticket erstellt. Hier ist dein Ticket: ${ticketChannel}`
         : `Ticket created. Here is your ticket: ${ticketChannel}`
-    )
-    .setFooter(FOOTER);
+    );
   await interaction.reply({ embeds: [replyEmbed], ephemeral: true, allowedMentions: { parse: [] } });
 
-  const embed = applyAuthor(new EmbedBuilder(), 'TICKET')
-    .setColor(COLOR)
-    .setFooter(FOOTER)
-    .setDescription(
+  const embed = coreEmbed('TICKET', lang).setDescription(
       lang === 'de'
         ? '> 🇩🇪 Bitte beschreibe dein Anliegen, während du wartest.'
         : '> 🇺🇸 Please describe your issue while you’re waiting.'

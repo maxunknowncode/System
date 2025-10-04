@@ -12,19 +12,20 @@ import {
 } from './config.js';
 import { openTicket } from './open.js';
 import { isTeam, setStatusPrefix } from './utils.js';
-import { FOOTER } from '../../util/embeds/footer.js';
-import { applyAuthor } from '../../util/embeds/author.js';
+import { coreEmbed } from '../../util/embeds/core.js';
+import { detectLangFromInteraction } from '../../util/embeds/lang.js';
 import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
 } from 'discord.js';
 import { logger } from '../../util/logging/logger.js';
 
 const ticketLogger = logger.withPrefix('tickets');
 
 export async function handleTicketInteractions(interaction, client) {
+  const lang = detectLangFromInteraction(interaction);
+
   if (interaction.isStringSelectMenu() && interaction.customId === MENU_CUSTOM_ID) {
     const value = interaction.values?.[0];
     if (value === 'support_en') {
@@ -40,7 +41,7 @@ export async function handleTicketInteractions(interaction, client) {
   switch (interaction.customId) {
     case BTN_CLAIM_ID: {
       if (!isTeam(interaction.member)) {
-        const embed = new EmbedBuilder()
+        const embed = coreEmbed('TICKET', lang)
           .setTitle('No Permission')
           .setDescription('You do not have permission to claim this ticket.')
           .setColor(0xff0000);
@@ -49,7 +50,7 @@ export async function handleTicketInteractions(interaction, client) {
       }
       await interaction.deferUpdate();
       await setStatusPrefix(interaction.channel, 'claimed');
-      const info = applyAuthor(new EmbedBuilder(), 'TICKET')
+      const info = coreEmbed('TICKET', lang)
         .setColor(0x57f287)
         .setDescription(
           `🇺🇸 **Claimed** by <@${interaction.user.id}>\n\n🇩🇪 **Beansprucht** von <@${interaction.user.id}>`
@@ -67,7 +68,7 @@ export async function handleTicketInteractions(interaction, client) {
         .setEmoji('✅')
         .setStyle(ButtonStyle.Primary);
       const row = new ActionRowBuilder().addComponents(btn);
-      const embed = new EmbedBuilder().setDescription(
+      const embed = coreEmbed('TICKET', lang).setDescription(
         '🇺🇸 **Are you sure** you want to close this ticket?\n\n🇩🇪 **Bist du sicher**, dass du dieses Ticket schließen möchtest?'
       );
       await interaction.reply({ embeds: [embed], components: [row], ephemeral: true, allowedMentions: { parse: [] } });
@@ -109,7 +110,7 @@ export async function handleTicketInteractions(interaction, client) {
         await startMsg.edit({ components: [row], embeds: startMsg.embeds, allowedMentions: { parse: [] } });
       }
       await setStatusPrefix(interaction.channel, 'closed');
-      const embed = new EmbedBuilder().setDescription(
+      const embed = coreEmbed('TICKET', lang).setDescription(
         '🇺🇸 **Ticket archived**\n\n🇩🇪 **Ticket archiviert**'
       );
       await interaction.update({ embeds: [embed], components: [], allowedMentions: { parse: [] } });
@@ -166,11 +167,10 @@ export async function handleTicketInteractions(interaction, client) {
         const row = new ActionRowBuilder().addComponents(claimBtn, closeBtn);
         await startMsg.edit({ components: [row], embeds: startMsg.embeds, allowedMentions: { parse: [] } });
       }
-      const info = applyAuthor(new EmbedBuilder(), 'TICKET')
+      const info = coreEmbed('TICKET', lang)
         .setDescription(
           '🔓 Ticket reopened | 🔓 Ticket wieder eröffnet\n• Please describe your issue. | Bitte beschreibe dein Anliegen.'
-        )
-        .setFooter(FOOTER);
+        );
       await interaction.channel.send({ embeds: [info], allowedMentions: { parse: [] } });
       await interaction.update({
         content: 'Reopened | Wieder eröffnet',
@@ -186,7 +186,7 @@ export async function handleTicketInteractions(interaction, client) {
         .setEmoji('✅')
         .setStyle(ButtonStyle.Danger);
       const row = new ActionRowBuilder().addComponents(btn);
-      const embed = new EmbedBuilder().setDescription(
+      const embed = coreEmbed('TICKET', lang).setDescription(
         '🇺🇸 **Are you sure** you want to delete this ticket?\n\n🇩🇪 **Bist du sicher**, dass du dieses Ticket löschen möchtest?'
       );
       await interaction.reply({
@@ -198,7 +198,7 @@ export async function handleTicketInteractions(interaction, client) {
       return;
     }
     case BTN_DELETE_CONFIRM_ID: {
-      const embed = new EmbedBuilder().setDescription(
+      const embed = coreEmbed('TICKET', lang).setDescription(
         '🇺🇸 **Deleting in 5 seconds…**\n\n🇩🇪 **Löschen in 5 Sekunden…**'
       );
       await interaction.update({ embeds: [embed], components: [], allowedMentions: { parse: [] } });

@@ -1,15 +1,8 @@
 /*
 ### Zweck: Baut die Teamlisten-Embed und Sprach-Buttons.
 */
-import {
-  EmbedBuilder,
-  ButtonBuilder,
-  ActionRowBuilder,
-  ButtonStyle,
-} from 'discord.js';
-import { FOOTER } from '../../util/embeds/footer.js';
-import { applyAuthorByLang } from '../../util/embeds/author.js';
-import { COLOR } from '../../util/embeds/color.js';
+import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
+import { coreEmbed } from '../../util/embeds/core.js';
 import {
   TEAM_BUTTON_ID_EN,
   TEAM_BUTTON_ID_DE,
@@ -53,12 +46,9 @@ export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
     ? '> *Sehr geehrte Community, hier findet ihr unsere Teamliste. Hier könnt ihr sehen, wer zum Serverteam gehört. Dies hilft, um immer zu wissen, ob man den Personen trauen kann.*'
     : '> *Dear community, here you can find our team list. Here you can see who is part of the server team. This helps you always know whom you can trust.*';
 
-  const embed = new EmbedBuilder()
-    .setColor(COLOR)
+  const embed = coreEmbed('TEAM', lang)
     .setTitle(title)
-    .setDescription(description)
-    .setFooter(FOOTER);
-  applyAuthorByLang(embed, 'TEAM', lang);
+    .setDescription(description);
 
   // Nur Rollen rendern, die mindestens 1 Mitglied haben
   for (const role of TEAM_ROLES) {

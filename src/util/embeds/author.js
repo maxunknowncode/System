@@ -3,6 +3,10 @@ export const AUTHOR_ICON =
 
 // Für jede Einbettung das passende EN- und DE-Label
 export const AUTHORS = {
+  WELCOME: {
+    en: "The Core - Welcome",
+    de: "The Core - Willkommen",
+  },
   TICKET: {
     en: "The Core - Ticket System",
     de: "The Core - Ticket System",
@@ -24,8 +28,8 @@ export const AUTHORS = {
     de: "The Core - Ankündigungen",
   },
   LOGS: {
-    en: "The Core – Logs",
-    de: "The Core – Logs",
+    en: "The Core - Logs",
+    de: "The Core - Logs",
   },
 };
 
@@ -34,7 +38,7 @@ export const AUTHORS = {
  * und gewählter Sprache ('en' oder 'de'). Fällt auf 'en' oder 'The Core' zurück, wenn nichts gefunden wird.
  *
  * @param {EmbedBuilder} embed
- * @param {"VERIFY"|"RULES"|"TEAM"|"ANN"|"LOGS"} context
+ * @param {"WELCOME"|"TICKET"|"VERIFY"|"RULES"|"TEAM"|"ANN"|"LOGS"} context
  * @param {"en"|"de"} lang
  * @returns {EmbedBuilder}
  */
