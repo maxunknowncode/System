@@ -9,7 +9,7 @@ export default {
   description: 'Show bot and API latency',
   async execute(interaction, client) {
     const start = Date.now();
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply();
     const roundtrip = Date.now() - start;
 
     const uptimeMs = client.uptime ?? 0;

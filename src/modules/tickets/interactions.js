@@ -18,6 +18,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  MessageFlags,
 } from 'discord.js';
 import { logger } from '../../util/logging/logger.js';
 
@@ -45,7 +46,7 @@ export async function handleTicketInteractions(interaction, client) {
           .setTitle('No Permission')
           .setDescription('You do not have permission to claim this ticket.')
           .setColor(0xff0000);
-        await interaction.reply({ embeds: [embed], ephemeral: true, allowedMentions: { parse: [] } });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
         return;
       }
       await interaction.deferUpdate();
@@ -71,7 +72,7 @@ export async function handleTicketInteractions(interaction, client) {
       const embed = coreEmbed('TICKET', lang).setDescription(
         '🇺🇸 **Are you sure** you want to close this ticket?\n\n🇩🇪 **Bist du sicher**, dass du dieses Ticket schließen möchtest?'
       );
-      await interaction.reply({ embeds: [embed], components: [row], ephemeral: true, allowedMentions: { parse: [] } });
+      await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
       return;
     }
     case BTN_CLOSE_CONFIRM_ID: {
@@ -126,7 +127,7 @@ export async function handleTicketInteractions(interaction, client) {
       await interaction.reply({
         content: '🇺🇸 Reopen this ticket?\n🇩🇪 Dieses Ticket wieder eröffnen?',
         components: [row],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         allowedMentions: { parse: [] },
       });
       return;
@@ -192,7 +193,7 @@ export async function handleTicketInteractions(interaction, client) {
       await interaction.reply({
         embeds: [embed],
         components: [row],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         allowedMentions: { parse: [] },
       });
       return;

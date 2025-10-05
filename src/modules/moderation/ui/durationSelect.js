@@ -1,5 +1,7 @@
 import {
   ActionRowBuilder,
+  MessageFlags,
+  RESTJSONErrorCodes,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
 } from 'discord.js';
@@ -63,9 +65,20 @@ export function isDurationSelect(interaction) {
   return interaction.isStringSelectMenu() && interaction.customId.startsWith(`${CUSTOM_IDS.DURATION_SELECT}:`);
 }
 
+function safeEditReply(interaction, payload) {
+  return interaction.editReply(payload).catch((error) => {
+    if (error?.code === RESTJSONErrorCodes.UnknownMessage) {
+      return null;
+    }
+    throw error;
+  });
+}
+
 export async function handleDurationSelect(interaction) {
+  const lang = detectLangFromInteraction(interaction) ?? 'en';
+  await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
+
   const { actionType, caseId } = parseCustomId(interaction.customId);
-  const lang = detectLangFromInteraction(interaction);
   const embed = coreEmbed('ANN', lang);
 
   const value = interaction.values?.[0];
@@ -73,7 +86,10 @@ export async function handleDurationSelect(interaction) {
     embed.setColor(ERROR_COLOR).setDescription(
       lang === 'de' ? 'Ungültige Auswahl.' : 'Invalid selection.'
     );
-    await interaction.reply({ ephemeral: true, embeds: [embed] });
+    await safeEditReply(interaction, {
+      embeds: [embed],
+      components: interaction.message?.components ?? [],
+    });
     return;
   }
 
@@ -82,7 +98,10 @@ export async function handleDurationSelect(interaction) {
     embed.setColor(ERROR_COLOR).setDescription(
       lang === 'de' ? 'Der Fall wurde nicht gefunden.' : 'The case could not be found.'
     );
-    await interaction.reply({ ephemeral: true, embeds: [embed] });
+    await safeEditReply(interaction, {
+      embeds: [embed],
+      components: interaction.message?.components ?? [],
+    });
     return;
   }
 
@@ -90,7 +109,10 @@ export async function handleDurationSelect(interaction) {
     embed.setColor(ERROR_COLOR).setDescription(
       lang === 'de' ? 'Aktion passt nicht zum Fall.' : 'Action type does not match this case.'
     );
-    await interaction.reply({ ephemeral: true, embeds: [embed] });
+    await safeEditReply(interaction, {
+      embeds: [embed],
+      components: interaction.message?.components ?? [],
+    });
     return;
   }
 
@@ -101,14 +123,17 @@ export async function handleDurationSelect(interaction) {
     permanent = true;
   } else {
     const durationMs = presetToMs(value);
-    if (!durationMs || !caseRecord.createdAt) {
+    if (!durationMs) {
       embed.setColor(ERROR_COLOR).setDescription(
         lang === 'de' ? 'Die Dauer konnte nicht verarbeitet werden.' : 'The duration could not be processed.'
       );
-      await interaction.reply({ ephemeral: true, embeds: [embed] });
+      await safeEditReply(interaction, {
+        embeds: [embed],
+        components: interaction.message?.components ?? [],
+      });
       return;
     }
-    endTs = new Date(caseRecord.createdAt.getTime() + durationMs);
+    endTs = new Date(Date.now() + durationMs);
   }
 
   await updateCaseDuration(caseId, { endTs, permanent });
@@ -121,7 +146,10 @@ export async function handleDurationSelect(interaction) {
         : `Duration set: ${value === 'permanent' ? 'Permanent' : value}`
     );
 
-  await interaction.reply({ ephemeral: true, embeds: [embed] });
+  await safeEditReply(interaction, {
+    embeds: [embed],
+    components: interaction.message?.components ?? [],
+  });
 }
 
 export { encodeCustomId as buildDurationCustomId };

@@ -20,11 +20,19 @@ const REASON_TEMPLATES = {
 export function composeReasonText(codes = [], customReason = '', lang = 'en') {
   const language = lang === 'de' ? 'de' : 'en';
   const templates = REASON_TEMPLATES[language];
-  const uniqueCodes = Array.from(new Set(Array.isArray(codes) ? codes : [])).filter((code) =>
-    Object.prototype.hasOwnProperty.call(templates, code)
-  );
+  const labels = REASON_LABELS[language] ?? {};
 
-  const sentences = uniqueCodes.map((code) => templates[code]);
+  const uniqueCodes = Array.from(new Set(Array.isArray(codes) ? codes : []));
+  const sentences = [];
+
+  for (const code of uniqueCodes) {
+    if (templates[code]) {
+      sentences.push(templates[code]);
+    } else if (labels[code]) {
+      sentences.push(labels[code]);
+    }
+  }
+
   let text = '';
 
   if (sentences.length === 1) {
@@ -37,11 +45,12 @@ export function composeReasonText(codes = [], customReason = '', lang = 'en') {
 
   const custom = typeof customReason === 'string' ? customReason.trim() : '';
   if (custom) {
-    text = text ? `${text} ${custom}` : custom;
+    const suffix = custom.endsWith('.') ? custom : `${custom}.`;
+    text = text ? `${text} ${suffix}` : suffix;
   }
 
   if (!text) {
-    const fallback = REASON_LABELS[language]?.CUSTOM ?? 'Custom reason';
+    const fallback = labels.CUSTOM ?? 'Custom reason';
     return fallback;
   }
 

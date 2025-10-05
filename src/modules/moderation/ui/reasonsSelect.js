@@ -1,5 +1,7 @@
 import {
   ActionRowBuilder,
+  MessageFlags,
+  RESTJSONErrorCodes,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
 } from 'discord.js';
@@ -26,7 +28,7 @@ export function buildReasonsSelect(caseId, lang = 'en') {
     .setCustomId(encodeCustomId(caseId))
     .setPlaceholder(language === 'de' ? 'Gründe auswählen' : 'Select reasons')
     .setMinValues(1)
-    .setMaxValues(3);
+    .setMaxValues(5);
 
   for (const code of REASON_CODES) {
     const label = REASON_LABELS[language][code] ?? code;
@@ -40,21 +42,40 @@ export function isReasonsSelect(interaction) {
   return interaction.isStringSelectMenu() && interaction.customId.startsWith(`${CUSTOM_IDS.REASON_SELECT}:`);
 }
 
+function safeEditReply(interaction, payload) {
+  return interaction.editReply(payload).catch((error) => {
+    if (error?.code === RESTJSONErrorCodes.UnknownMessage) {
+      return null;
+    }
+    throw error;
+  });
+}
+
 export async function handleReasonsSelect(interaction) {
+  const lang = detectLangFromInteraction(interaction) ?? 'en';
   const caseId = parseCustomId(interaction.customId);
-  const lang = detectLangFromInteraction(interaction);
   const embed = coreEmbed('ANN', lang);
 
   if (!caseId) {
-    embed.setColor(ERROR_COLOR).setDescription(lang === 'de' ? 'Der Fall fehlt.' : 'Missing case identifier.');
-    await interaction.reply({ ephemeral: true, embeds: [embed] });
+    embed.setColor(ERROR_COLOR).setDescription(
+      lang === 'de' ? 'Der Fall fehlt.' : 'Missing case identifier.'
+    );
+    await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
+    await safeEditReply(interaction, {
+      embeds: [embed],
+      components: interaction.message?.components ?? [],
+    });
     return;
   }
 
   const caseRecord = await getCaseById(caseId);
   if (!caseRecord) {
     embed.setColor(ERROR_COLOR).setDescription(lang === 'de' ? 'Fall nicht gefunden.' : 'Case not found.');
-    await interaction.reply({ ephemeral: true, embeds: [embed] });
+    await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
+    await safeEditReply(interaction, {
+      embeds: [embed],
+      components: interaction.message?.components ?? [],
+    });
     return;
   }
 
@@ -62,35 +83,71 @@ export async function handleReasonsSelect(interaction) {
     embed.setColor(ERROR_COLOR).setDescription(
       lang === 'de' ? 'Dieser Fall wurde bereits bearbeitet.' : 'This case has already been processed.'
     );
-    await interaction.reply({ ephemeral: true, embeds: [embed] });
+    await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
+    await safeEditReply(interaction, {
+      embeds: [embed],
+      components: interaction.message?.components ?? [],
+    });
     return;
   }
 
-  const values = interaction.values ?? [];
-  if (!values.length) {
-    embed.setColor(ERROR_COLOR).setDescription(lang === 'de' ? 'Mindestens ein Grund ist nötig.' : 'Select at least one reason.');
-    await interaction.reply({ ephemeral: true, embeds: [embed] });
+  const rawValues = interaction.values ?? [];
+  const uniqueValues = Array.from(new Set(rawValues));
+
+  if (!uniqueValues.length) {
+    embed.setColor(ERROR_COLOR).setDescription(
+      lang === 'de' ? 'Bitte wähle mindestens einen Grund.' : 'Please select at least one reason.'
+    );
+    await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
+    await safeEditReply(interaction, {
+      embeds: [embed],
+      components: interaction.message?.components ?? [],
+    });
     return;
   }
 
-  await setPendingReasons(caseId, values);
-
-  if (!values.includes('CUSTOM')) {
-    await setPendingCustomReason(caseId, null);
-    const labelMap = REASON_LABELS[language] ?? {};
-    embed
-      .setColor(SUCCESS_COLOR)
-      .setDescription(
-        language === 'de'
-          ? `Gründe gespeichert: ${values.map((code) => labelMap[code] ?? code).join(', ')}`
-          : `Reasons saved: ${values.map((code) => labelMap[code] ?? code).join(', ')}`
-      );
-    await interaction.reply({ ephemeral: true, embeds: [embed] });
+  if (uniqueValues.length > 5) {
+    embed.setColor(ERROR_COLOR).setDescription(
+      lang === 'de' ? 'Maximal 5 Gründe möglich.' : 'You can choose at most 5 reasons.'
+    );
+    await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
+    await safeEditReply(interaction, {
+      embeds: [embed],
+      components: interaction.message?.components ?? [],
+    });
     return;
   }
 
-  const modal = buildCustomReasonModal(caseId, lang);
-  await interaction.showModal(modal);
+  const needsCustom = uniqueValues.includes('CUSTOM');
+  const filtered = uniqueValues.filter((code) => code !== 'CUSTOM');
+
+  if (needsCustom) {
+    await setPendingReasons(caseId, filtered, lang);
+    await setPendingCustomReason(caseId, null, lang);
+    const modal = buildCustomReasonModal(caseId, lang);
+    await interaction.showModal(modal);
+    return;
+  }
+
+  await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
+
+  await setPendingReasons(caseId, filtered, lang);
+  await setPendingCustomReason(caseId, null, lang);
+
+  const language = lang === 'de' ? 'de' : 'en';
+  const labelMap = REASON_LABELS[language] ?? {};
+  embed
+    .setColor(SUCCESS_COLOR)
+    .setDescription(
+      language === 'de'
+        ? `Gründe gespeichert: ${filtered.map((code) => labelMap[code] ?? code).join(', ')}`
+        : `Reasons saved: ${filtered.map((code) => labelMap[code] ?? code).join(', ')}`
+    );
+
+  await safeEditReply(interaction, {
+    embeds: [embed],
+    components: interaction.message?.components ?? [],
+  });
 }
 
 export { encodeCustomId as buildReasonCustomId };

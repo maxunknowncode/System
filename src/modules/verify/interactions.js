@@ -8,6 +8,7 @@ import {
   VERIFY_LANG_DE_ID,
   VERIFY_RESET_MS,
 } from './config.js';
+import { MessageFlags } from 'discord.js';
 import { buildVerifyEmbedAndComponents } from './embed.js';
 import { coreEmbed } from '../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../util/embeds/lang.js';
@@ -30,7 +31,7 @@ export async function handleVerifyInteractions(interaction, client) {
         .setTitle('Verification')
         .setDescription('⚠️ Verification failed. Please try again or contact staff.');
       try {
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       } catch (err) {
         verifyLogger.error('Antwort konnte nicht gesendet werden:', err);
       }
@@ -44,7 +45,7 @@ export async function handleVerifyInteractions(interaction, client) {
         .setTitle('Verification')
         .setDescription('ℹ️ You are already verified.');
       try {
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       } catch (err) {
         verifyLogger.error('Antwort konnte nicht gesendet werden:', err);
       }
@@ -57,7 +58,7 @@ export async function handleVerifyInteractions(interaction, client) {
         .setColor(0x00ff00)
         .setTitle('Verification')
         .setDescription('✅ You are now verified!');
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } catch (err) {
       verifyLogger.warn('Rolle konnte nicht vergeben', err);
       const embed = coreEmbed('VERIFY', lang)
@@ -65,7 +66,7 @@ export async function handleVerifyInteractions(interaction, client) {
         .setTitle('Verification')
         .setDescription('⚠️ Verification failed. Please try again or contact staff.');
       try {
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       } catch (err) {
         verifyLogger.error('Antwort konnte nicht gesendet werden:', err);
       }

@@ -1,3 +1,4 @@
+import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 /*
 ### Zweck: Handhabt Regeln-, Verify- und Teamlisten-Buttons sowie Chat-Input-Commands.
 */
@@ -23,103 +24,154 @@ import {
   BTN_DELETE_CONFIRM_ID,
 } from '../../modules/tickets/config.js';
 import { handleTicketInteractions } from '../../modules/tickets/interactions.js';
+import { coreEmbed } from '../../util/embeds/core.js';
+import { detectLangFromInteraction } from '../../util/embeds/lang.js';
 
 const commandLogger = logger.withPrefix('befehle');
+const interactionLogger = logger.withPrefix('interaction-router');
+
+async function sendGenericError(interaction, error) {
+  if (error) {
+    interactionLogger.error('Handler failure', error);
+  }
+  const lang = detectLangFromInteraction(interaction) ?? 'en';
+  const embed = coreEmbed('ANN', lang)
+    .setColor(0xff4d4d)
+    .setDescription(lang === 'de' ? 'Etwas ist schiefgelaufen.' : 'Something went wrong.');
+
+  try {
+    if (interaction.isRepliable()) {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply({ embeds: [embed] });
+      } else {
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      }
+    } else if (typeof interaction.followUp === 'function') {
+      await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    }
+  } catch (err) {
+    if (err?.code !== RESTJSONErrorCodes.UnknownMessage && err?.code !== RESTJSONErrorCodes.UnknownInteraction) {
+      interactionLogger.warn('Failed to send generic error response', err);
+    }
+  }
+}
+
+async function handleCommand(interaction, client) {
+  const command = client.commands?.get(interaction.commandName);
+  if (!command) {
+    const lang = detectLangFromInteraction(interaction) ?? 'en';
+    const embed = coreEmbed('ANN', lang)
+      .setColor(0xff4d4d)
+      .setDescription(lang === 'de' ? 'Unbekannter Befehl.' : 'Unknown command.');
+    if (interaction.deferred || interaction.replied) {
+      await interaction.editReply({ embeds: [embed] });
+    } else {
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    }
+    return;
+  }
+
+  await command.execute(interaction, client);
+}
+
+async function handleStringSelect(interaction, client) {
+  if (interaction.customId === MENU_CUSTOM_ID) {
+    await handleTicketInteractions(interaction, client);
+    return;
+  }
+  if (isDurationSelect(interaction)) {
+    await handleDurationSelect(interaction);
+    return;
+  }
+  if (isReasonsSelect(interaction)) {
+    await handleReasonsSelect(interaction);
+    return;
+  }
+}
+
+async function handleButton(interaction, client) {
+  if (isConfirmButton(interaction)) {
+    await handleConfirmButton(interaction);
+    return;
+  }
+
+  if (
+    [
+      BTN_CLAIM_ID,
+      BTN_CLOSE_ID,
+      BTN_CLOSE_CONFIRM_ID,
+      BTN_REOPEN_ID,
+      BTN_REOPEN_CONFIRM_ID,
+      BTN_DELETE_ID,
+      BTN_DELETE_CONFIRM_ID,
+    ].includes(interaction.customId)
+  ) {
+    await handleTicketInteractions(interaction, client);
+    return;
+  }
+
+  if (
+    interaction.customId === VERIFY_BUTTON_ID ||
+    interaction.customId === VERIFY_LANG_EN_ID ||
+    interaction.customId === VERIFY_LANG_DE_ID
+  ) {
+    await handleVerifyInteractions(interaction, client);
+    return;
+  }
+
+  if (interaction.customId === TEAM_BUTTON_ID_EN || interaction.customId === TEAM_BUTTON_ID_DE) {
+    await handleTeamButtons(interaction, client);
+    return;
+  }
+
+  if (interaction.customId === RULES_BUTTON_ID_EN || interaction.customId === RULES_BUTTON_ID_DE) {
+    await handleRulesButtons(interaction, client);
+  }
+}
+
+async function handleModal(interaction) {
+  if (isCustomReasonModal(interaction)) {
+    await handleCustomReasonModal(interaction);
+  }
+}
 
 export default {
   name: 'interactionCreate',
   once: false,
   async execute(interaction, client) {
-    if (interaction.isStringSelectMenu() && interaction.customId === MENU_CUSTOM_ID) {
-      await handleTicketInteractions(interaction, client);
+    if (interaction.isChatInputCommand()) {
+      try {
+        await handleCommand(interaction, client);
+      } catch (error) {
+        commandLogger.error('Ausführung fehlgeschlagen:', error);
+        await sendGenericError(interaction, error);
+      }
       return;
-    }
-    if (
-      interaction.isButton() &&
-      [
-        BTN_CLAIM_ID,
-        BTN_CLOSE_ID,
-        BTN_CLOSE_CONFIRM_ID,
-        BTN_REOPEN_ID,
-        BTN_REOPEN_CONFIRM_ID,
-        BTN_DELETE_ID,
-        BTN_DELETE_CONFIRM_ID,
-      ].includes(interaction.customId)
-    ) {
-      await handleTicketInteractions(interaction, client);
-      return;
-    }
-    if (interaction.isButton()) {
-      if (isConfirmButton(interaction)) {
-        await handleConfirmButton(interaction);
-        return;
-      }
-      if (
-        interaction.customId === VERIFY_BUTTON_ID ||
-        interaction.customId === VERIFY_LANG_EN_ID ||
-        interaction.customId === VERIFY_LANG_DE_ID
-      ) {
-        await handleVerifyInteractions(interaction, client);
-        return;
-      }
-      if (interaction.customId === TEAM_BUTTON_ID_EN || interaction.customId === TEAM_BUTTON_ID_DE) {
-        await handleTeamButtons(interaction, client);
-        return;
-      }
-      if (interaction.customId === RULES_BUTTON_ID_EN || interaction.customId === RULES_BUTTON_ID_DE) {
-        await handleRulesButtons(interaction, client);
-        return;
-      }
     }
 
     if (interaction.isStringSelectMenu()) {
-      if (isDurationSelect(interaction)) {
-        await handleDurationSelect(interaction);
-        return;
-      }
-      if (isReasonsSelect(interaction)) {
-        await handleReasonsSelect(interaction);
-        return;
-      }
-    }
-
-    if (interaction.isModalSubmit() && isCustomReasonModal(interaction)) {
-      await handleCustomReasonModal(interaction);
-      return;
-    }
-
-    if (!interaction.isChatInputCommand()) return;
-
-    const command = client.commands?.get(interaction.commandName);
-    if (!command) {
-      const payload = { content: 'Unknown command.' };
       try {
-        if (interaction.deferred || interaction.replied) {
-          await interaction.editReply(payload);
-        } else {
-          await interaction.reply({ ...payload, ephemeral: true });
-        }
-      } catch (err) {
-        commandLogger.warn('Antwort senden fehlgeschlagen:', err);
+        await handleStringSelect(interaction, client);
+      } catch (error) {
+        await sendGenericError(interaction, error);
       }
       return;
     }
 
-    try {
-      if (typeof command.execute === 'function') {
-        await command.execute(interaction, client);
-      }
-    } catch (error) {
-      commandLogger.error('Ausführung fehlgeschlagen:', error);
-      const payload = { content: 'An error occurred while executing this command.' };
+    if (interaction.isModalSubmit()) {
       try {
-        if (interaction.deferred || interaction.replied) {
-          await interaction.editReply(payload);
-        } else {
-          await interaction.reply({ ...payload, ephemeral: true });
-        }
-      } catch (err) {
-        commandLogger.warn('Antwort senden fehlgeschlagen:', err);
+        await handleModal(interaction);
+      } catch (error) {
+        await sendGenericError(interaction, error);
+      }
+      return;
+    }
+
+    if (interaction.isButton()) {
+      try {
+        await handleButton(interaction, client);
+      } catch (error) {
+        await sendGenericError(interaction, error);
       }
     }
   },

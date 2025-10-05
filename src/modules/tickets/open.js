@@ -12,6 +12,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ChannelType,
+  MessageFlags,
   PermissionsBitField,
 } from 'discord.js';
 
@@ -19,7 +20,7 @@ export async function openTicket(interaction, lang = 'en') {
   const { guild, user } = interaction;
   const categoryId = TICKET_ACTIVE_CATEGORY_ID;
   if (!categoryId) {
-    await interaction.reply({ content: 'Fehler', ephemeral: true, allowedMentions: { parse: [] } });
+    await interaction.reply({ content: 'Fehler', flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     return;
   }
 
@@ -71,7 +72,7 @@ export async function openTicket(interaction, lang = 'en') {
       permissionOverwrites: overwrites,
     });
   } catch {
-    await interaction.reply({ content: 'Fehler', ephemeral: true, allowedMentions: { parse: [] } });
+    await interaction.reply({ content: 'Fehler', flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     return;
   }
 
@@ -83,7 +84,7 @@ export async function openTicket(interaction, lang = 'en') {
         ? `Ticket erstellt. Hier ist dein Ticket: ${ticketChannel}`
         : `Ticket created. Here is your ticket: ${ticketChannel}`
     );
-  await interaction.reply({ embeds: [replyEmbed], ephemeral: true, allowedMentions: { parse: [] } });
+  await interaction.reply({ embeds: [replyEmbed], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
 
   const embed = coreEmbed('TICKET', lang).setDescription(
       lang === 'de'
