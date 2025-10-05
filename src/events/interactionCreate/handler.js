@@ -8,6 +8,10 @@ import { handleRulesButtons } from '../../modules/rules/interactions.js';
 import { TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE } from '../../modules/teamlist/config.js';
 import { handleTeamButtons } from '../../modules/teamlist/interactions.js';
 import { logger } from '../../util/logging/logger.js';
+import { isDurationSelect, handleDurationSelect } from '../../modules/moderation/ui/durationSelect.js';
+import { isReasonsSelect, handleReasonsSelect } from '../../modules/moderation/ui/reasonsSelect.js';
+import { isCustomReasonModal, handleCustomReasonModal } from '../../modules/moderation/ui/customReasonModal.js';
+import { isConfirmButton, handleConfirmButton } from '../../modules/moderation/ui/confirmButtons.js';
 import {
   MENU_CUSTOM_ID,
   BTN_CLAIM_ID,
@@ -46,6 +50,10 @@ export default {
       return;
     }
     if (interaction.isButton()) {
+      if (isConfirmButton(interaction)) {
+        await handleConfirmButton(interaction);
+        return;
+      }
       if (
         interaction.customId === VERIFY_BUTTON_ID ||
         interaction.customId === VERIFY_LANG_EN_ID ||
@@ -62,6 +70,22 @@ export default {
         await handleRulesButtons(interaction, client);
         return;
       }
+    }
+
+    if (interaction.isStringSelectMenu()) {
+      if (isDurationSelect(interaction)) {
+        await handleDurationSelect(interaction);
+        return;
+      }
+      if (isReasonsSelect(interaction)) {
+        await handleReasonsSelect(interaction);
+        return;
+      }
+    }
+
+    if (interaction.isModalSubmit() && isCustomReasonModal(interaction)) {
+      await handleCustomReasonModal(interaction);
+      return;
     }
 
     if (!interaction.isChatInputCommand()) return;
