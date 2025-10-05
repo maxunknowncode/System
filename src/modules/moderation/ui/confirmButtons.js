@@ -3,6 +3,8 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
+  MessageFlags,
+  RESTJSONErrorCodes,
   StringSelectMenuBuilder,
 } from 'discord.js';
 import { coreEmbed } from '../../../util/embeds/core.js';
@@ -10,6 +12,9 @@ import { detectLangFromInteraction } from '../../../util/embeds/lang.js';
 import { CUSTOM_IDS, CONFIRM_ACTION, ERROR_COLOR, STATUS } from '../constants.js';
 import { executeAction } from '../service/exec.js';
 import { getCaseById, markCaseFailed } from '../storage/repo.js';
+import { logger } from '../../../util/logging/logger.js';
+
+const uiLogger = logger.withPrefix('moderation:ui:confirm');
 
 function encodeCustomId(actionType, caseId, decision) {
   return `${CUSTOM_IDS.CONFIRM_BUTTON}:${actionType}:${caseId}:${decision}`;
@@ -54,15 +59,26 @@ function disableComponents(rows) {
   });
 }
 
+function safeEditReply(interaction, payload) {
+  return interaction.editReply(payload).catch((error) => {
+    if (error?.code === RESTJSONErrorCodes.UnknownMessage) {
+      return null;
+    }
+    throw error;
+  });
+}
+
 export async function handleConfirmButton(interaction) {
+  const lang = detectLangFromInteraction(interaction) ?? 'en';
+  await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
+
   const { actionType, caseId, decision } = parseCustomId(interaction.customId);
-  const lang = detectLangFromInteraction(interaction);
 
   if (!caseId) {
     const embed = coreEmbed('ANN', lang).setColor(ERROR_COLOR).setDescription(
       lang === 'de' ? 'Fall-ID fehlt.' : 'Missing case id.'
     );
-    await interaction.reply({ ephemeral: true, embeds: [embed] });
+    await safeEditReply(interaction, { embeds: [embed] });
     return;
   }
 
@@ -70,7 +86,7 @@ export async function handleConfirmButton(interaction) {
     const embed = coreEmbed('ANN', lang).setColor(ERROR_COLOR).setDescription(
       lang === 'de' ? 'Unbekannte Aktion.' : 'Unknown action.'
     );
-    await interaction.reply({ ephemeral: true, embeds: [embed] });
+    await safeEditReply(interaction, { embeds: [embed] });
     return;
   }
 
@@ -79,7 +95,7 @@ export async function handleConfirmButton(interaction) {
     const embed = coreEmbed('ANN', lang).setColor(ERROR_COLOR).setDescription(
       lang === 'de' ? 'Fall nicht gefunden.' : 'Case not found.'
     );
-    await interaction.reply({ ephemeral: true, embeds: [embed] });
+    await safeEditReply(interaction, { embeds: [embed] });
     return;
   }
 
@@ -87,23 +103,23 @@ export async function handleConfirmButton(interaction) {
     const embed = coreEmbed('ANN', lang).setColor(ERROR_COLOR).setDescription(
       lang === 'de' ? 'Dieser Fall wurde bereits bearbeitet.' : 'This case has already been processed.'
     );
-    await interaction.reply({ ephemeral: true, embeds: [embed] });
+    await safeEditReply(interaction, { embeds: [embed] });
     return;
   }
 
   if (decision === CONFIRM_ACTION.CANCEL) {
-    await interaction.deferReply({ ephemeral: true });
     await markCaseFailed(caseId);
     const disabled = disableComponents(interaction.message.components);
-    await interaction.message.edit({ components: disabled });
+    await safeEditReply(interaction, { components: disabled });
     const embed = coreEmbed('ANN', lang)
       .setColor(ERROR_COLOR)
       .setDescription(lang === 'de' ? 'Fall verworfen.' : 'Case cancelled.');
-    await interaction.editReply({ embeds: [embed] });
+    await safeEditReply(interaction, { embeds: [embed] });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  const disabledComponents = disableComponents(interaction.message.components);
+  await safeEditReply(interaction, { components: disabledComponents });
 
   const guild = interaction.guild;
   if (!guild) {
@@ -112,7 +128,7 @@ export async function handleConfirmButton(interaction) {
       .setDescription(
         lang === 'de' ? 'Keine Guild verfügbar.' : 'Guild unavailable.'
       );
-    await interaction.editReply({ embeds: [embed] });
+    await safeEditReply(interaction, { embeds: [embed] });
     return;
   }
 
@@ -134,10 +150,11 @@ export async function handleConfirmButton(interaction) {
       lang,
     });
   } catch (error) {
+    uiLogger.error('Execution failed', error);
     const errorEmbed = coreEmbed('ANN', lang)
       .setColor(ERROR_COLOR)
       .setDescription(lang === 'de' ? 'Aktion fehlgeschlagen.' : 'Action failed.');
-    await interaction.editReply({ embeds: [errorEmbed] });
+    await safeEditReply(interaction, { embeds: [errorEmbed] });
     return;
   }
 
@@ -145,15 +162,16 @@ export async function handleConfirmButton(interaction) {
     const fresh = await getCaseById(caseId);
     if (fresh && fresh.status !== STATUS.PENDING) {
       const disabled = disableComponents(interaction.message.components);
-      await interaction.message.edit({ components: disabled });
+      await safeEditReply(interaction, { components: disabled });
     }
-    await interaction.editReply({ embeds: [result.embed] });
+    await safeEditReply(interaction, { embeds: [result.embed] });
     return;
   }
 
-  const disabled = disableComponents(interaction.message.components);
-  await interaction.message.edit({ components: disabled });
-  await interaction.editReply({ embeds: [result.embed] });
+  await safeEditReply(interaction, {
+    components: disableComponents(interaction.message.components),
+    embeds: [result.embed],
+  });
 }
 
 export { encodeCustomId as buildConfirmCustomId };

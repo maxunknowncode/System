@@ -24,7 +24,7 @@ const REQUIRED_PERMISSIONS = {
   [ACTION.UNBAN]: PermissionsBitField.Flags.BanMembers,
   [ACTION.TIMEOUT]: PermissionsBitField.Flags.ModerateMembers,
   [ACTION.KICK]: PermissionsBitField.Flags.KickMembers,
-  [ACTION.WARN]: PermissionsBitField.Flags.ModerateMembers,
+  [ACTION.WARN]: null,
 };
 
 function buildResponseEmbed(interaction, lang, color) {
@@ -86,11 +86,11 @@ function formatDuration(ms) {
   return parts.join(' ');
 }
 
-function hasTeamRole(member) {
+export function hasTeamRole(member) {
   return Boolean(member?.roles?.cache?.has(TEAM_ROLE_ID));
 }
 
-function compareHierarchy(invoker, target) {
+export function compareHierarchy(invoker, target) {
   if (!invoker || !target) return true;
   if (invoker.guild?.ownerId === invoker.id) return true;
   const invokerHighest = invoker.roles?.highest;
@@ -99,7 +99,7 @@ function compareHierarchy(invoker, target) {
   return invokerHighest.comparePositionTo(targetHighest) > 0;
 }
 
-function compareBotHierarchy(guild, target) {
+export function compareBotHierarchy(guild, target) {
   if (!guild?.members?.me || !target) return true;
   const botHighest = guild.members.me.roles?.highest;
   const targetHighest = target.roles?.highest;
@@ -231,6 +231,40 @@ export async function executeAction(params) {
     return { ok: false, embed };
   }
 
+  if (caseRecord.userId === moderator.id) {
+    embed
+      .setColor(ERROR_COLOR)
+      .setDescription(
+        language === 'de'
+          ? 'Du kannst keine Aktion gegen dich selbst durchführen.'
+          : 'You cannot run this action against yourself.'
+      );
+    return { ok: false, embed };
+  }
+
+  const botId = guild.client?.user?.id;
+  if (botId && caseRecord.userId === botId) {
+    embed
+      .setColor(ERROR_COLOR)
+      .setDescription(
+        language === 'de'
+          ? 'Der Bot kann nicht Ziel dieser Aktion sein.'
+          : 'The bot cannot be targeted with this action.'
+      );
+    return { ok: false, embed };
+  }
+
+  if (targetMember?.user?.bot || targetUser?.bot) {
+    embed
+      .setColor(ERROR_COLOR)
+      .setDescription(
+        language === 'de'
+          ? 'Bots können nicht mit diesem Ablauf moderiert werden.'
+          : 'Bots cannot be moderated with this flow.'
+      );
+    return { ok: false, embed };
+  }
+
   const reasonText = composeReasonText(effectiveReasonCodes, effectiveCustom, language);
   await updateCaseReasonText(caseId, reasonText);
 
@@ -348,10 +382,22 @@ export async function executeAction(params) {
   return result;
 }
 
-export async function setPendingReasons(caseId, reasonCodes) {
-  return updateCaseReasonCodes(caseId, reasonCodes);
+export async function setPendingReasons(caseId, reasonCodes = [], _lang = 'en') {
+  const sanitised = Array.from(
+    new Set(
+      (Array.isArray(reasonCodes) ? reasonCodes : [])
+        .map((code) => (typeof code === 'string' ? code.trim().toUpperCase() : ''))
+        .filter(Boolean)
+    )
+  ).slice(0, 5);
+  return updateCaseReasonCodes(caseId, sanitised);
 }
 
-export async function setPendingCustomReason(caseId, text) {
-  return updateCaseCustomReason(caseId, text);
+export async function setPendingCustomReason(caseId, text, _lang = 'en') {
+  if (typeof text !== 'string') {
+    return updateCaseCustomReason(caseId, null);
+  }
+  const trimmed = text.trim();
+  const limited = trimmed ? trimmed.slice(0, 300) : null;
+  return updateCaseCustomReason(caseId, limited);
 }

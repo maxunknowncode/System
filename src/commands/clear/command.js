@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType } from 'discord.js';
+import { ApplicationCommandOptionType, MessageFlags } from 'discord.js';
 import { coreEmbed } from '../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../util/embeds/lang.js';
 
@@ -25,11 +25,11 @@ export default {
         .setTitle('No Permission')
         .setDescription('You do not have permission to use this command.')
         .setColor(0xff0000);
-      await interaction.reply({ embeds: [embed], ephemeral: true, allowedMentions: { parse: [] } });
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
       return;
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     let deleted = 0;
     try {
