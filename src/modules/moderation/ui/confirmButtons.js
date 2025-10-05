@@ -59,119 +59,165 @@ function disableComponents(rows) {
   });
 }
 
-function safeEditReply(interaction, payload) {
-  return interaction.editReply(payload).catch((error) => {
+async function editReplyWithFallback(interaction, payload) {
+  try {
+    await interaction.editReply(payload);
+  } catch (error) {
     if (error?.code === RESTJSONErrorCodes.UnknownMessage) {
-      return null;
+      const fallback = {
+        embeds: payload.embeds,
+        components: [],
+        flags: MessageFlags.Ephemeral,
+      };
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp(fallback);
+      } else {
+        await interaction.reply(fallback);
+      }
+      return;
     }
     throw error;
-  });
+  }
 }
 
 export async function handleConfirmButton(interaction) {
   const lang = detectLangFromInteraction(interaction) ?? 'en';
-  await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
-
   const { actionType, caseId, decision } = parseCustomId(interaction.customId);
+  const errorMessage =
+    lang === 'de'
+      ? 'Etwas ist schiefgelaufen. Bitte versuche es erneut.'
+      : 'Something went wrong. Please try again.';
 
-  if (!caseId) {
-    const embed = coreEmbed('ANN', lang).setColor(ERROR_COLOR).setDescription(
-      lang === 'de' ? 'Fall-ID fehlt.' : 'Missing case id.'
-    );
-    await safeEditReply(interaction, { embeds: [embed] });
-    return;
-  }
-
-  if (![CONFIRM_ACTION.CONFIRM, CONFIRM_ACTION.CANCEL].includes(decision)) {
-    const embed = coreEmbed('ANN', lang).setColor(ERROR_COLOR).setDescription(
-      lang === 'de' ? 'Unbekannte Aktion.' : 'Unknown action.'
-    );
-    await safeEditReply(interaction, { embeds: [embed] });
-    return;
-  }
-
-  const caseRecord = await getCaseById(caseId);
-  if (!caseRecord) {
-    const embed = coreEmbed('ANN', lang).setColor(ERROR_COLOR).setDescription(
-      lang === 'de' ? 'Fall nicht gefunden.' : 'Case not found.'
-    );
-    await safeEditReply(interaction, { embeds: [embed] });
-    return;
-  }
-
-  if (caseRecord.status !== STATUS.PENDING) {
-    const embed = coreEmbed('ANN', lang).setColor(ERROR_COLOR).setDescription(
-      lang === 'de' ? 'Dieser Fall wurde bereits bearbeitet.' : 'This case has already been processed.'
-    );
-    await safeEditReply(interaction, { embeds: [embed] });
-    return;
-  }
-
-  if (decision === CONFIRM_ACTION.CANCEL) {
-    await markCaseFailed(caseId);
-    const disabled = disableComponents(interaction.message.components);
-    await safeEditReply(interaction, { components: disabled });
-    const embed = coreEmbed('ANN', lang)
-      .setColor(ERROR_COLOR)
-      .setDescription(lang === 'de' ? 'Fall verworfen.' : 'Case cancelled.');
-    await safeEditReply(interaction, { embeds: [embed] });
-    return;
-  }
-
-  const disabledComponents = disableComponents(interaction.message.components);
-  await safeEditReply(interaction, { components: disabledComponents });
-
-  const guild = interaction.guild;
-  if (!guild) {
-    const embed = coreEmbed('ANN', lang)
-      .setColor(ERROR_COLOR)
-      .setDescription(
-        lang === 'de' ? 'Keine Guild verfügbar.' : 'Guild unavailable.'
-      );
-    await safeEditReply(interaction, { embeds: [embed] });
-    return;
-  }
-
-  const targetMember = await guild.members.fetch(caseRecord.userId).catch(() => null);
-  const targetUser = targetMember?.user ?? (await guild.client.users.fetch(caseRecord.userId).catch(() => null));
-
-  let result;
   try {
-    result = await executeAction({
-      interaction,
-      caseId,
-      actionType: actionType ?? caseRecord.actionType,
-      guild,
-      moderator: interaction.member,
-      targetMember,
-      targetUser,
-      reasonCodes: caseRecord.reasonCodes,
-      customReason: caseRecord.customReason,
-      lang,
+    await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
+
+    if (!caseId) {
+      const embed = coreEmbed('ANN', lang)
+        .setColor(ERROR_COLOR)
+        .setDescription(lang === 'de' ? 'Fall-ID fehlt.' : 'Missing case id.');
+      await editReplyWithFallback(interaction, { embeds: [embed] });
+      return;
+    }
+
+    if (![CONFIRM_ACTION.CONFIRM, CONFIRM_ACTION.CANCEL].includes(decision)) {
+      const embed = coreEmbed('ANN', lang)
+        .setColor(ERROR_COLOR)
+        .setDescription(lang === 'de' ? 'Unbekannte Aktion.' : 'Unknown action.');
+      await editReplyWithFallback(interaction, { embeds: [embed] });
+      return;
+    }
+
+    const caseRecord = await getCaseById(caseId);
+    if (!caseRecord) {
+      const embed = coreEmbed('ANN', lang)
+        .setColor(ERROR_COLOR)
+        .setDescription(lang === 'de' ? 'Fall nicht gefunden.' : 'Case not found.');
+      await editReplyWithFallback(interaction, { embeds: [embed] });
+      return;
+    }
+
+    if (caseRecord.status !== STATUS.PENDING) {
+      const embed = coreEmbed('ANN', lang)
+        .setColor(ERROR_COLOR)
+        .setDescription(
+          lang === 'de' ? 'Dieser Fall wurde bereits bearbeitet.' : 'This case has already been processed.'
+        );
+      await editReplyWithFallback(interaction, { embeds: [embed] });
+      return;
+    }
+
+    if (decision === CONFIRM_ACTION.CANCEL) {
+      await markCaseFailed(caseId);
+      const disabledComponents = disableComponents(interaction.message.components ?? []);
+      const embed = coreEmbed('ANN', lang)
+        .setColor(ERROR_COLOR)
+        .setDescription(lang === 'de' ? 'Fall verworfen.' : 'Case cancelled.');
+      await editReplyWithFallback(interaction, {
+        embeds: [embed],
+        components: disabledComponents,
+      });
+      return;
+    }
+
+    const guild = interaction.guild;
+    if (!guild) {
+      const embed = coreEmbed('ANN', lang)
+        .setColor(ERROR_COLOR)
+        .setDescription(lang === 'de' ? 'Keine Guild verfügbar.' : 'Guild unavailable.');
+      await editReplyWithFallback(interaction, { embeds: [embed] });
+      return;
+    }
+
+    const refreshedRecord = await getCaseById(caseId);
+    if (!refreshedRecord || refreshedRecord.status !== STATUS.PENDING) {
+      const embed = coreEmbed('ANN', lang)
+        .setColor(ERROR_COLOR)
+        .setDescription(
+          lang === 'de'
+            ? 'Dieser Fall wurde bereits bearbeitet.'
+            : 'This case has already been processed.'
+        );
+      await editReplyWithFallback(interaction, { embeds: [embed] });
+      return;
+    }
+
+    const targetMember = await guild.members.fetch(refreshedRecord.userId).catch(() => null);
+    const targetUser =
+      targetMember?.user ?? (await guild.client.users.fetch(refreshedRecord.userId).catch(() => null));
+
+    let result;
+    try {
+      result = await executeAction({
+        interaction,
+        caseId,
+        actionType: actionType ?? refreshedRecord.actionType,
+        guild,
+        moderator: interaction.member,
+        targetMember,
+        targetUser,
+        reasonCodes: refreshedRecord.reasonCodes ?? [],
+        customReason: refreshedRecord.customReason,
+        lang,
+      });
+    } catch (executionError) {
+      uiLogger.error('Execution failed', executionError);
+      const errorEmbed = coreEmbed('ANN', lang)
+        .setColor(ERROR_COLOR)
+        .setDescription(lang === 'de' ? 'Aktion fehlgeschlagen.' : 'Action failed.');
+      const disabledComponents = disableComponents(interaction.message.components ?? []);
+      await editReplyWithFallback(interaction, {
+        embeds: [errorEmbed],
+        components: disabledComponents,
+      });
+      return;
+    }
+
+    const disabledComponents = disableComponents(interaction.message.components ?? []);
+
+    await editReplyWithFallback(interaction, {
+      embeds: [result.embed],
+      components: disabledComponents,
     });
   } catch (error) {
-    uiLogger.error('Execution failed', error);
-    const errorEmbed = coreEmbed('ANN', lang)
-      .setColor(ERROR_COLOR)
-      .setDescription(lang === 'de' ? 'Aktion fehlgeschlagen.' : 'Action failed.');
-    await safeEditReply(interaction, { embeds: [errorEmbed] });
-    return;
-  }
+    uiLogger.error('Failed to handle confirm interaction', error);
 
-  if (!result.ok) {
-    const fresh = await getCaseById(caseId);
-    if (fresh && fresh.status !== STATUS.PENDING) {
-      const disabled = disableComponents(interaction.message.components);
-      await safeEditReply(interaction, { components: disabled });
+    if (!interaction.deferred && !interaction.replied) {
+      try {
+        await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
+      } catch (deferError) {
+        uiLogger.error('Failed to defer confirm interaction', deferError);
+      }
     }
-    await safeEditReply(interaction, { embeds: [result.embed] });
-    return;
-  }
 
-  await safeEditReply(interaction, {
-    components: disableComponents(interaction.message.components),
-    embeds: [result.embed],
-  });
+    const failureEmbed = coreEmbed('ANN', lang)
+      .setColor(ERROR_COLOR)
+      .setDescription(errorMessage);
+
+    await editReplyWithFallback(interaction, {
+      embeds: [failureEmbed],
+      components: disableComponents(interaction.message?.components ?? []),
+    });
+  }
 }
 
 export { encodeCustomId as buildConfirmCustomId };
