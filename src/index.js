@@ -8,6 +8,7 @@ import eventLoader from './loaders/eventLoader.js';
 import { logger } from './util/logging/logger.js';
 import { setupDiscordLogging } from './util/logging/discordTransport.js';
 import { getLogChannelIds } from './util/logging/config.js';
+import { startModerationScheduler } from './modules/moderation/worker/scheduler.js';
 
 const startLogger = logger.withPrefix('start');
 const shutdownLogger = logger.withPrefix('beenden');
@@ -54,5 +55,9 @@ const eventsDir = process.env.EVENTS_DIR
   ? path.resolve(process.cwd(), process.env.EVENTS_DIR)
   : undefined;
 await eventLoader(client, eventsDir);
+
+client.once('ready', () => {
+  startModerationScheduler(client);
+});
 
 await client.login(process.env.TOKEN);

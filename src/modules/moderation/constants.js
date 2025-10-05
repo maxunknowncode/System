@@ -1,0 +1,29 @@
+export const ACTION = {
+  BAN: 'BAN',
+  UNBAN: 'UNBAN',
+  TIMEOUT: 'TIMEOUT',
+  KICK: 'KICK',
+  WARN: 'WARN',
+};
+
+export const STATUS = {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  LIFTED: 'LIFTED',
+  FAILED: 'FAILED',
+};
+
+export const SUCCESS_COLOR = 0x57f287;
+export const ERROR_COLOR = 0xff0000;
+
+export const CUSTOM_IDS = {
+  DURATION_SELECT: 'MOD_DUR_SELECT',
+  REASON_SELECT: 'MOD_REASON_SELECT',
+  REASON_MODAL: 'MOD_REASON_MODAL',
+  CONFIRM_BUTTON: 'MOD_CONFIRM',
+};
+
+export const CONFIRM_ACTION = {
+  CONFIRM: 'CONFIRM',
+  CANCEL: 'CANCEL',
+};
