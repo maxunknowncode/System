@@ -1,4 +1,4 @@
-# The Core System — Discord Bot
+# M x S Creatable — Discord Bot
 
 ## Überblick
 - Vollständig in Node.js (ESM) implementierter Discord-Bot mit modularem Aufbau.
@@ -51,7 +51,7 @@ scripts/         # CLI-Skripte (Slash-Command-Registrierung)
 ## Slash-Commands
 | Name  | Datei                                | Beschreibung | Wichtige IDs/Details |
 |-------|--------------------------------------|--------------|----------------------|
-| `/ping` | `src/commands/ping/command.js` | Zeigt WebSocket-Ping, Roundtrip, Uptime und Serverzeit als Embed. | Nutzt Footer `The Core System` und Formatierung über `formatDuration`. |
+| `/ping` | `src/commands/ping/command.js` | Zeigt WebSocket-Ping, Roundtrip, Uptime und Serverzeit als Embed. | Nutzt Footer `M x S Creatable • Moderation` und Formatierung über `formatDuration`. |
 | `/clear` | `src/commands/clear/command.js` | Löscht bis zu 100 Nachrichten im aktuellen Kanal. | Nur nutzbar für Rolleninhaber `ROLE_ID = 1363298860121985215`; sendet Erfolg/Fehler-Embeds. |
 
 ## Event-Listener

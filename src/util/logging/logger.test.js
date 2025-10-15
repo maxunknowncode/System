@@ -232,7 +232,7 @@ describe('setupDiscordLogging', () => {
     expect(payload.embeds).toHaveLength(1);
     const embed = payload.embeds[0];
     expect(embed.data.description).toBe('general entry');
-    expect(embed.data.author?.name).toBe('The Core - Logs');
+    expect(embed.data.author?.name).toBe('M x S Creatable - Logs');
     expect(embed.data.fields ?? []).toEqual([]);
 
     unsubscribe();

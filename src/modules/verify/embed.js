@@ -2,6 +2,7 @@
 ### Zweck: Baut die Verify-Embed samt Sprach- und Verify-Buttons.
 */
 import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
+import { BRAND_NAME } from '../../util/embeds/brand.js';
 import { coreEmbed } from '../../util/embeds/core.js';
 import {
   VERIFY_BUTTON_ID,
@@ -19,8 +20,8 @@ export function buildVerifyEmbedAndComponents(lang = VERIFY_DEFAULT_LANG) {
     : '✅ Verify — Access the Server';
 
   const description = isDe
-    ? '🛡️ *Offizielle Verifizierung von **The Core Team** — bitte bestätige, dass du kein Bot bist.*'
-    : '🛡️ *Official verification by **The Core Team** — please confirm you’re not a bot.*';
+    ? `🛡️ *Offizielle Verifizierung von **${BRAND_NAME} Team** — bitte bestätige, dass du kein Bot bist.*`
+    : `🛡️ *Official verification by **${BRAND_NAME} Team** — please confirm you’re not a bot.*`;
 
   const fields = isDe
     ? [
