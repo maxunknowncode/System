@@ -2,6 +2,7 @@
 ### Zweck: Baut die Rules-Embed und die Sprachwahl-Buttons.
 */
 import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from "discord.js";
+import { BRAND_NAME } from "../../util/embeds/brand.js";
 import { coreEmbed } from "../../util/embeds/core.js";
 import { RULES_BUTTON_ID_EN, RULES_BUTTON_ID_DE } from "./config.js";
 
@@ -115,8 +116,8 @@ export function buildRulesEmbedAndComponents(lang = "en") {
   const fields = isDe ? FIELDS_DE : FIELDS_EN;
   const title = isDe ? "📜 Regeln — Bitte lesen" : "📜 Rules — Please Read";
   const description = isDe
-    ? "🛡️ *Offizielle Server-Regeln von **The Core Team** — alle müssen sich daran halten.*"
-    : "🛡️ *Official server rules by **The Core Team** — everyone must follow them.*";
+    ? `🛡️ *Offizielle Server-Regeln von **${BRAND_NAME} Team** — alle müssen sich daran halten.*`
+    : `🛡️ *Official server rules by **${BRAND_NAME} Team** — everyone must follow them.*`;
 
   const embed = coreEmbed("RULES", lang)
     .setTitle(title)

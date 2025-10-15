@@ -3,6 +3,7 @@
 */
 import { Events } from 'discord.js';
 import { coreEmbed } from '../../util/embeds/core.js';
+import { BRAND_NAME } from '../../util/embeds/brand.js';
 import { detectLangFromInteraction } from '../../util/embeds/lang.js';
 import { logger } from '../../util/logging/logger.js';
 import {
@@ -20,7 +21,7 @@ export default {
     const channel = member.guild?.channels.cache.get(WELCOME_CHANNEL_ID);
     if (!channel) return;
 
-    const description = `> Hello ${member}, welcome to **The Core**.\n\n> Please read the rules in channel <#${RULES_CHANNEL_ID}>!`;
+    const description = `> Hello ${member}, welcome to **${BRAND_NAME}**.\n\n> Please read the rules in channel <#${RULES_CHANNEL_ID}>!`;
 
     const lang = detectLangFromInteraction(member);
 

@@ -1,6 +1,7 @@
 import { TICKET_PANEL_CHANNEL_ID, TICKET_PANEL_MESSAGE_ID, MENU_CUSTOM_ID } from './config.js';
 import { buildTicketPanel } from './panel.js';
 import { logger } from '../../util/logging/logger.js';
+import { BRAND_NAME } from '../../util/embeds/brand.js';
 
 const ticketLogger = logger.withPrefix('tickets');
 
@@ -30,7 +31,7 @@ export async function ensureTicketPanel(client) {
         (m) =>
           m.author.id === client.user.id &&
           (m.components.some((row) => row.components.some((c) => c.customId === MENU_CUSTOM_ID)) ||
-            m.embeds.some((e) => e.author?.name === 'The Core - Ticket System'))
+            m.embeds.some((e) => e.author?.name === `${BRAND_NAME} - Ticket System`))
       );
     } catch (err) {
       ticketLogger.error('Nachrichten konnten nicht geladen werden:', err);

@@ -1,4 +1,6 @@
 /*
-### Zweck: Zentrale Footer-Konstante („The Core System“) für Embeds.
+### Zweck: Zentrale Footer-Konstante für Embeds.
 */
-export const FOOTER = { text: 'The Core System' };
+import { BRAND_FOOTER } from './brand.js';
+
+export const FOOTER = { text: BRAND_FOOTER };
