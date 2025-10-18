@@ -3,7 +3,7 @@ import { buildTicketPanel } from './panel.js';
 import { logger } from '../../util/logging/logger.js';
 import { BRAND_NAME } from '../../util/embeds/brand.js';
 
-const ticketLogger = logger.withPrefix('tickets');
+const ticketLogger = logger.withPrefix('tickets:ensure');
 
 export async function ensureTicketPanel(client) {
   let channel;

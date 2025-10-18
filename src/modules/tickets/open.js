@@ -15,15 +15,19 @@ import {
   MessageFlags,
   PermissionsBitField,
 } from 'discord.js';
+import { TICKET_MESSAGES, resolveText } from '../../i18n/messages.js';
+import { logger } from '../../util/logging/logger.js';
+
+const ticketsLogger = logger.withPrefix('tickets:open');
 
 export async function openTicket(interaction, lang = 'en') {
   const { guild, user } = interaction;
   const categoryId = TICKET_ACTIVE_CATEGORY_ID;
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
   if (!categoryId) {
-    await interaction.reply({ content: 'Fehler', flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+    await interaction.editReply({ content: 'Fehler', allowedMentions: { parse: [] } });
     return;
   }
-
   const existing = guild.channels.cache.filter(
     (c) =>
       c.parentId === TICKET_ACTIVE_CATEGORY_ID && c.name.startsWith(TICKET_CHANNEL_PREFIX)
@@ -71,26 +75,23 @@ export async function openTicket(interaction, lang = 'en') {
       type: ChannelType.GuildText,
       permissionOverwrites: overwrites,
     });
-  } catch {
-    await interaction.reply({ content: 'Fehler', flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+  } catch (error) {
+    ticketsLogger.error('Kanal konnte nicht erstellt werden:', error);
+    await interaction.editReply({ content: 'Fehler', allowedMentions: { parse: [] } });
     return;
   }
 
   const ticketChannel = channel.toString();
   const replyEmbed = coreEmbed('TICKET', lang)
-    .setTitle(lang === 'de' ? 'Erfolgreich – Ticket erstellt' : 'Successfully - Ticket Created')
+    .setTitle(resolveText(TICKET_MESSAGES.createdTitle, lang))
     .setDescription(
-      lang === 'de'
-        ? `Ticket erstellt. Hier ist dein Ticket: ${ticketChannel}`
-        : `Ticket created. Here is your ticket: ${ticketChannel}`
+      resolveText(TICKET_MESSAGES.createdDescription, lang, { ticketChannel })
     );
-  await interaction.reply({ embeds: [replyEmbed], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+  await interaction.editReply({ embeds: [replyEmbed], allowedMentions: { parse: [] } });
 
   const embed = coreEmbed('TICKET', lang).setDescription(
-      lang === 'de'
-        ? '> 🇩🇪 Bitte beschreibe dein Anliegen, während du wartest.'
-        : '> 🇺🇸 Please describe your issue while you’re waiting.'
-    );
+    resolveText(TICKET_MESSAGES.promptDescription, lang)
+  );
 
   const claimBtn = new ButtonBuilder()
     .setCustomId(BTN_CLAIM_ID)

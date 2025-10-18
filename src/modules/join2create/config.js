@@ -1,1 +1,3 @@
-export const JOIN_TO_CREATE_CHANNEL_ID = "1362861795639038142";
+import { CHANNEL_IDS } from '../../config/ids.js';
+
+export const JOIN_TO_CREATE_CHANNEL_ID = CHANNEL_IDS.joinToCreateTrigger;

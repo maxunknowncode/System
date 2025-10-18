@@ -10,7 +10,7 @@ import {
   SUGGESTIONS_IGNORE_BOTS,
 } from '../../modules/suggestions/config.js';
 
-const suggestionsLogger = logger.withPrefix('suggestions');
+const suggestionsLogger = logger.withPrefix('suggestions:handler');
 
 export default {
   name: Events.MessageCreate,

@@ -18,6 +18,7 @@ const MAX_QUEUE_SIZE = 50;
 const DESCRIPTION_LIMIT = 200;
 const FIELD_VALUE_LIMIT = 60;
 const FALLBACK_FIELD_VALUE = '—';
+const DEDUP_WINDOW_MS = 60_000;
 
 const collapseToSingleLine = (value) => value.replace(/\s+/g, ' ').trim();
 
@@ -182,6 +183,26 @@ const buildAuditPayload = (entry) => {
   return { description, fields };
 };
 
+const serialiseForKey = (value) => {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (value instanceof Error) {
+    return `${value.name}:${value.message}`;
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+};
+
+const buildDedupKey = (entry) => {
+  const label = entry.context?.label ?? 'general';
+  const rawArgs = getRawArgs(entry).map((value) => serialiseForKey(value));
+  return [entry.level ?? 'info', label, ...rawArgs].join('|');
+};
+
 export function setupDiscordLogging(client, options = {}) {
   const fallbackChannelIds = getLogChannelIds();
   const generalChannelId = normaliseId(
@@ -194,6 +215,7 @@ export function setupDiscordLogging(client, options = {}) {
   const channelCache = new Map();
   const queue = [];
   let ready = Boolean(client.isReady?.());
+  const dedupState = new Map();
 
   const internalLog = (level, ...args) => {
     const method = level === 'error' ? 'error' : 'warn';
@@ -344,8 +366,67 @@ export function setupDiscordLogging(client, options = {}) {
     void processQueue();
   };
 
+  const flushDedupSummary = (key) => {
+    const state = dedupState.get(key);
+    if (!state) {
+      return;
+    }
+
+    dedupState.delete(key);
+    if (state.timer) {
+      clearTimeout(state.timer);
+    }
+
+    if (state.count <= 1) {
+      return;
+    }
+
+    const suppressed = state.count - 1;
+    const label = state.label ?? 'general';
+    const summaryEntry = {
+      level: 'info',
+      args: [
+        `[logging:dedup] ${suppressed} weitere Einträge für [${label}] innerhalb von ${Math.round(DEDUP_WINDOW_MS / 1000)}s unterdrückt.`,
+      ],
+      rawArgs: [],
+      timestamp: new Date(),
+      context: {
+        segments: ['logging', 'dedup'],
+        label: 'logging:dedup',
+        text: '[logging:dedup]',
+        metadata: { suppressed, label },
+      },
+    };
+
+    enqueue(summaryEntry);
+  };
+
   const unsubscribe = registerLogTransport((entry) => {
-    enqueue(entry);
+    const key = buildDedupKey(entry);
+    const now = Date.now();
+    const state = dedupState.get(key);
+
+    if (!state || now - state.lastTimestamp > DEDUP_WINDOW_MS) {
+      if (state?.timer) {
+        clearTimeout(state.timer);
+      }
+      dedupState.set(key, {
+        count: 1,
+        label: entry.context?.label ?? state?.label ?? 'general',
+        lastTimestamp: now,
+        timer: null,
+      });
+      enqueue(entry);
+      return;
+    }
+
+    state.count += 1;
+    state.lastTimestamp = now;
+    state.label = entry.context?.label ?? state.label;
+    if (state.timer) {
+      clearTimeout(state.timer);
+    }
+    state.timer = setTimeout(() => flushDedupSummary(key), DEDUP_WINDOW_MS);
   });
 
   let removeReadyListener = null;
@@ -375,5 +456,11 @@ export function setupDiscordLogging(client, options = {}) {
   return () => {
     removeReadyListener?.();
     unsubscribe();
+    for (const state of dedupState.values()) {
+      if (state.timer) {
+        clearTimeout(state.timer);
+      }
+    }
+    dedupState.clear();
   };
 }

@@ -2,12 +2,14 @@
 ### Zweck: Stellt sicher, dass genau eine Teamlisten-Nachricht existiert.
 */
 import { TEAM_CHANNEL_ID, TEAM_MESSAGE_ID, TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE, TEAM_ROLES } from './config.js';
-import { buildTeamEmbedAndComponents, TEAM_TITLES } from './embed.js';
+import { buildTeamEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logging/logger.js';
+import { TEAM_MESSAGES, resolveText } from '../../i18n/messages.js';
 
-const teamLogger = logger.withPrefix('team');
+const teamLogger = logger.withPrefix('team:ensure');
 const FALLBACK_EMBED_TITLES = new Set([
-  ...Object.values(TEAM_TITLES),
+  resolveText(TEAM_MESSAGES.title, 'en'),
+  resolveText(TEAM_MESSAGES.title, 'de'),
   '💠 The Server Team 💠',
   '💠 Das Serverteam 💠',
 ]);

@@ -5,7 +5,7 @@ import { VERIFY_CHANNEL_ID, VERIFY_BUTTON_ID, VERIFY_DEFAULT_LANG, VERIFY_MESSAG
 import { buildVerifyEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logging/logger.js';
 
-const verifyLogger = logger.withPrefix('verify');
+const verifyLogger = logger.withPrefix('verify:ensure');
 
 export default async function ensureVerifyMessage(client) {
   let channel;

@@ -13,8 +13,10 @@ import { buildVerifyEmbedAndComponents } from './embed.js';
 import { coreEmbed } from '../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../util/embeds/lang.js';
 import { logger } from '../../util/logging/logger.js';
+import { hasRole } from '../../util/permissions.js';
+import { resolveText, VERIFY_MESSAGES } from '../../i18n/messages.js';
 
-const verifyLogger = logger.withPrefix('verify');
+const verifyLogger = logger.withPrefix('verify:interactions');
 
 const verifyLangTimers = new Map();
 
@@ -27,9 +29,9 @@ export async function handleVerifyInteractions(interaction, client) {
       (await interaction.guild.members.fetch(interaction.user.id).catch(() => null));
     if (!member) {
       const embed = coreEmbed('VERIFY', lang)
-        .setColor(0xFFA500)
-        .setTitle('Verification')
-        .setDescription('⚠️ Verification failed. Please try again or contact staff.');
+        .setColor(0xffa500)
+        .setTitle(resolveText(VERIFY_MESSAGES.responseTitle, lang))
+        .setDescription(resolveText(VERIFY_MESSAGES.failure, lang));
       try {
         await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       } catch (err) {
@@ -39,11 +41,11 @@ export async function handleVerifyInteractions(interaction, client) {
       return;
     }
 
-    if (member.roles.cache.has(VERIFY_ROLE_ID)) {
+    if (hasRole(member, VERIFY_ROLE_ID)) {
       const embed = coreEmbed('VERIFY', lang)
         .setColor(0x00ff00)
-        .setTitle('Verification')
-        .setDescription('ℹ️ You are already verified.');
+        .setTitle(resolveText(VERIFY_MESSAGES.responseTitle, lang))
+        .setDescription(resolveText(VERIFY_MESSAGES.alreadyVerified, lang));
       try {
         await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       } catch (err) {
@@ -56,15 +58,15 @@ export async function handleVerifyInteractions(interaction, client) {
       await member.roles.add(VERIFY_ROLE_ID);
       const embed = coreEmbed('VERIFY', lang)
         .setColor(0x00ff00)
-        .setTitle('Verification')
-        .setDescription('✅ You are now verified!');
+        .setTitle(resolveText(VERIFY_MESSAGES.responseTitle, lang))
+        .setDescription(resolveText(VERIFY_MESSAGES.success, lang));
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } catch (err) {
       verifyLogger.warn('Rolle konnte nicht vergeben', err);
       const embed = coreEmbed('VERIFY', lang)
-        .setColor(0xFFA500)
-        .setTitle('Verification')
-        .setDescription('⚠️ Verification failed. Please try again or contact staff.');
+        .setColor(0xffa500)
+        .setTitle(resolveText(VERIFY_MESSAGES.responseTitle, lang))
+        .setDescription(resolveText(VERIFY_MESSAGES.failure, lang));
       try {
         await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       } catch (err) {

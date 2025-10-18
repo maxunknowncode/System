@@ -5,7 +5,7 @@ import { RULES_BUTTON_ID_EN, RULES_BUTTON_ID_DE, RULES_DEFAULT_LANG, RULES_RESET
 import { buildRulesEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logging/logger.js';
 
-const rulesLogger = logger.withPrefix('regeln');
+const rulesLogger = logger.withPrefix('rules:interactions');
 
 const timeouts = new Map();
 

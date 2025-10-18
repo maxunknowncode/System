@@ -1,8 +1,9 @@
 import { ApplicationCommandOptionType, MessageFlags } from 'discord.js';
 import { coreEmbed } from '../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../util/embeds/lang.js';
-
-const ROLE_ID = '1363298860121985215';
+import { hasRole } from '../../util/permissions.js';
+import { ROLE_IDS } from '../../config/ids.js';
+import { CLEAR_COMMAND_MESSAGES, GENERIC_MESSAGES, resolveText } from '../../i18n/messages.js';
 
 export default {
   name: 'clear',
@@ -20,10 +21,10 @@ export default {
     const amount = interaction.options.getInteger('amount', true);
     const lang = detectLangFromInteraction(interaction);
 
-    if (!interaction.member.roles.cache.has(ROLE_ID)) {
+    if (!hasRole(interaction.member, ROLE_IDS.moderationClear)) {
       const embed = coreEmbed('ANN', lang)
-        .setTitle('No Permission')
-        .setDescription('You do not have permission to use this command.')
+        .setTitle(resolveText(CLEAR_COMMAND_MESSAGES.noPermissionTitle, lang))
+        .setDescription(resolveText(GENERIC_MESSAGES.noPermission, lang))
         .setColor(0xff0000);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
       return;
@@ -40,8 +41,13 @@ export default {
     }
 
     const embed = coreEmbed('ANN', lang)
-      .setTitle('Messages Cleared')
-      .setDescription(`Deleted **${deleted}** messages in <#${interaction.channel.id}>.`)
+      .setTitle(resolveText(CLEAR_COMMAND_MESSAGES.resultTitle, lang))
+      .setDescription(
+        resolveText(CLEAR_COMMAND_MESSAGES.resultDescription, lang, {
+          deleted,
+          channelId: interaction.channel.id,
+        })
+      )
       .setColor(0x00ff00);
     await interaction.editReply({ embeds: [embed], allowedMentions: { parse: [] } });
   },

@@ -9,7 +9,7 @@ import {
   formatMetadataKey,
 } from '../../util/logging/formatting.js';
 
-const auditLogger = logger.withPrefix('audit');
+const auditLogger = logger.withPrefix('audit:events');
 
 const WARN_ACTIONS = new Set([
   AuditLogEvent.ChannelDelete,

@@ -1,9 +1,11 @@
 /*
 ### Zweck: Hält IDs/Konstanten für das Verify-Feature (Channel, Rolle, Buttons, Sprache).
 */
-export const VERIFY_CHANNEL_ID = '1354914940611330239';
-export const VERIFY_MESSAGE_ID = '1412850918952669304';
-export const VERIFY_ROLE_ID = '1354909911691038862';
+import { CHANNEL_IDS, MESSAGE_IDS, ROLE_IDS } from '../../config/ids.js';
+
+export const VERIFY_CHANNEL_ID = CHANNEL_IDS.verify;
+export const VERIFY_MESSAGE_ID = MESSAGE_IDS.verify;
+export const VERIFY_ROLE_ID = ROLE_IDS.verify;
 export const VERIFY_BUTTON_ID = 'verify_action';
 export const VERIFY_LANG_EN_ID = 'verify_lang_en';
 export const VERIFY_LANG_DE_ID = 'verify_lang_de';

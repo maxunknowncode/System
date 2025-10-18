@@ -11,8 +11,9 @@ import {
   RULES_CHANNEL_ID,
   WELCOME_IMAGE_URL,
 } from '../../modules/welcome/config.js';
+import { WELCOME_MESSAGES, resolveText } from '../../i18n/messages.js';
 
-const welcomeLogger = logger.withPrefix('welcome');
+const welcomeLogger = logger.withPrefix('welcome:handler');
 
 export default {
   name: Events.GuildMemberAdd,
@@ -21,13 +22,17 @@ export default {
     const channel = member.guild?.channels.cache.get(WELCOME_CHANNEL_ID);
     if (!channel) return;
 
-    const description = `> Hello ${member}, welcome to **${BRAND_NAME}**.\n\n> Please read the rules in channel <#${RULES_CHANNEL_ID}>!`;
-
     const lang = detectLangFromInteraction(member);
 
     const embed = coreEmbed('WELCOME', lang)
-      .setTitle('Welcome!')
-      .setDescription(description)
+      .setTitle(resolveText(WELCOME_MESSAGES.title, lang))
+      .setDescription(
+        resolveText(WELCOME_MESSAGES.description, lang, {
+          member: member.toString(),
+          brand: BRAND_NAME,
+          rulesChannelId: RULES_CHANNEL_ID,
+        })
+      )
       .setThumbnail(WELCOME_IMAGE_URL);
 
     try {
