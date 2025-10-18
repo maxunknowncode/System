@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 /*
 ### Zweck: Handhabt Regeln-, Verify- und Teamlisten-Buttons sowie Chat-Input-Commands.
@@ -26,18 +27,25 @@ import {
 import { handleTicketInteractions } from '../../modules/tickets/interactions.js';
 import { coreEmbed } from '../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../util/embeds/lang.js';
+import { GENERIC_MESSAGES, resolveText } from '../../i18n/messages.js';
 
-const commandLogger = logger.withPrefix('befehle');
-const interactionLogger = logger.withPrefix('interaction-router');
+const commandLogger = logger.withPrefix('commands:execute');
+const interactionLogger = logger.withPrefix('interactions:router');
 
-async function sendGenericError(interaction, error) {
-  if (error) {
-    interactionLogger.error('Handler failure', error);
+const createErrorId = () => {
+  try {
+    return randomUUID();
+  } catch {
+    return Math.random().toString(36).slice(2, 10);
   }
+};
+
+async function sendGenericError(interaction, errorId) {
   const lang = detectLangFromInteraction(interaction) ?? 'en';
   const embed = coreEmbed('ANN', lang)
     .setColor(0xff4d4d)
-    .setDescription(lang === 'de' ? 'Etwas ist schiefgelaufen.' : 'Something went wrong.');
+    .setTitle(resolveText(GENERIC_MESSAGES.genericErrorTitle, lang))
+    .setDescription(resolveText(GENERIC_MESSAGES.errorWithReference, lang, { errorId }));
 
   try {
     if (interaction.isRepliable()) {
@@ -51,7 +59,7 @@ async function sendGenericError(interaction, error) {
     }
   } catch (err) {
     if (err?.code !== RESTJSONErrorCodes.UnknownMessage && err?.code !== RESTJSONErrorCodes.UnknownInteraction) {
-      interactionLogger.warn('Failed to send generic error response', err);
+      interactionLogger.warn(`Failed to send generic error response (${errorId})`, err);
     }
   }
 }
@@ -62,7 +70,7 @@ async function handleCommand(interaction, client) {
     const lang = detectLangFromInteraction(interaction) ?? 'en';
     const embed = coreEmbed('ANN', lang)
       .setColor(0xff4d4d)
-      .setDescription(lang === 'de' ? 'Unbekannter Befehl.' : 'Unknown command.');
+      .setDescription(resolveText(GENERIC_MESSAGES.unknownCommand, lang));
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply({ embeds: [embed] });
     } else {
@@ -143,8 +151,9 @@ export default {
       try {
         await handleCommand(interaction, client);
       } catch (error) {
-        commandLogger.error('Ausführung fehlgeschlagen:', error);
-        await sendGenericError(interaction, error);
+        const errorId = createErrorId();
+        commandLogger.error(`Ausführung fehlgeschlagen (${errorId}):`, error);
+        await sendGenericError(interaction, errorId);
       }
       return;
     }
@@ -153,7 +162,9 @@ export default {
       try {
         await handleStringSelect(interaction, client);
       } catch (error) {
-        await sendGenericError(interaction, error);
+        const errorId = createErrorId();
+        interactionLogger.error(`String select handler failed (${errorId})`, error);
+        await sendGenericError(interaction, errorId);
       }
       return;
     }
@@ -162,7 +173,9 @@ export default {
       try {
         await handleModal(interaction);
       } catch (error) {
-        await sendGenericError(interaction, error);
+        const errorId = createErrorId();
+        interactionLogger.error(`Modal handler failed (${errorId})`, error);
+        await sendGenericError(interaction, errorId);
       }
       return;
     }
@@ -171,7 +184,9 @@ export default {
       try {
         await handleButton(interaction, client);
       } catch (error) {
-        await sendGenericError(interaction, error);
+        const errorId = createErrorId();
+        interactionLogger.error(`Button handler failed (${errorId})`, error);
+        await sendGenericError(interaction, errorId);
       }
     }
   },

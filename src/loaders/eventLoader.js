@@ -5,55 +5,36 @@ import path from 'node:path';
 import { logger } from '../util/logging/logger.js';
 import { walk } from './walk.js';
 
-const eventsLogger = logger.withPrefix('ereignisse');
+const eventsLogger = logger.withPrefix('loader:events');
 
 export default async function eventLoader(
   client,
   baseDir = path.join(process.cwd(), 'src', 'events'),
 ) {
   let loaded = 0;
-  const filesByDir = new Map();
-  const processedDirs = new Set();
+  const eventFiles = [];
 
   const handleReadError = (err, dir) => {
     eventsLogger.error('Verzeichnis konnte nicht gelesen werden:', dir, err);
   };
 
-  const hasProcessedAncestor = (directory) => {
-    for (const processed of processedDirs) {
-      if (processed === directory) {
-        continue;
-      }
-
-      const relative = path.relative(processed, directory);
-      if (relative && !relative.startsWith('..') && !path.isAbsolute(relative)) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
   for await (const filePath of walk(baseDir, { onError: handleReadError })) {
     const fileName = path.basename(filePath);
-    if (fileName !== 'handler.js' && fileName !== 'index.js') {
+    if (fileName === 'index.js') {
+      eventsLogger.warn(
+        `Überspringe ${path.relative(baseDir, filePath)}: erwarteter Dateiname handler.js`
+      );
       continue;
     }
 
-    const directory = path.dirname(filePath);
-    if (hasProcessedAncestor(directory)) {
+    if (fileName !== 'handler.js') {
       continue;
     }
 
-    if (!filesByDir.has(directory)) {
-      filesByDir.set(directory, filePath);
-      processedDirs.add(directory);
-    } else if (fileName === 'handler.js') {
-      filesByDir.set(directory, filePath);
-    }
+    eventFiles.push(filePath);
   }
 
-  for (const filePath of filesByDir.values()) {
+  for (const filePath of eventFiles) {
     try {
       const mod = (await import(filePath)).default;
       if (!mod?.name || typeof mod.execute !== 'function') {

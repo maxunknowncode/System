@@ -1,5 +1,7 @@
-export const MOD_LOG_CHANNEL_ID = '1418659303916703794';
-export const TEAM_ROLE_ID = '1354916696527208693';
+import { CHANNEL_IDS, ROLE_IDS } from '../../config/ids.js';
+
+export const MOD_LOG_CHANNEL_ID = CHANNEL_IDS.moderationLog;
+export const TEAM_ROLE_ID = ROLE_IDS.team;
 export const BAN_PRESETS = ['1d', '3d', '7d', '14d', '30d', 'permanent'];
 export const TIMEOUT_PRESETS = ['10m', '1h', '1d', '3d', '7d'];
 export const REASON_CODES = ['SPAM', 'HARASS', 'NSFW', 'ALT', 'D0X', 'CUSTOM'];

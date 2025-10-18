@@ -9,13 +9,10 @@ import {
   TEAM_ROLES,
 } from './config.js';
 import { logger } from '../../util/logging/logger.js';
+import { hasRole } from '../../util/permissions.js';
+import { TEAM_MESSAGES, resolveText } from '../../i18n/messages.js';
 
-const teamLogger = logger.withPrefix('team');
-
-export const TEAM_TITLES = {
-  en: 'The Server Team',
-  de: 'Das Serverteam',
-};
+const teamLogger = logger.withPrefix('team:embed');
 
 async function getRoleMemberMentions(guild, roleId) {
   // Cache auffüllen, falls nötig
@@ -27,7 +24,7 @@ async function getRoleMemberMentions(guild, roleId) {
     }
   }
   // Mitglieder mit der Rolle sammeln
-  const members = guild.members.cache.filter(m => m.roles.cache.has(roleId));
+  const members = guild.members.cache.filter((member) => hasRole(member, roleId));
   if (!members.size) return [];
   // Max 30 Zeilen, dann "…"
   const lines = Array.from(members.values())
@@ -39,12 +36,8 @@ async function getRoleMemberMentions(guild, roleId) {
 
 export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
   const isDe = lang === 'de';
-  const title = isDe ? TEAM_TITLES.de : TEAM_TITLES.en;
-
-  // Beschreibungen: beide Varianten als Quote ("> ") und kursiv (*...*)
-  const description = isDe
-    ? '> *Sehr geehrte Community, hier findet ihr unsere Teamliste. Hier könnt ihr sehen, wer zum Serverteam gehört. Dies hilft, um immer zu wissen, ob man den Personen trauen kann.*'
-    : '> *Dear community, here you can find our team list. Here you can see who is part of the server team. This helps you always know whom you can trust.*';
+  const title = resolveText(TEAM_MESSAGES.title, lang);
+  const description = resolveText(TEAM_MESSAGES.description, lang);
 
   const embed = coreEmbed('TEAM', lang)
     .setTitle(title)

@@ -5,7 +5,7 @@ import { TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE, TEAM_RESET_MS, TEAM_ROLES } from 
 import { buildTeamEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logging/logger.js';
 
-const teamLogger = logger.withPrefix('team');
+const teamLogger = logger.withPrefix('team:interactions');
 
 const timeouts = new Map();
 

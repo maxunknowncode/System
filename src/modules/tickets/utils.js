@@ -1,4 +1,6 @@
+import { OverwriteType } from 'discord.js';
 import { TICKET_CHANNEL_PREFIX, TEAM_ROLE_ID } from './config.js';
+import { hasRole } from '../../util/permissions.js';
 
 export function slugUsername(name) {
   return name
@@ -15,7 +17,7 @@ export function buildTicketName(user, index) {
 }
 
 export function isTeam(member) {
-  return member.roles.cache.has(TEAM_ROLE_ID);
+  return hasRole(member, TEAM_ROLE_ID);
 }
 
 const PREFIX_STRIP_RE = /^(?:(?:✅[ -])|(?:🔴-))+/u;
@@ -29,4 +31,37 @@ export async function setStatusPrefix(channel, mode) {
     mode === "closed"  ? `🔴-${base}` :
     base;
   if (next !== raw) await channel.setName(next);
+}
+
+export function findTicketOwner(channel, botUserId) {
+  const overwrites = channel.permissionOverwrites.cache;
+  const candidate = overwrites.find(
+    (overwrite) => overwrite.type === OverwriteType.Member && overwrite.id !== botUserId,
+  );
+  return candidate?.id ?? null;
+}
+
+export async function applyOpenPermissions(channel, userId) {
+  if (!userId) {
+    return;
+  }
+
+  await channel.permissionOverwrites.edit(userId, {
+    ViewChannel: true,
+    SendMessages: true,
+    ReadMessageHistory: true,
+    AttachFiles: true,
+  });
+}
+
+export async function applyClosedPermissions(channel, userId) {
+  if (!userId) {
+    return;
+  }
+
+  await channel.permissionOverwrites.edit(userId, {
+    ViewChannel: true,
+    SendMessages: false,
+    AttachFiles: false,
+  });
 }

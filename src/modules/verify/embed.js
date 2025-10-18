@@ -4,6 +4,7 @@
 import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
 import { BRAND_NAME } from '../../util/embeds/brand.js';
 import { coreEmbed } from '../../util/embeds/core.js';
+import { VERIFY_MESSAGES, resolveFields, resolveText } from '../../i18n/messages.js';
 import {
   VERIFY_BUTTON_ID,
   VERIFY_LANG_EN_ID,
@@ -13,37 +14,11 @@ import {
 } from './config.js';
 
 export function buildVerifyEmbedAndComponents(lang = VERIFY_DEFAULT_LANG) {
-  const isDe = lang === 'de';
+  const replacements = { brand: BRAND_NAME, verifyRoleId: VERIFY_ROLE_ID };
 
-  const title = isDe
-    ? '✅ Verifizierung — Zugriff auf den Server'
-    : '✅ Verify — Access the Server';
-
-  const description = isDe
-    ? `🛡️ *Offizielle Verifizierung von **${BRAND_NAME} Team** — bitte bestätige, dass du kein Bot bist.*`
-    : `🛡️ *Official verification by **${BRAND_NAME} Team** — please confirm you’re not a bot.*`;
-
-  const fields = isDe
-    ? [
-        {
-          name: '🎯 __**Was passiert**__',
-          value: `> Du schaltest Kanäle & Rollen frei, z. B. <@&${VERIFY_ROLE_ID}>.`,
-        },
-        {
-          name: 'ℹ️ __**So geht’s**__',
-          value: '> Klicke **Verify**. Geht sofort und ist sicher.',
-        },
-      ]
-    : [
-        {
-          name: '🎯 __**What happens**__',
-          value: `> You unlock channels & roles like <@&${VERIFY_ROLE_ID}>.`,
-        },
-        {
-          name: 'ℹ️ __**How to**__',
-          value: '> Press **Verify**. It’s instant and safe.',
-        },
-      ];
+  const title = resolveText(VERIFY_MESSAGES.embed.title, lang, replacements);
+  const description = resolveText(VERIFY_MESSAGES.embed.description, lang, replacements);
+  const fields = resolveFields(VERIFY_MESSAGES.embed.fields, lang, replacements);
 
   const embed = coreEmbed('VERIFY', lang)
     .setTitle(title)

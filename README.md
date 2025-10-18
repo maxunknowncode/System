@@ -151,6 +151,13 @@ Nachfolgend sämtliche relevanten Konstanten (siehe `src/modules/**/config.js`).
 - `src/util/embeds/*` liefert wiederverwendbare Embed-Eigenschaften (Farbe, Footer, Autoren-Label und Icon).
 - `scripts/cleanup-commands.js` ist als Platzhalter für zukünftiges Entfernen nicht mehr genutzter Commands vorgesehen.
 
+## Konfiguration & Fehlerfluss
+- **Zentrale IDs:** `src/config/ids.js` bündelt sämtliche Channel-, Rollen- und Message-IDs, die zuvor über mehrere Module verteilt waren. Anpassungen an der Server-Struktur erfolgen nur noch dort.
+- **Rollen-Checks:** `src/util/permissions.js` kapselt gängige Rollenabfragen (`hasRole`, `hasAnyRole`) und wird von Commands/Modulen verwendet, um Berechtigungen konsistent zu prüfen.
+- **Mehrsprachige Texte:** `src/i18n/messages.js` hält die zweisprachigen (EN/DE) Texte für Embeds und Nutzer-Feedback bereit; Module lösen Inhalte über `resolveText`/`resolveFields` auf.
+
+Alle Fehlerszenarien erzeugen eine eindeutige Referenz-ID. Diese ID wird den Nutzern ephemer angezeigt und gleichzeitig in Konsole sowie Discord-Logkanal geschrieben. Der Discord-Transport dedupliziert nahezu identische Meldungen innerhalb von 60 Sekunden und fasst diese als Zusammenfassungseintrag zusammen, damit Log-Spam vermieden wird.
+
 ## Tests & Qualitätssicherung
 - **Logger-Test:** `src/util/logging/logger.test.js` verifiziert die Einhaltung des `LOG_LEVEL`.
 - Empfohlener Workflow: `npm run lint` → `npm test` → `npm start`.

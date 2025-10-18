@@ -5,7 +5,7 @@ import { RULES_CHANNEL_ID, RULES_MESSAGE_ID, RULES_BUTTON_ID_EN, RULES_BUTTON_ID
 import { buildRulesEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logging/logger.js';
 
-const rulesLogger = logger.withPrefix('regeln');
+const rulesLogger = logger.withPrefix('rules:ensure');
 
 export async function ensureRulesMessage(client) {
   let channel;

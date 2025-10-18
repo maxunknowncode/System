@@ -23,6 +23,12 @@ export async function attachAuditInfo(guild, actionType, caseId) {
     return null;
   }
 
+  const me = guild.members.me;
+  if (!me?.permissions?.has('ViewAuditLog')) {
+    auditLogger.warn(`Keine AuditLog-Berechtigung für ${guild.id} – Fall ${caseId} wird ohne Link fortgesetzt.`);
+    return null;
+  }
+
   try {
     const audit = await guild.fetchAuditLogs({ limit: 5, type });
     const entry = Array.from(audit.entries.values()).find((item) => item.target?.id === caseRecord.userId);
@@ -31,7 +37,7 @@ export async function attachAuditInfo(guild, actionType, caseId) {
       return entry.id;
     }
   } catch (error) {
-    auditLogger.warn('Failed to fetch audit log entry:', error);
+    auditLogger.warn(`AuditLog konnte nicht geladen werden (Fall ${caseId}):`, error);
   }
   return null;
 }

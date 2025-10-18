@@ -5,13 +5,11 @@ import {
 } from 'discord.js';
 import { coreEmbed } from '../../util/embeds/core.js';
 import { MENU_CUSTOM_ID, MENU_PLACEHOLDER, MENU_OPTION_EN, MENU_OPTION_DE } from './config.js';
+import { TICKET_MESSAGES, resolveText } from '../../i18n/messages.js';
 
 export function buildTicketPanel() {
   const embed = coreEmbed('TICKET')
-    .setDescription(
-      `🇺🇸 **English**\n> Select which type of ticket you would like to open in the dropdown menu!\n\n` +
-        `🇩🇪 **Deutsch**\n> Wähle im Dropdown-Menü aus, welche Art von Ticket du öffnen möchtest!`
-    );
+    .setDescription(resolveText(TICKET_MESSAGES.panelDescription));
 
   const optionEN = new StringSelectMenuOptionBuilder()
     .setValue(MENU_OPTION_EN.value)
