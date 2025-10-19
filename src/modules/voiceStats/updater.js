@@ -73,7 +73,7 @@ async function tick() {
   try {
     const { humans, online } = await computeCounts(guild);
     if (membersChannel && humans !== lastHumans) {
-      await setChannelName(membersChannel, `👥 Mitglieder: ${humans}`);
+      await setChannelName(membersChannel, `👥 Members: ${humans}`);
       lastHumans = humans;
     }
     if (onlineChannel && online != null && online !== lastOnline) {
