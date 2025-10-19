@@ -1,4 +1,3 @@
-import { PermissionFlagsBits } from 'discord.js';
 import { ChannelType } from 'discord.js';
 import { JOIN_TO_CREATE_CHANNEL_ID } from '../../modules/join2create/config.js';
 import { ROLE_IDS } from '../../config/ids.js';
@@ -39,6 +38,9 @@ export default {
               Connect: true,
               Speak: true,
               UseVAD: true,
+              Stream: true,
+              UseSoundboard: true,
+              UseExternalSounds: true,
             });
           } catch (err) {
             joinLogger.warn('Mitglieds-Berechtigungen konnten nicht gesetzt werden:', err);
@@ -48,6 +50,9 @@ export default {
               Connect: true,
               Speak: true,
               UseVAD: true,
+              Stream: true,
+              UseSoundboard: true,
+              UseExternalSounds: true,
             });
           } catch (err) {
             joinLogger.warn('Rollen-Berechtigungen konnten nicht gesetzt werden:', err);
