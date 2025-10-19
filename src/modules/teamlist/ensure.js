@@ -1,7 +1,14 @@
 /*
 ### Zweck: Stellt sicher, dass genau eine Teamlisten-Nachricht existiert.
 */
-import { TEAM_CHANNEL_ID, TEAM_MESSAGE_ID, TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE, TEAM_ROLES } from './config.js';
+import {
+  TEAM_CHANNEL_ID,
+  TEAM_MESSAGE_ID,
+  TEAM_BUTTON_ID_EN,
+  TEAM_BUTTON_ID_DE,
+  TEAM_ROLES,
+  TEAM_ROLES_ORDER,
+} from './config.js';
 import { buildTeamEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logging/logger.js';
 import { TEAM_MESSAGES, resolveText } from '../../i18n/messages.js';
@@ -27,7 +34,10 @@ export async function ensureTeamMessage(client) {
     return;
   }
 
-  const allowedMentions = { parse: [], roles: TEAM_ROLES.map(r => r.id) };
+  const allowedMentions = {
+    parse: [],
+    roles: TEAM_ROLES_ORDER.map((key) => TEAM_ROLES[key]?.id).filter(Boolean),
+  };
 
   let message = null;
   try {

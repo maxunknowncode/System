@@ -7,6 +7,7 @@ import {
   TEAM_BUTTON_ID_EN,
   TEAM_BUTTON_ID_DE,
   TEAM_ROLES,
+  TEAM_ROLES_ORDER,
 } from './config.js';
 import { logger } from '../../util/logging/logger.js';
 import { hasRole } from '../../util/permissions.js';
@@ -37,24 +38,31 @@ async function getRoleMemberMentions(guild, roleId) {
 export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
   const isDe = lang === 'de';
   const title = resolveText(TEAM_MESSAGES.title, lang);
-  const description = resolveText(TEAM_MESSAGES.description, lang);
 
   const embed = coreEmbed('TEAM', lang)
-    .setTitle(title)
-    .setDescription(description);
+    .setTitle(title);
 
-  // Nur Rollen rendern, die mindestens 1 Mitglied haben
-  for (const role of TEAM_ROLES) {
-    const desc = isDe ? role.descDe : role.descEn;
+  for (const roleKey of TEAM_ROLES_ORDER) {
+    const role = TEAM_ROLES[roleKey];
+    if (!role) continue;
+
+    const desc = resolveText(TEAM_MESSAGES.roleDescriptions?.[roleKey], lang);
     const label = isDe ? role.labelDe : role.labelEn;
 
     const mentions = await getRoleMemberMentions(guild, role.id);
-    if (mentions.length === 0) continue;
 
-    // Titel = Label (ohne Emoji/Mention)
-    // Wert: 1) Role-Mention, 2) kurze Beschreibung im Code-Style, 3) Mitglieder als Zitate
-    const value = `<@&${role.id}>\n\`${desc}\`\n${mentions.join('\n')}`;
-    embed.addFields({ name: label, value, inline: false });
+    const parts = [`<@&${role.id}>`];
+    if (desc) {
+      parts.push(`\`${desc}\``);
+    }
+
+    if (mentions.length) {
+      parts.push(mentions.join('\n'));
+    } else {
+      parts.push(resolveText(TEAM_MESSAGES.emptyRole, lang));
+    }
+
+    embed.addFields({ name: label, value: parts.join('\n'), inline: false });
   }
 
   // Sprach-Buttons (Flag + Text)

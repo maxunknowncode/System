@@ -109,13 +109,55 @@ export const VERIFY_MESSAGES = Object.freeze({
 
 export const TEAM_MESSAGES = Object.freeze({
   title: {
-    en: 'The Server Team',
-    de: 'Das Serverteam',
+    de: 'Unser Team',
+    en: 'Our Team',
   },
-  description: {
-    en: '> *Dear community, here you can find our team list. Here you can see who is part of the server team. This helps you always know whom you can trust.*',
-    de: '> *Sehr geehrte Community, hier findet ihr unsere Teamliste. Hier könnt ihr sehen, wer zum Serverteam gehört. Dies hilft, immer zu wissen, ob man den Personen trauen kann.*',
+  emptyRole: {
+    de: '— aktuell keine Mitglieder',
+    en: '— no members yet',
   },
+  roleDescriptions: Object.freeze({
+    teamOwner: {
+      de: 'Server-Inhaber: Gesamtverantwortung, finale Entscheidungen, schützt die Vision.',
+      en: 'Server owner: ultimate responsibility, final decisions, protects the vision.',
+    },
+    teamCoOwner: {
+      de: 'Stellvertretung des Owners: Strategie, Planung, übernimmt bei Abwesenheit.',
+      en: 'Deputy to the owner: strategy, planning, steps in when needed.',
+    },
+    teamAdministrator: {
+      de: 'Administration: Rechte, Sicherheit, Struktur & technische Abläufe.',
+      en: 'Administration: permissions, security, structure & technical operations.',
+    },
+    teamHeadModerator: {
+      de: 'Leitung Moderation: Eskalationen, Qualitätssicherung, Coaching des Mod-Teams.',
+      en: 'Head of moderation: escalations, quality assurance, coaching the mod team.',
+    },
+    teamModerator: {
+      de: 'Moderation: Regeln durchsetzen, Chat sauber halten, Tickets unterstützen.',
+      en: 'Moderation: enforce rules, keep chat clean, support tickets.',
+    },
+    teamSupporter: {
+      de: 'Support: erste Hilfe, Fragen beantworten, an passende Teams weiterleiten.',
+      en: 'Support: first-line help, answers questions, routes to the right teams.',
+    },
+    teamDeveloper: {
+      de: 'Development: Bot, Automationen, Fixes, Deployments, interne Tools.',
+      en: 'Development: bot, automations, fixes, deployments, internal tools.',
+    },
+    teamEditing: {
+      de: 'Editing: Video/Grafik, Thumbnails, Assets, Qualität von Media.',
+      en: 'Editing: video/graphics, thumbnails, assets, media quality.',
+    },
+    teamEvent: {
+      de: 'Events: Planung, Orga, Umsetzung von Aktionen & Giveaways.',
+      en: 'Events: planning, organization, execution of activities & giveaways.',
+    },
+    teamGamingLead: {
+      de: 'Gaming Lead: koordiniert Spiel-Bereiche, Community-Events & Teamplay.',
+      en: 'Gaming lead: coordinates game areas, community events & team play.',
+    },
+  }),
 });
 
 export const RULES_MESSAGES = Object.freeze({
