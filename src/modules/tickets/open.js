@@ -6,7 +6,7 @@ import {
   TICKET_CHANNEL_PREFIX,
 } from './config.js';
 import { buildTicketName } from './utils.js';
-import { coreEmbed } from '../../util/embeds/core.js';
+import { brandTitle, coreEmbed } from '../../util/embeds/core.js';
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -83,7 +83,7 @@ export async function openTicket(interaction, lang = 'en') {
 
   const ticketChannel = channel.toString();
   const replyEmbed = coreEmbed('TICKET', lang)
-    .setTitle(resolveText(TICKET_MESSAGES.createdTitle, lang))
+    .setTitle(brandTitle(resolveText(TICKET_MESSAGES.createdTitle, lang)))
     .setDescription(
       resolveText(TICKET_MESSAGES.createdDescription, lang, { ticketChannel })
     );

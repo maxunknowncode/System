@@ -8,7 +8,7 @@ import {
 import { coreEmbed } from '../../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../../util/embeds/lang.js';
 import { BAN_PRESETS, TIMEOUT_PRESETS } from '../config.js';
-import { ACTION, CUSTOM_IDS, ERROR_COLOR, SUCCESS_COLOR } from '../constants.js';
+import { ACTION, CUSTOM_IDS } from '../constants.js';
 import { getCaseById, updateCaseDuration } from '../storage/repo.js';
 import { logger } from '../../../util/logging/logger.js';
 
@@ -128,9 +128,7 @@ export async function handleDurationSelect(interaction) {
 
     const value = interaction.values?.[0];
     if (!caseId || !value) {
-      embed
-        .setColor(ERROR_COLOR)
-        .setDescription(lang === 'de' ? 'Ungültige Auswahl.' : 'Invalid selection.');
+      embed.setDescription(lang === 'de' ? 'Ungültige Auswahl.' : 'Invalid selection.');
       await editReplyWithFallback(interaction, {
         embeds: [embed],
         components: interaction.message?.components ?? [],
@@ -140,9 +138,7 @@ export async function handleDurationSelect(interaction) {
 
     const caseRecord = await getCaseById(caseId);
     if (!caseRecord) {
-      embed
-        .setColor(ERROR_COLOR)
-        .setDescription(
+      embed.setDescription(
           lang === 'de' ? 'Der Fall wurde nicht gefunden.' : 'The case could not be found.'
         );
       await editReplyWithFallback(interaction, {
@@ -153,9 +149,7 @@ export async function handleDurationSelect(interaction) {
     }
 
     if (caseRecord.actionType !== actionType) {
-      embed
-        .setColor(ERROR_COLOR)
-        .setDescription(
+      embed.setDescription(
           lang === 'de' ? 'Aktion passt nicht zum Fall.' : 'Action type does not match this case.'
         );
       await editReplyWithFallback(interaction, {
@@ -173,9 +167,7 @@ export async function handleDurationSelect(interaction) {
     } else {
       const durationMs = presetToMs(value);
       if (!durationMs) {
-        embed
-          .setColor(ERROR_COLOR)
-          .setDescription(
+        embed.setDescription(
             lang === 'de'
               ? 'Die Dauer konnte nicht verarbeitet werden.'
               : 'The duration could not be processed.'
@@ -201,9 +193,7 @@ export async function handleDurationSelect(interaction) {
     );
     const updatedComponents = replaceDurationRow(interaction.message?.components ?? [], newDurationRow);
 
-    embed
-      .setColor(SUCCESS_COLOR)
-      .setDescription(
+    embed.setDescription(
         lang === 'de'
           ? `Dauer gesetzt: ${value === 'permanent' ? 'Permanent' : value}`
           : `Duration set: ${value === 'permanent' ? 'Permanent' : value}`
@@ -224,9 +214,7 @@ export async function handleDurationSelect(interaction) {
       }
     }
 
-    const failureEmbed = coreEmbed('ANN', lang)
-      .setColor(ERROR_COLOR)
-      .setDescription(errorMessage);
+    const failureEmbed = coreEmbed('ANN', lang).setDescription(errorMessage);
 
     await editReplyWithFallback(interaction, {
       embeds: [failureEmbed],

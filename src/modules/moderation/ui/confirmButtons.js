@@ -9,7 +9,7 @@ import {
 } from 'discord.js';
 import { coreEmbed } from '../../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../../util/embeds/lang.js';
-import { CUSTOM_IDS, CONFIRM_ACTION, ERROR_COLOR, STATUS } from '../constants.js';
+import { CUSTOM_IDS, CONFIRM_ACTION, STATUS } from '../constants.js';
 import { executeAction } from '../service/exec.js';
 import { getCaseById, markCaseFailed } from '../storage/repo.js';
 import { logger } from '../../../util/logging/logger.js';
@@ -92,34 +92,26 @@ export async function handleConfirmButton(interaction) {
     await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
 
     if (!caseId) {
-      const embed = coreEmbed('ANN', lang)
-        .setColor(ERROR_COLOR)
-        .setDescription(lang === 'de' ? 'Fall-ID fehlt.' : 'Missing case id.');
+      const embed = coreEmbed('ANN', lang).setDescription(lang === 'de' ? 'Fall-ID fehlt.' : 'Missing case id.');
       await editReplyWithFallback(interaction, { embeds: [embed] });
       return;
     }
 
     if (![CONFIRM_ACTION.CONFIRM, CONFIRM_ACTION.CANCEL].includes(decision)) {
-      const embed = coreEmbed('ANN', lang)
-        .setColor(ERROR_COLOR)
-        .setDescription(lang === 'de' ? 'Unbekannte Aktion.' : 'Unknown action.');
+      const embed = coreEmbed('ANN', lang).setDescription(lang === 'de' ? 'Unbekannte Aktion.' : 'Unknown action.');
       await editReplyWithFallback(interaction, { embeds: [embed] });
       return;
     }
 
     const caseRecord = await getCaseById(caseId);
     if (!caseRecord) {
-      const embed = coreEmbed('ANN', lang)
-        .setColor(ERROR_COLOR)
-        .setDescription(lang === 'de' ? 'Fall nicht gefunden.' : 'Case not found.');
+      const embed = coreEmbed('ANN', lang).setDescription(lang === 'de' ? 'Fall nicht gefunden.' : 'Case not found.');
       await editReplyWithFallback(interaction, { embeds: [embed] });
       return;
     }
 
     if (caseRecord.status !== STATUS.PENDING) {
-      const embed = coreEmbed('ANN', lang)
-        .setColor(ERROR_COLOR)
-        .setDescription(
+      const embed = coreEmbed('ANN', lang).setDescription(
           lang === 'de' ? 'Dieser Fall wurde bereits bearbeitet.' : 'This case has already been processed.'
         );
       await editReplyWithFallback(interaction, { embeds: [embed] });
@@ -129,9 +121,7 @@ export async function handleConfirmButton(interaction) {
     if (decision === CONFIRM_ACTION.CANCEL) {
       await markCaseFailed(caseId);
       const disabledComponents = disableComponents(interaction.message.components ?? []);
-      const embed = coreEmbed('ANN', lang)
-        .setColor(ERROR_COLOR)
-        .setDescription(lang === 'de' ? 'Fall verworfen.' : 'Case cancelled.');
+      const embed = coreEmbed('ANN', lang).setDescription(lang === 'de' ? 'Fall verworfen.' : 'Case cancelled.');
       await editReplyWithFallback(interaction, {
         embeds: [embed],
         components: disabledComponents,
@@ -141,18 +131,14 @@ export async function handleConfirmButton(interaction) {
 
     const guild = interaction.guild;
     if (!guild) {
-      const embed = coreEmbed('ANN', lang)
-        .setColor(ERROR_COLOR)
-        .setDescription(lang === 'de' ? 'Keine Guild verfügbar.' : 'Guild unavailable.');
+      const embed = coreEmbed('ANN', lang).setDescription(lang === 'de' ? 'Keine Guild verfügbar.' : 'Guild unavailable.');
       await editReplyWithFallback(interaction, { embeds: [embed] });
       return;
     }
 
     const refreshedRecord = await getCaseById(caseId);
     if (!refreshedRecord || refreshedRecord.status !== STATUS.PENDING) {
-      const embed = coreEmbed('ANN', lang)
-        .setColor(ERROR_COLOR)
-        .setDescription(
+      const embed = coreEmbed('ANN', lang).setDescription(
           lang === 'de'
             ? 'Dieser Fall wurde bereits bearbeitet.'
             : 'This case has already been processed.'
@@ -181,9 +167,7 @@ export async function handleConfirmButton(interaction) {
       });
     } catch (executionError) {
       uiLogger.error('Execution failed', executionError);
-      const errorEmbed = coreEmbed('ANN', lang)
-        .setColor(ERROR_COLOR)
-        .setDescription(lang === 'de' ? 'Aktion fehlgeschlagen.' : 'Action failed.');
+      const errorEmbed = coreEmbed('ANN', lang).setDescription(lang === 'de' ? 'Aktion fehlgeschlagen.' : 'Action failed.');
       const disabledComponents = disableComponents(interaction.message.components ?? []);
       await editReplyWithFallback(interaction, {
         embeds: [errorEmbed],
@@ -209,9 +193,7 @@ export async function handleConfirmButton(interaction) {
       }
     }
 
-    const failureEmbed = coreEmbed('ANN', lang)
-      .setColor(ERROR_COLOR)
-      .setDescription(errorMessage);
+    const failureEmbed = coreEmbed('ANN', lang).setDescription(errorMessage);
 
     await editReplyWithFallback(interaction, {
       embeds: [failureEmbed],

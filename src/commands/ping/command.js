@@ -1,8 +1,7 @@
 /*
 ### Zweck: Slash-Command /ping – zeigt Ping, Roundtrip, Uptime und Serverzeit als Embed.
 */
-import { coreEmbed } from '../../util/embeds/core.js';
-import { BRAND_NAME } from '../../util/embeds/brand.js';
+import { brandTitle, coreEmbed } from '../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../util/embeds/lang.js';
 
 export default {
@@ -17,7 +16,7 @@ export default {
     const uptime = formatDuration(uptimeMs);
 
     const embed = coreEmbed('ANN', detectLangFromInteraction(interaction))
-      .setTitle(`🟢 ${BRAND_NAME} — Status`)
+      .setTitle(brandTitle('🟢 Status'))
       .setDescription('✅ Operational.')
       .addFields(
         { name: '📡 WebSocket Ping', value: `${Math.round(client.ws.ping)} ms`, inline: true },

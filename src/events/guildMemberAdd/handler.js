@@ -2,8 +2,8 @@
 ### Zweck: Reagiert auf neue Mitglieder und sendet eine Willkommensnachricht.
 */
 import { Events } from 'discord.js';
-import { coreEmbed } from '../../util/embeds/core.js';
-import { BRAND_NAME } from '../../util/embeds/brand.js';
+import { brandTitle, coreEmbed } from '../../util/embeds/core.js';
+import { BRAND_NAME } from '../../config/branding.js';
 import { detectLangFromInteraction } from '../../util/embeds/lang.js';
 import { logger } from '../../util/logging/logger.js';
 import {
@@ -25,7 +25,7 @@ export default {
     const lang = detectLangFromInteraction(member);
 
     const embed = coreEmbed('WELCOME', lang)
-      .setTitle(resolveText(WELCOME_MESSAGES.title, lang))
+      .setTitle(brandTitle(resolveText(WELCOME_MESSAGES.title, lang)))
       .setDescription(
         resolveText(WELCOME_MESSAGES.description, lang, {
           member: member.toString(),

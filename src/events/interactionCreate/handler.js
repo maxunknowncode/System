@@ -25,7 +25,7 @@ import {
   BTN_DELETE_CONFIRM_ID,
 } from '../../modules/tickets/config.js';
 import { handleTicketInteractions } from '../../modules/tickets/interactions.js';
-import { coreEmbed } from '../../util/embeds/core.js';
+import { brandTitle, coreEmbed } from '../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../util/embeds/lang.js';
 import { GENERIC_MESSAGES, resolveText } from '../../i18n/messages.js';
 
@@ -42,9 +42,7 @@ const createErrorId = () => {
 
 async function sendGenericError(interaction, errorId) {
   const lang = detectLangFromInteraction(interaction) ?? 'en';
-  const embed = coreEmbed('ANN', lang)
-    .setColor(0xff4d4d)
-    .setTitle(resolveText(GENERIC_MESSAGES.genericErrorTitle, lang))
+  const embed = coreEmbed('ANN', lang).setTitle(brandTitle(resolveText(GENERIC_MESSAGES.genericErrorTitle, lang)))
     .setDescription(resolveText(GENERIC_MESSAGES.errorWithReference, lang, { errorId }));
 
   try {
@@ -68,9 +66,7 @@ async function handleCommand(interaction, client) {
   const command = client.commands?.get(interaction.commandName);
   if (!command) {
     const lang = detectLangFromInteraction(interaction) ?? 'en';
-    const embed = coreEmbed('ANN', lang)
-      .setColor(0xff4d4d)
-      .setDescription(resolveText(GENERIC_MESSAGES.unknownCommand, lang));
+    const embed = coreEmbed('ANN', lang).setDescription(resolveText(GENERIC_MESSAGES.unknownCommand, lang));
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply({ embeds: [embed] });
     } else {

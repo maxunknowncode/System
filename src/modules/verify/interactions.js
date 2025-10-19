@@ -10,7 +10,7 @@ import {
 } from './config.js';
 import { MessageFlags } from 'discord.js';
 import { buildVerifyEmbedAndComponents } from './embed.js';
-import { coreEmbed } from '../../util/embeds/core.js';
+import { brandTitle, coreEmbed } from '../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../util/embeds/lang.js';
 import { logger } from '../../util/logging/logger.js';
 import { hasRole } from '../../util/permissions.js';
@@ -29,8 +29,7 @@ export async function handleVerifyInteractions(interaction, client) {
       (await interaction.guild.members.fetch(interaction.user.id).catch(() => null));
     if (!member) {
       const embed = coreEmbed('VERIFY', lang)
-        .setColor(0xffa500)
-        .setTitle(resolveText(VERIFY_MESSAGES.responseTitle, lang))
+        .setTitle(brandTitle(resolveText(VERIFY_MESSAGES.responseTitle, lang)))
         .setDescription(resolveText(VERIFY_MESSAGES.failure, lang));
       try {
         await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
@@ -43,8 +42,7 @@ export async function handleVerifyInteractions(interaction, client) {
 
     if (hasRole(member, VERIFY_ROLE_ID)) {
       const embed = coreEmbed('VERIFY', lang)
-        .setColor(0x00ff00)
-        .setTitle(resolveText(VERIFY_MESSAGES.responseTitle, lang))
+        .setTitle(brandTitle(resolveText(VERIFY_MESSAGES.responseTitle, lang)))
         .setDescription(resolveText(VERIFY_MESSAGES.alreadyVerified, lang));
       try {
         await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
@@ -57,15 +55,13 @@ export async function handleVerifyInteractions(interaction, client) {
     try {
       await member.roles.add(VERIFY_ROLE_ID);
       const embed = coreEmbed('VERIFY', lang)
-        .setColor(0x00ff00)
-        .setTitle(resolveText(VERIFY_MESSAGES.responseTitle, lang))
+        .setTitle(brandTitle(resolveText(VERIFY_MESSAGES.responseTitle, lang)))
         .setDescription(resolveText(VERIFY_MESSAGES.success, lang));
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } catch (err) {
       verifyLogger.warn('Rolle konnte nicht vergeben', err);
       const embed = coreEmbed('VERIFY', lang)
-        .setColor(0xffa500)
-        .setTitle(resolveText(VERIFY_MESSAGES.responseTitle, lang))
+        .setTitle(brandTitle(resolveText(VERIFY_MESSAGES.responseTitle, lang)))
         .setDescription(resolveText(VERIFY_MESSAGES.failure, lang));
       try {
         await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });

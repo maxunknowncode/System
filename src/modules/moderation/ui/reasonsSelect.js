@@ -8,7 +8,7 @@ import {
 import { coreEmbed } from '../../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../../util/embeds/lang.js';
 import { REASON_CODES, REASON_LABELS } from '../config.js';
-import { CUSTOM_IDS, ERROR_COLOR, SUCCESS_COLOR, STATUS } from '../constants.js';
+import { CUSTOM_IDS, STATUS } from '../constants.js';
 import { getCaseById } from '../storage/repo.js';
 import { setPendingReasons, setPendingCustomReason } from '../service/exec.js';
 import { buildCustomReasonModal } from './customReasonModal.js';
@@ -110,9 +110,7 @@ export async function handleReasonsSelect(interaction) {
 
   try {
     if (!caseId) {
-      embed
-        .setColor(ERROR_COLOR)
-        .setDescription(lang === 'de' ? 'Der Fall fehlt.' : 'Missing case identifier.');
+      embed.setDescription(lang === 'de' ? 'Der Fall fehlt.' : 'Missing case identifier.');
       await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
       await editReplyWithFallback(interaction, {
         embeds: [embed],
@@ -123,9 +121,7 @@ export async function handleReasonsSelect(interaction) {
 
     const caseRecord = await getCaseById(caseId);
     if (!caseRecord) {
-      embed
-        .setColor(ERROR_COLOR)
-        .setDescription(lang === 'de' ? 'Fall nicht gefunden.' : 'Case not found.');
+      embed.setDescription(lang === 'de' ? 'Fall nicht gefunden.' : 'Case not found.');
       await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
       await editReplyWithFallback(interaction, {
         embeds: [embed],
@@ -135,9 +131,7 @@ export async function handleReasonsSelect(interaction) {
     }
 
     if (caseRecord.status !== STATUS.PENDING) {
-      embed
-        .setColor(ERROR_COLOR)
-        .setDescription(
+      embed.setDescription(
           lang === 'de'
             ? 'Dieser Fall wurde bereits bearbeitet.'
             : 'This case has already been processed.'
@@ -154,9 +148,7 @@ export async function handleReasonsSelect(interaction) {
     const uniqueValues = Array.from(new Set(rawValues));
 
     if (!uniqueValues.length) {
-      embed
-        .setColor(ERROR_COLOR)
-        .setDescription(
+      embed.setDescription(
           lang === 'de' ? 'Bitte wähle mindestens einen Grund.' : 'Please select at least one reason.'
         );
       await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
@@ -168,9 +160,7 @@ export async function handleReasonsSelect(interaction) {
     }
 
     if (uniqueValues.length > 5) {
-      embed
-        .setColor(ERROR_COLOR)
-        .setDescription(
+      embed.setDescription(
           lang === 'de' ? 'Maximal 5 Gründe möglich.' : 'You can choose at most 5 reasons.'
         );
       await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
@@ -214,9 +204,7 @@ export async function handleReasonsSelect(interaction) {
 
     const language = lang === 'de' ? 'de' : 'en';
     const labelMap = REASON_LABELS[language] ?? {};
-    embed
-      .setColor(SUCCESS_COLOR)
-      .setDescription(
+    embed.setDescription(
         language === 'de'
           ? `Gründe gespeichert: ${filtered.map((code) => labelMap[code] ?? code).join(', ')}`
           : `Reasons saved: ${filtered.map((code) => labelMap[code] ?? code).join(', ')}`
@@ -237,9 +225,7 @@ export async function handleReasonsSelect(interaction) {
       }
     }
 
-    const failureEmbed = coreEmbed('ANN', lang)
-      .setColor(ERROR_COLOR)
-      .setDescription(errorMessage);
+    const failureEmbed = coreEmbed('ANN', lang).setDescription(errorMessage);
 
     await editReplyWithFallback(interaction, {
       embeds: [failureEmbed],

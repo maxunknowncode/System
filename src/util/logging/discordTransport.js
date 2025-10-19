@@ -1,14 +1,14 @@
-import { EmbedBuilder } from 'discord.js';
 import { applyAuthorByLang } from '../embeds/author.js';
+import { brandTitle, coreEmbed } from '../embeds/core.js';
 import { truncate, isPlainObject } from './formatting.js';
 import { getLogChannelIds } from './config.js';
 import { formatLogArgs, registerLogTransport } from './logger.js';
 
-const LEVEL_COLOURS = {
-  debug: 0x95a5a6,
-  info: 0x3498db,
-  warn: 0xf1c40f,
-  error: 0xe74c3c,
+const LEVEL_LABELS = {
+  debug: { de: 'Debug', en: 'Debug' },
+  info: { de: 'Info', en: 'Info' },
+  warn: { de: 'Warnung', en: 'Warning' },
+  error: { de: 'Fehler', en: 'Error' },
 };
 
 const JOIN_MATCH_REGEX = /\[join2create\]/i;
@@ -266,11 +266,11 @@ export function setupDiscordLogging(client, options = {}) {
 
   const createBaseEmbed = (entry) => {
     const level = entry.level ?? 'info';
-    const embed = new EmbedBuilder()
-      .setColor(LEVEL_COLOURS[level] ?? LEVEL_COLOURS.info)
-      .setTimestamp(entry.timestamp ?? new Date());
-
-    return applyAuthorByLang(embed, 'LOGS', 'de');
+    const lang = entry.lang === 'en' ? 'en' : 'de';
+    const embed = coreEmbed('LOGS', lang).setTimestamp(entry.timestamp ?? new Date());
+    applyAuthorByLang(embed, 'LOGS', lang);
+    const label = LEVEL_LABELS[level]?.[lang] ?? LEVEL_LABELS.info[lang];
+    return embed.setTitle(brandTitle(label));
   };
 
   const buildJoinToCreatePayload = (entry) => {

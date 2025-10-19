@@ -1,5 +1,5 @@
 import { logger } from '../../../util/logging/logger.js';
-import { ACTION, SUCCESS_COLOR } from '../constants.js';
+import { ACTION } from '../constants.js';
 import { findDueToLift, markLifted } from '../storage/repo.js';
 import { sendModLog } from '../service/log.js';
 
@@ -66,7 +66,6 @@ async function processCase(client, guild, entry) {
           : 'Action lifted automatically (duration expired).',
       dmOk: entry.dmOk,
       auditId: entry.auditId,
-      color: SUCCESS_COLOR,
     },
     lang
   );

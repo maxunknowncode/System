@@ -2,8 +2,8 @@
 ### Zweck: Baut die Verify-Embed samt Sprach- und Verify-Buttons.
 */
 import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
-import { BRAND_NAME } from '../../util/embeds/brand.js';
-import { coreEmbed } from '../../util/embeds/core.js';
+import { BRAND_NAME } from '../../config/branding.js';
+import { brandTitle, coreEmbed } from '../../util/embeds/core.js';
 import { VERIFY_MESSAGES, resolveFields, resolveText } from '../../i18n/messages.js';
 import {
   VERIFY_BUTTON_ID,
@@ -21,7 +21,7 @@ export function buildVerifyEmbedAndComponents(lang = VERIFY_DEFAULT_LANG) {
   const fields = resolveFields(VERIFY_MESSAGES.embed.fields, lang, replacements);
 
   const embed = coreEmbed('VERIFY', lang)
-    .setTitle(title)
+    .setTitle(brandTitle(title))
     .setDescription(description)
     .addFields(fields);
 
