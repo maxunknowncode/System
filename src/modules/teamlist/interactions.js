@@ -1,7 +1,13 @@
 /*
 ### Zweck: Handhabt Sprachwechsel-Buttons der Teamliste und Timeout-Rücksetzung.
 */
-import { TEAM_BUTTON_ID_EN, TEAM_BUTTON_ID_DE, TEAM_RESET_MS, TEAM_ROLES } from './config.js';
+import {
+  TEAM_BUTTON_ID_EN,
+  TEAM_BUTTON_ID_DE,
+  TEAM_RESET_MS,
+  TEAM_ROLES,
+  TEAM_ROLES_ORDER,
+} from './config.js';
 import { buildTeamEmbedAndComponents } from './embed.js';
 import { logger } from '../../util/logging/logger.js';
 
@@ -10,7 +16,11 @@ const teamLogger = logger.withPrefix('team:interactions');
 const timeouts = new Map();
 
 export async function handleTeamButtons(interaction, client) {
-  const allowedMentions = { parse: [], roles: TEAM_ROLES.map(r => r.id), users: [] };
+  const allowedMentions = {
+    parse: [],
+    roles: TEAM_ROLES_ORDER.map((key) => TEAM_ROLES[key]?.id).filter(Boolean),
+    users: [],
+  };
   const lang = interaction.customId === TEAM_BUTTON_ID_DE ? 'de' : 'en';
   try {
     await interaction.update({ ...(await buildTeamEmbedAndComponents(lang, interaction.guild)), allowedMentions });

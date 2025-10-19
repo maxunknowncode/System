@@ -26,15 +26,14 @@ export const ROLE_IDS = Object.freeze({
   moderationClear: '1363298860121985215',
   teamOwner: '1354909215365534010',
   teamCoOwner: '1354909233103245493',
-  teamManager: '1392416721633149029',
-  teamHeadAdministrator: '1418662092470485154',
-  teamAdministrator: '1418662144551158002',
-  teamManagement: '1418662199647273163',
+  teamAdministrator: '1392416721633149029',
   teamHeadModerator: '1418662556083556583',
   teamModerator: '1418662493877964914',
   teamSupporter: '1418662392442781786',
-  teamTestSupporter: '1418662353637085184',
   teamDeveloper: '1354909289889796455',
+  teamEditing: '1429376147967316018',
+  teamEvent: '1429376193001426964',
+  teamGamingLead: '1429376229471158343',
 });
 
 export const CATEGORY_IDS = Object.freeze({
