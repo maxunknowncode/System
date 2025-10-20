@@ -112,6 +112,10 @@ export const TEAM_MESSAGES = Object.freeze({
     de: 'Unser Team',
     en: 'Our Team',
   },
+  intro: {
+    de: '> *Sehr geehrte Community, hier findet Ihr unsere Teamliste - hier könnt Ihr entnehmen wer zum Serverteam gehört und wer nicht, dies hilft um immer zu wissen ob man den Personen trauen kann.*',
+    en: '> *Dear community, here you can find our team list — you can see who is part of the server team and who isn\'t; this helps you always know whether you can trust the person.*',
+  },
   emptyRole: {
     de: '— aktuell keine Mitglieder',
     en: '— no members yet',

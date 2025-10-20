@@ -39,8 +39,16 @@ export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
   const isDe = lang === 'de';
   const title = resolveText(TEAM_MESSAGES.title, lang);
 
-  const embed = coreEmbed('TEAM', lang)
-    .setTitle(brandTitle(title));
+  const embed = coreEmbed('TEAM', lang);
+
+  const intro = resolveText(TEAM_MESSAGES.intro, lang);
+  if (intro) {
+    const existingDescription = embed.data?.description;
+    const description = existingDescription ? `${intro}\n\n${existingDescription}` : intro;
+    embed.setDescription(description);
+  }
+
+  embed.setTitle(brandTitle(title));
 
   for (const roleKey of TEAM_ROLES_ORDER) {
     const role = TEAM_ROLES[roleKey];
