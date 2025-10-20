@@ -13,9 +13,6 @@ export const STATUS = {
   FAILED: 'FAILED',
 };
 
-export const SUCCESS_COLOR = 0x57f287;
-export const ERROR_COLOR = 0xff0000;
-
 export const CUSTOM_IDS = {
   DURATION_SELECT: 'MOD_DUR_SELECT',
   REASON_SELECT: 'MOD_REASON_SELECT',

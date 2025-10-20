@@ -18,7 +18,7 @@ import {
   isTeam,
   setStatusPrefix,
 } from './utils.js';
-import { coreEmbed } from '../../util/embeds/core.js';
+import { brandTitle, coreEmbed } from '../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../util/embeds/lang.js';
 import {
   ActionRowBuilder,
@@ -50,19 +50,16 @@ export async function handleTicketInteractions(interaction, client) {
     case BTN_CLAIM_ID: {
       if (!isTeam(interaction.member)) {
         const embed = coreEmbed('TICKET', lang)
-          .setTitle(resolveText(TICKET_MESSAGES.claimDeniedTitle, lang))
-          .setDescription(resolveText(TICKET_MESSAGES.claimDeniedDescription, lang))
-          .setColor(0xff0000);
+          .setTitle(brandTitle(resolveText(TICKET_MESSAGES.claimDeniedTitle, lang)))
+          .setDescription(resolveText(TICKET_MESSAGES.claimDeniedDescription, lang));
         await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
         return;
       }
       await interaction.deferUpdate();
       await setStatusPrefix(interaction.channel, 'claimed');
-      const info = coreEmbed('TICKET', lang)
-        .setColor(0x57f287)
-        .setDescription(
-          resolveText(TICKET_MESSAGES.claimedAnnouncement, lang, { userId: interaction.user.id })
-        );
+      const info = coreEmbed('TICKET', lang).setDescription(
+        resolveText(TICKET_MESSAGES.claimedAnnouncement, lang, { userId: interaction.user.id })
+      );
       await interaction.channel.send({
         embeds: [info],
         allowedMentions: { users: [interaction.user.id], parse: [] },
@@ -191,10 +188,9 @@ export async function handleTicketInteractions(interaction, client) {
         const row = new ActionRowBuilder().addComponents(claimBtn, closeBtn);
         await startMsg.edit({ components: [row], embeds: startMsg.embeds, allowedMentions: { parse: [] } });
       }
-      const info = coreEmbed('TICKET', lang)
-        .setDescription(
-          resolveText(TICKET_MESSAGES.reopenedInfo, lang)
-        );
+      const info = coreEmbed('TICKET', lang).setDescription(
+        resolveText(TICKET_MESSAGES.reopenedInfo, lang)
+      );
       await interaction.channel.send({ embeds: [info], allowedMentions: { parse: [] } });
       await interaction.update({
         content: resolveText(TICKET_MESSAGES.reopenedNotice, lang),
@@ -239,4 +235,3 @@ export async function handleTicketInteractions(interaction, client) {
       return;
   }
 }
-

@@ -1,4 +1,4 @@
-import { coreEmbed } from '../../../util/embeds/core.js';
+import { brandTitle, coreEmbed } from '../../../util/embeds/core.js';
 
 const ACTION_LABELS = {
   en: {
@@ -28,7 +28,7 @@ export async function sendUserDM(userId, payload, lang = 'en') {
     const user = await client.users.fetch(userId);
     const actionLabel = ACTION_LABELS[language][actionType] ?? actionType;
     const embed = coreEmbed('ANN', language)
-      .setTitle(actionLabel)
+      .setTitle(brandTitle(actionLabel))
       .setDescription(
         language === 'de'
           ? `Du erhältst diese Nachricht vom Server **${guildName}**.`

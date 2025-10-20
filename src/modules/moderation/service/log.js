@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { coreEmbed } from '../../../util/embeds/core.js';
+import { brandTitle, coreEmbed } from '../../../util/embeds/core.js';
 import { MOD_LOG_CHANNEL_ID } from '../config.js';
 
 const DM_STATUS = {
@@ -22,9 +22,6 @@ export async function sendModLog(guild, data, lang = 'en') {
   }
 
   const embed = coreEmbed('LOGS', language);
-  if (data.color) {
-    embed.setColor(data.color);
-  }
 
   const startUnix = data.startTs ? Math.floor(data.startTs.getTime() / 1000) : null;
   const endUnix = data.endTs ? Math.floor(data.endTs.getTime() / 1000) : null;
@@ -51,7 +48,7 @@ export async function sendModLog(guild, data, lang = 'en') {
   const dmText = DM_STATUS[language]?.[dmKey] ?? (language === 'de' ? 'Fehlgeschlagen' : 'Failed');
 
   embed
-    .setTitle(`${data.actionType} • Case #${data.caseId}`)
+    .setTitle(brandTitle(`${data.actionType} • Case #${data.caseId}`))
     .addFields(
       userField,
       moderatorField,

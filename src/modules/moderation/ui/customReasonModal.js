@@ -8,7 +8,7 @@ import {
 } from 'discord.js';
 import { coreEmbed } from '../../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../../util/embeds/lang.js';
-import { CUSTOM_IDS, ERROR_COLOR, SUCCESS_COLOR, STATUS } from '../constants.js';
+import { CUSTOM_IDS, STATUS } from '../constants.js';
 import { setPendingCustomReason } from '../service/exec.js';
 import { getCaseById } from '../storage/repo.js';
 import { buildReasonsSelect } from './reasonsSelect.js';
@@ -106,18 +106,14 @@ export async function handleCustomReasonModal(interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (!caseId) {
-      embed
-        .setColor(ERROR_COLOR)
-        .setDescription(lang === 'de' ? 'Fall-ID fehlt.' : 'Missing case id.');
+      embed.setDescription(lang === 'de' ? 'Fall-ID fehlt.' : 'Missing case id.');
       await editReplyWithFallback(interaction, { embeds: [embed] });
       return;
     }
 
     const caseRecord = await getCaseById(caseId);
     if (!caseRecord || caseRecord.status !== STATUS.PENDING) {
-      embed
-        .setColor(ERROR_COLOR)
-        .setDescription(
+      embed.setDescription(
           lang === 'de'
             ? 'Dieser Fall wurde bereits bearbeitet.'
             : 'This case has already been processed.'
@@ -129,9 +125,7 @@ export async function handleCustomReasonModal(interaction) {
     const rawValue = interaction.fields.getTextInputValue(INPUT_ID);
     const value = typeof rawValue === 'string' ? rawValue.trim() : '';
     if (!value) {
-      embed
-        .setColor(ERROR_COLOR)
-        .setDescription(lang === 'de' ? 'Bitte gib einen Grund ein.' : 'Please provide a reason.');
+      embed.setDescription(lang === 'de' ? 'Bitte gib einen Grund ein.' : 'Please provide a reason.');
       await editReplyWithFallback(interaction, { embeds: [embed] });
       return;
     }
@@ -151,9 +145,7 @@ export async function handleCustomReasonModal(interaction) {
       ? replaceReasonRow(baseComponents, newReasonRow)
       : baseComponents;
 
-    embed
-      .setColor(SUCCESS_COLOR)
-      .setDescription(lang === 'de' ? 'Eigener Grund gespeichert.' : 'Custom reason saved.');
+    embed.setDescription(lang === 'de' ? 'Eigener Grund gespeichert.' : 'Custom reason saved.');
 
     await editReplyWithFallback(interaction, {
       embeds: [embed],
@@ -170,9 +162,7 @@ export async function handleCustomReasonModal(interaction) {
       }
     }
 
-    const failureEmbed = coreEmbed('ANN', lang)
-      .setColor(ERROR_COLOR)
-      .setDescription(errorMessage);
+    const failureEmbed = coreEmbed('ANN', lang).setDescription(errorMessage);
 
     await editReplyWithFallback(interaction, { embeds: [failureEmbed] });
   }

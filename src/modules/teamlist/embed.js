@@ -2,7 +2,7 @@
 ### Zweck: Baut die Teamlisten-Embed und Sprach-Buttons.
 */
 import { ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
-import { coreEmbed } from '../../util/embeds/core.js';
+import { brandTitle, coreEmbed } from '../../util/embeds/core.js';
 import {
   TEAM_BUTTON_ID_EN,
   TEAM_BUTTON_ID_DE,
@@ -30,7 +30,7 @@ async function getRoleMemberMentions(guild, roleId) {
   // Max 30 Zeilen, dann "…"
   const lines = Array.from(members.values())
     .slice(0, 30)
-    .map(m => `> <@${m.id}>`);
+    .map((m) => `> <@${m.id}>`);
   if (members.size > 30) lines.push('> …');
   return lines;
 }
@@ -40,7 +40,7 @@ export async function buildTeamEmbedAndComponents(lang = 'en', guild) {
   const title = resolveText(TEAM_MESSAGES.title, lang);
 
   const embed = coreEmbed('TEAM', lang)
-    .setTitle(title);
+    .setTitle(brandTitle(title));
 
   for (const roleKey of TEAM_ROLES_ORDER) {
     const role = TEAM_ROLES[roleKey];

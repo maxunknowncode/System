@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { coreEmbed } from '../../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../../util/embeds/lang.js';
 import { TEAM_ROLE_ID } from '../config.js';
-import { ACTION, STATUS, SUCCESS_COLOR, ERROR_COLOR } from '../constants.js';
+import { ACTION, STATUS } from '../constants.js';
 import { composeReasonText } from './composeReason.js';
 import { sendUserDM } from './dm.js';
 import { sendModLog } from './log.js';
@@ -27,12 +27,8 @@ const REQUIRED_PERMISSIONS = {
   [ACTION.WARN]: null,
 };
 
-function buildResponseEmbed(interaction, lang, color) {
-  const embed = coreEmbed('ANN', lang);
-  if (color) {
-    embed.setColor(color);
-  }
-  return embed;
+function buildResponseEmbed(interaction, lang) {
+  return coreEmbed('ANN', lang);
 }
 
 function ensureGuild(interaction) {
@@ -126,69 +122,57 @@ export async function executeAction(params) {
   const embed = buildResponseEmbed(interaction, language);
 
   if (!hasTeamRole(moderator)) {
-    embed
-      .setColor(ERROR_COLOR)
-      .setDescription(
-        language === 'de'
-          ? 'Du benötigst die Team-Rolle, um diesen Befehl zu nutzen.'
-          : 'You need the team role to execute this command.'
-      );
+    embed.setDescription(
+      language === 'de'
+        ? 'Du benötigst die Team-Rolle, um diesen Befehl zu nutzen.'
+        : 'You need the team role to execute this command.'
+    );
     return { ok: false, embed };
   }
 
   const requiredPermission = REQUIRED_PERMISSIONS[actionType];
   if (requiredPermission && !moderator.permissions?.has(requiredPermission)) {
-    embed
-      .setColor(ERROR_COLOR)
-      .setDescription(
-        language === 'de'
-          ? 'Dir fehlen die erforderlichen Discord-Berechtigungen.'
-          : 'You are missing the required Discord permission.'
-      );
+    embed.setDescription(
+      language === 'de'
+        ? 'Dir fehlen die erforderlichen Discord-Berechtigungen.'
+        : 'You are missing the required Discord permission.'
+    );
     return { ok: false, embed };
   }
 
   if (requiredPermission && !guild.members.me?.permissions?.has(requiredPermission)) {
-    embed
-      .setColor(ERROR_COLOR)
-      .setDescription(
-        language === 'de'
-          ? 'Der Bot verfügt nicht über die nötigen Berechtigungen.'
-          : 'The bot lacks the required permission to execute this action.'
-      );
+    embed.setDescription(
+      language === 'de'
+        ? 'Der Bot verfügt nicht über die nötigen Berechtigungen.'
+        : 'The bot lacks the required permission to execute this action.'
+    );
     return { ok: false, embed };
   }
 
   if (hasTeamRole(targetMember)) {
-    embed
-      .setColor(ERROR_COLOR)
-      .setDescription(
-        language === 'de'
-          ? 'Aktion blockiert: Ziel gehört zum Team.'
-          : 'Action blocked: target is part of the team.'
-      );
+    embed.setDescription(
+      language === 'de'
+        ? 'Aktion blockiert: Ziel gehört zum Team.'
+        : 'Action blocked: target is part of the team.'
+    );
     return { ok: false, embed };
   }
 
   if (targetMember) {
     if (!compareHierarchy(moderator, targetMember)) {
-      embed
-        .setColor(ERROR_COLOR)
-        .setDescription(
-          language === 'de'
-            ? 'Du kannst keine Mitglieder mit gleicher oder höherer Rolle moderieren.'
-            : 'You cannot moderate members with equal or higher role.'
-        );
+      embed.setDescription(
+        language === 'de'
+          ? 'Du kannst keine Mitglieder mit gleicher oder höherer Rolle moderieren.'
+          : 'You cannot moderate members with equal or higher role.'
+      );
       return { ok: false, embed };
     }
     if (!compareBotHierarchy(guild, targetMember)) {
-      embed
-        .setColor(ERROR_COLOR)
-        .setDescription(
-          language === 'de'
-            ? 'Die Bot-Rolle ist nicht hoch genug, um diese Aktion auszuführen.'
-            : 'The bot role hierarchy prevents this action.'
-        );
+      embed.setDescription(
+        language === 'de'
+          ? 'Die Bot-Rolle ist nicht hoch genug, um diese Aktion auszuführen.'
+          : 'The bot role hierarchy prevents this action.'
+      );
       return { ok: false, embed };
     }
   }
@@ -221,47 +205,39 @@ export async function executeAction(params) {
   const effectiveCustom = caseRecord.customReason ?? customReason ?? '';
 
   if (!effectiveReasonCodes.length) {
-    embed
-      .setColor(ERROR_COLOR)
-      .setDescription(
-        language === 'de'
-          ? 'Bitte wähle mindestens einen Grund aus.'
-          : 'Please select at least one reason.'
-      );
+    embed.setDescription(
+      language === 'de'
+        ? 'Bitte wähle mindestens einen Grund aus.'
+        : 'Please select at least one reason.'
+    );
     return { ok: false, embed };
   }
 
   if (caseRecord.userId === moderator.id) {
-    embed
-      .setColor(ERROR_COLOR)
-      .setDescription(
-        language === 'de'
-          ? 'Du kannst keine Aktion gegen dich selbst durchführen.'
-          : 'You cannot run this action against yourself.'
-      );
+    embed.setDescription(
+      language === 'de'
+        ? 'Du kannst keine Aktion gegen dich selbst durchführen.'
+        : 'You cannot run this action against yourself.'
+    );
     return { ok: false, embed };
   }
 
   const botId = guild.client?.user?.id;
   if (botId && caseRecord.userId === botId) {
-    embed
-      .setColor(ERROR_COLOR)
-      .setDescription(
-        language === 'de'
-          ? 'Der Bot kann nicht Ziel dieser Aktion sein.'
-          : 'The bot cannot be targeted with this action.'
-      );
+    embed.setDescription(
+      language === 'de'
+        ? 'Der Bot kann nicht Ziel dieser Aktion sein.'
+        : 'The bot cannot be targeted with this action.'
+    );
     return { ok: false, embed };
   }
 
   if (targetMember?.user?.bot || targetUser?.bot) {
-    embed
-      .setColor(ERROR_COLOR)
-      .setDescription(
-        language === 'de'
-          ? 'Bots können nicht mit diesem Ablauf moderiert werden.'
-          : 'Bots cannot be moderated with this flow.'
-      );
+    embed.setDescription(
+      language === 'de'
+        ? 'Bots können nicht mit diesem Ablauf moderiert werden.'
+        : 'Bots cannot be moderated with this flow.'
+    );
     return { ok: false, embed };
   }
 
@@ -328,13 +304,11 @@ export async function executeAction(params) {
     }
   } catch (error) {
     await markCaseFailed(caseId);
-    embed
-      .setColor(ERROR_COLOR)
-      .setDescription(
-        language === 'de'
-          ? 'Die Moderationsaktion ist fehlgeschlagen.'
-          : 'The moderation action failed.'
-      );
+    embed.setDescription(
+      language === 'de'
+        ? 'Die Moderationsaktion ist fehlgeschlagen.'
+        : 'The moderation action failed.'
+    );
     result.ok = false;
     result.embed = embed;
     result.error = error;
@@ -352,7 +326,6 @@ export async function executeAction(params) {
   const auditId = await attachAuditInfo(guild, actionType, caseId);
 
   embed
-    .setColor(SUCCESS_COLOR)
     .setDescription(
       language === 'de'
         ? `Aktion erfolgreich abgeschlossen. Case #${caseId}`
@@ -373,7 +346,6 @@ export async function executeAction(params) {
       reasonText,
       dmOk,
       auditId,
-      color: SUCCESS_COLOR,
     },
     language
   );

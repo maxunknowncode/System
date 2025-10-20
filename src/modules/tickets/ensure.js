@@ -1,9 +1,13 @@
 import { TICKET_PANEL_CHANNEL_ID, TICKET_PANEL_MESSAGE_ID, MENU_CUSTOM_ID } from './config.js';
 import { buildTicketPanel } from './panel.js';
 import { logger } from '../../util/logging/logger.js';
-import { BRAND_NAME } from '../../util/embeds/brand.js';
+import { BRAND_PREFIX } from '../../config/branding.js';
 
 const ticketLogger = logger.withPrefix('tickets:ensure');
+const TICKET_AUTHOR_NAMES = [
+  `${BRAND_PREFIX}Ticket System`,
+  `${BRAND_PREFIX}Ticketsystem`,
+];
 
 export async function ensureTicketPanel(client) {
   let channel;
@@ -31,7 +35,7 @@ export async function ensureTicketPanel(client) {
         (m) =>
           m.author.id === client.user.id &&
           (m.components.some((row) => row.components.some((c) => c.customId === MENU_CUSTOM_ID)) ||
-            m.embeds.some((e) => e.author?.name === `${BRAND_NAME} - Ticket System`))
+            m.embeds.some((e) => e.author?.name && TICKET_AUTHOR_NAMES.includes(e.author.name)))
       );
     } catch (err) {
       ticketLogger.error('Nachrichten konnten nicht geladen werden:', err);

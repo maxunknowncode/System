@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType, MessageFlags } from 'discord.js';
-import { coreEmbed } from '../../util/embeds/core.js';
+import { brandTitle, coreEmbed } from '../../util/embeds/core.js';
 import { detectLangFromInteraction } from '../../util/embeds/lang.js';
 import { hasRole } from '../../util/permissions.js';
 import { ROLE_IDS } from '../../config/ids.js';
@@ -23,9 +23,8 @@ export default {
 
     if (!hasRole(interaction.member, ROLE_IDS.moderationClear)) {
       const embed = coreEmbed('ANN', lang)
-        .setTitle(resolveText(CLEAR_COMMAND_MESSAGES.noPermissionTitle, lang))
-        .setDescription(resolveText(GENERIC_MESSAGES.noPermission, lang))
-        .setColor(0xff0000);
+        .setTitle(brandTitle(resolveText(CLEAR_COMMAND_MESSAGES.noPermissionTitle, lang)))
+        .setDescription(resolveText(GENERIC_MESSAGES.noPermission, lang));
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
       return;
     }
@@ -41,14 +40,13 @@ export default {
     }
 
     const embed = coreEmbed('ANN', lang)
-      .setTitle(resolveText(CLEAR_COMMAND_MESSAGES.resultTitle, lang))
+      .setTitle(brandTitle(resolveText(CLEAR_COMMAND_MESSAGES.resultTitle, lang)))
       .setDescription(
         resolveText(CLEAR_COMMAND_MESSAGES.resultDescription, lang, {
           deleted,
           channelId: interaction.channel.id,
         })
-      )
-      .setColor(0x00ff00);
+      );
     await interaction.editReply({ embeds: [embed], allowedMentions: { parse: [] } });
   },
 };
